@@ -1,8 +1,0 @@
-Champions Bolão v1.16
-
-Refinamento exclusivamente mobile nas telas Classificação e Atividades.
-
-- Desktop preservado.
-- Classificação mobile: temporada compacta, Top 3 mobile-first, destaques sem "Líder atual" e ranking em lista.
-- Atividades mobile: timeline compacta, filtros mobile, avatars reais para eventos de participantes e horários relativos.
-- Nenhuma migration Supabase nova é necessária.
