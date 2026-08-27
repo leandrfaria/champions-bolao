@@ -54,7 +54,7 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
               <span>Resultado</span>
               <strong>{match.home_score} <i>×</i> {match.away_score}</strong>
             </div>
-            <div className="home-match-score-block own-score">
+            <div className={`home-match-score-block own-score ${ownPrediction ? feedback.className : 'no-prediction'}`}>
               <span>Seu palpite</span>
               <strong>{ownPrediction ? `${ownPrediction.home_score} × ${ownPrediction.away_score}` : '—'}</strong>
             </div>

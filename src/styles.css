@@ -5820,3 +5820,210 @@ select, input, button { max-width: 100%; }
     justify-self: stretch;
   }
 }
+
+
+/* ==========================================================
+   v1.20 — Home result tone + symmetric matchup alignment
+   ========================================================== */
+
+/* Finished prediction inherits the result tone directly. */
+.home-match-row.is-finished .home-match-score-block.own-score.exact {
+  border-left-color: rgba(83, 224, 161, .28);
+  background: linear-gradient(135deg, rgba(42, 190, 126, .08), rgba(18, 24, 35, .02));
+}
+.home-match-row.is-finished .home-match-score-block.own-score.exact span,
+.home-match-row.is-finished .home-match-score-block.own-score.exact strong {
+  color: #67e4aa;
+}
+.home-match-row.is-finished .home-match-score-block.own-score.winner {
+  border-left-color: rgba(91, 150, 255, .30);
+  background: linear-gradient(135deg, rgba(63, 119, 226, .09), rgba(18, 24, 39, .02));
+}
+.home-match-row.is-finished .home-match-score-block.own-score.winner span,
+.home-match-row.is-finished .home-match-score-block.own-score.winner strong {
+  color: #82adff;
+}
+.home-match-row.is-finished .home-match-score-block.own-score.miss {
+  border-left-color: rgba(238, 92, 125, .28);
+  background: linear-gradient(135deg, rgba(198, 58, 91, .08), rgba(27, 17, 27, .02));
+}
+.home-match-row.is-finished .home-match-score-block.own-score.miss span,
+.home-match-row.is-finished .home-match-score-block.own-score.miss strong {
+  color: #ef8098;
+}
+
+/* Keep both clubs optically centered and mirrored around the versus mark. */
+.home-match-teams {
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+  gap: 11px;
+  padding: 0 6px;
+}
+.home-team-line {
+  width: 100%;
+  gap: 9px;
+}
+.home-team-line:not(.away) {
+  justify-content: flex-end;
+  text-align: right;
+}
+.home-team-line:not(.away) .team-crest {
+  order: 2;
+}
+.home-team-line.away {
+  justify-content: flex-start;
+  text-align: left;
+}
+.home-team-line strong {
+  flex: 0 1 auto;
+  max-width: calc(100% - 46px);
+}
+.home-versus {
+  width: 28px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  color: #777082;
+}
+
+@media (max-width: 680px) {
+  /* Mobile stays vertically readable instead of mirroring the first club. */
+  .home-match-teams {
+    padding: 0 !important;
+  }
+  .home-team-line,
+  .home-team-line:not(.away),
+  .home-team-line.away {
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .home-team-line:not(.away) .team-crest {
+    order: initial;
+  }
+  .home-team-line strong {
+    max-width: none;
+  }
+
+  .home-match-row.is-finished .home-match-score-block.own-score.exact {
+    border-color: rgba(83, 224, 161, .22) !important;
+  }
+  .home-match-row.is-finished .home-match-score-block.own-score.winner {
+    border-color: rgba(91, 150, 255, .22) !important;
+  }
+  .home-match-row.is-finished .home-match-score-block.own-score.miss {
+    border-color: rgba(238, 92, 125, .22) !important;
+  }
+}
+
+
+/* ==========================================================
+   v1.21 — live match-card fixes + local Como/Fenerbahce crests
+   ========================================================== */
+
+/* The Home column is narrower than the full page. Keep the action/result
+   columns inside the card at 100% browser zoom instead of clipping them. */
+.home-match-row.is-sent {
+  grid-template-columns: 64px minmax(220px, 1fr) minmax(170px, 210px) !important;
+  gap: 10px !important;
+}
+.home-match-row.is-sent .home-match-action-area {
+  grid-column: 3 !important;
+  display: block !important;
+  min-width: 0;
+}
+.home-match-row.is-sent .home-sent-state {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  align-items: stretch;
+  padding-left: 12px;
+}
+.home-match-row.is-sent .home-edit-prediction-button {
+  width: 100%;
+  min-height: 36px;
+  justify-self: stretch;
+  align-self: stretch;
+  padding-inline: 12px;
+}
+
+.home-match-row.is-finished {
+  grid-template-columns: 64px minmax(200px, 1fr) 82px 82px 126px !important;
+  gap: 10px !important;
+}
+.home-match-row.is-finished .home-match-feedback {
+  margin-left: 0 !important;
+  min-width: 0;
+}
+
+/* Revert the direct green/blue/red paint on "Seu palpite".
+   Result meaning belongs to the small feedback card again. */
+.home-match-row.is-finished .home-match-score-block.own-score.exact,
+.home-match-row.is-finished .home-match-score-block.own-score.winner,
+.home-match-row.is-finished .home-match-score-block.own-score.miss {
+  background: transparent !important;
+  border-left-color: rgba(175,155,225,.10) !important;
+}
+.home-match-row.is-finished .home-match-score-block.own-score.exact span,
+.home-match-row.is-finished .home-match-score-block.own-score.exact strong,
+.home-match-row.is-finished .home-match-score-block.own-score.winner span,
+.home-match-row.is-finished .home-match-score-block.own-score.winner strong,
+.home-match-row.is-finished .home-match-score-block.own-score.miss span,
+.home-match-row.is-finished .home-match-score-block.own-score.miss strong {
+  color: inherit !important;
+}
+.home-match-row.is-finished .home-match-score-block.own-score span {
+  color: #7e778c !important;
+}
+.home-match-row.is-finished .home-match-score-block.own-score strong {
+  color: #f6f3fb !important;
+}
+
+@media (max-width: 1260px) and (min-width: 921px) {
+  .home-match-row.is-sent {
+    grid-template-columns: 58px minmax(210px, 1fr) minmax(160px, 195px) !important;
+  }
+  .home-match-row.is-finished {
+    grid-template-columns: 58px minmax(185px, 1fr) 78px 78px 116px !important;
+    gap: 8px !important;
+  }
+  .home-match-row.is-finished .home-match-score-block strong { font-size: 17px; }
+  .home-match-row.is-finished .home-match-feedback strong,
+  .home-match-row.is-finished .home-match-feedback span { font-size: 10px; }
+}
+
+@media (max-width: 920px) {
+  .home-match-row.is-sent {
+    grid-template-columns: 55px minmax(0,1fr) !important;
+  }
+  .home-match-row.is-sent .home-match-action-area {
+    grid-column: 1 / -1 !important;
+    padding: 10px 4px 0;
+    border-top: 1px solid rgba(175,155,225,.09);
+  }
+  .home-match-row.is-sent .home-sent-state {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .home-match-row.is-finished {
+    grid-template-columns: 55px minmax(0,1fr) 105px 128px !important;
+    gap: 9px !important;
+  }
+  .home-match-row.is-finished .home-match-score-block.result-score { grid-column: 3 !important; }
+  .home-match-row.is-finished .home-match-score-block.own-score { grid-column: 4 !important; }
+  .home-match-row.is-finished .home-match-feedback {
+    grid-column: 1 / -1 !important;
+    margin: -2px 0 2px 64px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .home-match-row.is-finished,
+  .home-match-row.is-sent {
+    grid-template-columns: 52px minmax(0,1fr) !important;
+  }
+  .home-match-row.is-finished .home-match-score-block.result-score,
+  .home-match-row.is-finished .home-match-score-block.own-score,
+  .home-match-row.is-finished .home-match-feedback {
+    grid-column: 1 / -1 !important;
+    margin: 0 !important;
+  }
+}
