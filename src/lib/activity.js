@@ -60,7 +60,8 @@ export function activityText(item) {
 export function activityTone(action = '') {
   if (action === 'prediction_created' || action === 'prediction_updated') return 'purple'
   if (action === 'result_updated') return 'green'
-  if (action === 'leader_changed' || action === 'second_changed') return 'gold'
+  if (action === 'leader_changed') return 'gold'
+  if (action === 'second_changed') return 'silver'
   if (action === 'season_deleted' || action === 'round_deleted') return 'red'
   if (action.includes('season') || action.includes('round')) return 'blue'
   return 'neutral'

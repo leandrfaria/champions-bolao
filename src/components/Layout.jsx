@@ -24,7 +24,7 @@ const mobilePrimaryItems = [
 ]
 
 export default function Layout() {
-  const { profile, isAdmin, logout } = useAuth()
+  const { profile, isAdmin, logout, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [profileTarget, setProfileTarget] = useState(null)
@@ -40,6 +40,13 @@ export default function Layout() {
   useEffect(() => {
     setMobileMoreOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!profile?.id) return
+    refreshProfile?.().catch(() => {})
+    // profile id is the only signal we need here; avoid re-fetch loops from a recreated callback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id])
 
   async function handleLogout() {
     await logout()
@@ -93,7 +100,7 @@ export default function Layout() {
 
           <div className="sidebar-footer">
             <div className="user-chip">
-              <UserAvatar profile={profile} size="sidebar" />
+              <UserAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} size="sidebar" />
               <div>
                 <strong>{profile?.display_name || 'Jogador'}</strong>
                 <span>{isAdmin ? 'Administrador · jogador' : 'Jogador'}</span>

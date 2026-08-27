@@ -1,0 +1,28 @@
+CHAMPIONS BOLÃO — ATUALIZAÇÃO v1.4
+
+SE VOCÊ JÁ ESTÁ USANDO A v1.3:
+
+1. Abra o Supabase.
+2. Vá em SQL Editor > New query.
+3. Abra o arquivo supabase/upgrade-v1.4.sql deste projeto.
+4. Copie todo o conteúdo, cole no SQL Editor e clique em Run.
+5. Faça o deploy da nova versão do frontend.
+
+O SQL adiciona:
+- profiles.avatar_path;
+- bucket privado avatars;
+- leitura das fotos apenas para usuários autenticados;
+- upload, troca e exclusão apenas para administradores;
+- limite de 5 MB por imagem;
+- JPG, PNG e WebP como formatos aceitos.
+
+Depois disso:
+Administração > Fotos dos jogadores
+
+O administrador pode adicionar, trocar ou remover a foto de qualquer participante.
+
+IMPORTANTE:
+- O bucket NÃO é público.
+- As fotos são exibidas por URLs assinadas temporárias.
+- Nenhuma chave secreta nova é necessária no frontend.
+- Se você estiver instalando o banco do zero, execute apenas supabase/setup.sql; ele já inclui tudo da v1.4.

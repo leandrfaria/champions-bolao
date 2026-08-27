@@ -1,0 +1,24 @@
+CHAMPIONS BOLÃO — v1.5
+
+Esta atualização não exige migration no Supabase.
+
+Principais mudanças:
+- Home reconstruída como central da rodada atual.
+- Rodadas reconstruída como histórico visual da temporada.
+- Novo modo Individual/Geral em Rodadas.
+- Filtros de fase e seletor de temporada.
+- Expansão inline das rodadas.
+- Estatísticas por rodada e evolução de posição.
+- Classificação e atividades compactas na Home.
+- Resolver central de escudos reais dos clubes com fallback seguro.
+- Sidebar refinada.
+- Nenhum participante ou quantidade de participantes foi hardcoded.
+- Feed da Home não revela placares apostados.
+
+Deploy:
+1. mantenha as mesmas variáveis de ambiente da v1.4 na Vercel;
+2. execute npm install;
+3. execute npm run build;
+4. publique normalmente.
+
+Não há SQL novo para executar nesta versão.

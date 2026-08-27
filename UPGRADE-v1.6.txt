@@ -1,0 +1,23 @@
+CHAMPIONS BOLÃO — v1.6
+
+O QUE MUDOU
+- Meus palpites foi reconstruído como histórico pessoal.
+- Jogos sem palpite deixaram de aparecer nessa tela.
+- Filtros: Em aberto, Finalizados, Todos e Rodada.
+- Desempenho compacto e gráfico real de pontos por rodada.
+- Palpites em aberto podem ser editados enquanto a regra de horário permitir.
+- Histórico finalizado por rodada com escudos, resultado, palpite e pontos.
+- Classificação reconstruída com Geral / Por rodada.
+- Top 3 com foto cadastrada ou iniciais como fallback.
+- Destaques reais da temporada.
+- Tabela principal sem “Última rodada” e sem “Mov.”.
+- Ranking usa participantes reais, sem limite fixo.
+- Empates nos três critérios recebem a mesma posição.
+
+BANCO DE DADOS
+Não há SQL novo para executar nesta versão.
+Mantenha o banco configurado pela v1.4 (incluindo avatars) e as proteções da v1.2.
+
+DEPLOY
+Mantenha VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY configuradas na Vercel.
+Nenhuma credencial real foi adicionada ao repositório.

@@ -1,0 +1,11 @@
+CHAMPIONS BOLÃO — UPGRADE v1.8
+
+1. Se o banco já está na v1.7, execute uma vez:
+   supabase/upgrade-v1.8.sql
+
+2. A migration adiciona apenas rounds.closed_at.
+   Ela NÃO muda a regra de bloqueio dos palpites.
+
+3. "Encerrar rodada" na Administração só é habilitado quando todos os jogos da rodada já possuem resultado.
+
+4. Nenhuma nova variável de ambiente foi adicionada.

@@ -1,0 +1,22 @@
+CHAMPIONS BOLÃO — v1.15
+
+Atualização exclusivamente visual/responsiva para mobile nas telas Início e Rodadas.
+
+Principais mudanças:
+- Home reorganizada para smartphones entre 360px e 430px.
+- Resumo da rodada em grid 2x2 no mobile.
+- Jogos reorganizados em layout mobile-first.
+- Ranking e atividades mais compactos no mobile.
+- Rodadas com filtros de fase removidos apenas no mobile.
+- Individual/Geral e ordenação passam a ser os controles principais no mobile.
+- Cards de rodada e rankings adaptados para listas sem overflow horizontal.
+- Bottom navigation mobile reduzida a 5 itens: Início, Rodadas, Classificação, Atividades e Mais.
+- Menu “Mais” reúne Meus palpites, Sobre, Administração (quando aplicável) e Sair.
+- Suporte a safe-area inferior para iPhones.
+
+Desktop:
+- Nenhum redesign foi aplicado aos layouts desktop de Início e Rodadas.
+
+Supabase:
+- Nenhuma migration nova é necessária.
+- Banco compatível com a estrutura existente da v1.14.

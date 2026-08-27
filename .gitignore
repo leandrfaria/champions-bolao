@@ -20,5 +20,3 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
-
-*.txt

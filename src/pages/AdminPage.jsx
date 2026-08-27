@@ -46,17 +46,19 @@ async function prepareAvatarFile(file) {
     const side = Math.min(width, height)
     // A small, consistent crop avoids avatars where the person looks tiny inside the circle.
     // Keep a slight upward bias on portrait photos so face + shirt remain visible.
-    const cropSide = side * 0.92
+    const cropSide = side * 0.98
     const sx = Math.max(0, (width - cropSide) / 2)
-    const portraitOffset = height > width ? (height - cropSide) * 0.30 : (height - cropSide) / 2
-    const sy = Math.max(0, portraitOffset)
+    const portraitOffset = height > width ? (height - cropSide) * 0.18 : (height - cropSide) / 2
+    const sy = Math.max(0, Math.min(height - cropSide, portraitOffset))
     const canvas = document.createElement('canvas')
-    canvas.width = 768
-    canvas.height = 768
+    canvas.width = 1024
+    canvas.height = 1024
     const context = canvas.getContext('2d')
-    context.drawImage(image, sx, sy, cropSide, cropSide, 0, 0, 768, 768)
+    context.imageSmoothingEnabled = true
+    context.imageSmoothingQuality = 'high'
+    context.drawImage(image, sx, sy, cropSide, cropSide, 0, 0, 1024, 1024)
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92))
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.96))
     if (!blob) throw new Error('Não foi possível preparar a imagem.')
     return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'avatar'}.webp`, { type: 'image/webp' })
   } finally {

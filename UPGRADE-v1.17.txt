@@ -1,0 +1,17 @@
+Champions Bolão v1.17
+
+Atualização exclusivamente visual/estrutural para mobile nas telas Sobre e Administração.
+
+Supabase:
+- nenhuma migration nova;
+- não execute SQL adicional se o banco já está atualizado até upgrade-v1.11.sql.
+
+Desktop:
+- nenhuma mudança intencional de layout nas páginas Sobre e Administração.
+
+Mobile:
+- Sobre reconstruído como regulamento editorial/timeline;
+- Administração compacta e operacional;
+- tabs e ações adaptadas para toque;
+- CTA contextual para adicionar jogo;
+- resultados, participantes e modais adaptados para 360–430 px.

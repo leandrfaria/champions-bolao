@@ -1,0 +1,9 @@
+Champions Bolão v1.13
+
+- Rodadas agora podem ser ordenadas do 1 para a última ou em ordem inversa.
+- Removido o antigo marcador visual da timeline de rodadas.
+- Modo Geral de Rodadas usa estatísticas agregadas da temporada e das rodadas.
+- Times ficam agrupados visualmente nas tabelas de Rodadas e Meus palpites.
+- Avatares foram ampliados e padronizados para preencher todo o círculo.
+
+Supabase: nenhuma migration nova é necessária nesta versão.

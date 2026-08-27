@@ -132,9 +132,20 @@ export default function DashboardPage() {
     await load()
   }
 
+  const currentMatches = useMemo(() => {
+    const list = [...(round?.matches || [])]
+    const group = (match) => {
+      const hasOwnPrediction = ownPredictionMap.has(match.id)
+      if (!isLocked(match) && !hasOwnPrediction) return 0
+      if (!isLocked(match) && hasOwnPrediction) return 1
+      if (!hasResult(match)) return 2
+      return 3
+    }
+    return list.sort((a, b) => group(a) - group(b) || new Date(a.kickoff_at) - new Date(b.kickoff_at))
+  }, [round?.matches, ownPredictionMap])
+
   if (loading) return <Loading label="Carregando a rodada atual..." />
 
-  const currentMatches = round?.matches || []
   const roundInProgress = currentMatches.some((match) => !hasResult(match))
   const ownCount = currentMatches.filter((match) => ownPredictionMap.has(match.id)).length
   const openMatches = currentMatches.filter((match) => !isLocked(match)).length

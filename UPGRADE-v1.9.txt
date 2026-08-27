@@ -1,0 +1,12 @@
+CHAMPIONS BOLÃO — UPGRADE v1.9
+
+1. Se o banco já está na v1.8, execute uma vez:
+   supabase/upgrade-v1.9.sql
+
+2. Essa migration corrige a persistência de fotos dos participantes.
+   O Storage da v1.4 já existia, mas faltava conceder ao role authenticated
+   permissão de UPDATE somente na coluna profiles.avatar_path.
+
+3. O RLS continua protegendo a tabela: apenas administradores podem atualizar a foto.
+
+4. Nenhuma nova variável de ambiente foi adicionada.
