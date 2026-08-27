@@ -1,6 +1,0 @@
-CHAMPIONS BOLÃO v1.10
-
-- Corrige responsividade dos cards pendentes na Home.
-- Palpites na Home agora abrem um modal rápido, com digitação e botões -/+.
-- O modal mostra quem ainda não enviou palpite para a partida.
-- Não há alteração de banco nesta versão. Nenhum SQL novo precisa ser executado.
