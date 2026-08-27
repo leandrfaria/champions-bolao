@@ -1,0 +1,12 @@
+CHAMPIONS BOLÃO — v1.12
+
+- Avatares maiores em todo o produto.
+- Clique em qualquer avatar para abrir o perfil resumido do participante.
+- Clique na foto dentro do perfil para abrir a imagem em tela cheia.
+- Revisão ampla de responsividade, com foco em iPhone 13 (390 px).
+- Textos da página Atividades aumentados para melhorar leitura.
+- Visão geral da Administração reorganizada e menos carregada.
+- Removido o glifo visual incorreto na timeline da página Rodadas.
+
+BANCO DE DADOS
+Nenhuma migration nova é necessária. O schema da v1.11 continua compatível.
