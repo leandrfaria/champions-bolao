@@ -5615,3 +5615,98 @@ select, input, button { max-width: 100%; }
   .admin-participant-person .avatar.medium { width: 46px !important; height: 46px !important; flex-basis: 46px; }
   .admin-participant-row > :nth-child(2) { margin-left: 56px !important; }
 }
+
+
+/* ==========================================================
+   v1.18 — bugfixes from live validation
+   ========================================================== */
+.home-sent-state {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 11px;
+  border-left: 1px solid rgba(175,155,225,.1);
+}
+.sent-score-card {
+  border-left: 0 !important;
+  padding-left: 0 !important;
+}
+.home-sent-label {
+  color: #67e2a9 !important;
+}
+.home-edit-prediction-button {
+  min-height: 36px;
+  justify-self: start;
+  padding: 0 14px;
+  border: 1px solid rgba(169,119,255,.28);
+  border-radius: 9px;
+  color: #d8cff4;
+  background: rgba(255,255,255,.025);
+  font-size: 11px;
+  font-weight: 850;
+}
+.home-edit-prediction-button:hover {
+  color: #fff;
+  background: rgba(255,255,255,.05);
+}
+.home-standing-row {
+  grid-template-columns: 28px minmax(0,1fr) auto !important;
+}
+.home-standing-player {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.home-standing-copy {
+  min-width: 0;
+}
+.home-standing-copy strong,
+.home-standing-copy small {
+  display: block;
+}
+.sidebar-footer .avatar.sidebar,
+.user-chip .avatar.sidebar {
+  width: 52px !important;
+  height: 52px !important;
+  flex: 0 0 52px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+.sidebar-footer .avatar.sidebar .avatar-media,
+.user-chip .avatar.sidebar .avatar-media,
+.sidebar-footer .avatar.sidebar img,
+.user-chip .avatar.sidebar img {
+  border-radius: 50% !important;
+}
+.home-bet-backdrop,
+.modal-backdrop,
+.participant-profile-backdrop {
+  z-index: 9999 !important;
+}
+.home-bet-modal,
+.admin-modal,
+.participant-profile-modal {
+  overscroll-behavior: contain;
+}
+.home-bet-actions,
+.admin-modal-footer {
+  z-index: 2;
+}
+@media (max-width: 680px) {
+  .home-sent-state {
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 10px;
+    border-top: 1px solid rgba(175,155,225,.09);
+  }
+  .home-match-action-area {
+    padding-top: 0 !important;
+    border-top: 0 !important;
+  }
+  .home-edit-prediction-button {
+    width: 100%;
+    min-height: 42px;
+  }
+}

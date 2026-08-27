@@ -1,5 +1,16 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
+
 export default function AdminModal({ title, eyebrow, children, onClose, wide = false, footer }) {
-  return (
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  const modalContent = (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }}>
       <section className={`admin-modal ${wide ? 'admin-modal-wide' : ''}`.trim()} role="dialog" aria-modal="true" aria-label={title}>
         <header className="admin-modal-header">
@@ -14,4 +25,7 @@ export default function AdminModal({ title, eyebrow, children, onClose, wide = f
       </section>
     </div>
   )
+
+  if (typeof document === "undefined") return modalContent
+  return createPortal(modalContent, document.body)
 }

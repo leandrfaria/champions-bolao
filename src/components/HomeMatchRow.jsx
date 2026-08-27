@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import HomeBetModal from './HomeBetModal'
 import TeamCrest from './TeamCrest'
-import { calculatePoints, hasResult, isLocked, timeUntilStart } from '../lib/utils'
+import { calculatePoints, hasResult, isLocked } from '../lib/utils'
 
 function dateParts(value) {
   const date = new Date(value)
@@ -77,17 +77,13 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
         ) : (
           <div className="home-match-action-area">
             {ownPrediction ? (
-              <>
-                <div className="home-match-score-block own-score editable-score">
-                  <span>Seu palpite</span>
+              <div className="home-sent-state">
+                <div className="home-match-score-block own-score editable-score sent-score-card">
+                  <span className="home-sent-label">Seu palpite</span>
                   <strong>{ownPrediction.home_score} <i>×</i> {ownPrediction.away_score}</strong>
                 </div>
-                <div className="home-match-feedback sent-feedback">
-                  <strong>PALPITE ENVIADO</strong>
-                  <span>{timeUntilStart(match.kickoff_at)}</span>
-                  <button onClick={() => setBetModalOpen(true)}>Alterar</button>
-                </div>
-              </>
+                <button type="button" className="home-edit-prediction-button" onClick={() => setBetModalOpen(true)}>Alterar palpite</button>
+              </div>
             ) : (
               <div className="home-pending-action">
                 <button

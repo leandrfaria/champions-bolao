@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import ScorePicker from './ScorePicker'
 import TeamCrest from './TeamCrest'
 import UserAvatar from './UserAvatar'
@@ -30,7 +31,13 @@ export default function HomeBetModal({ match, ownPrediction, presence = [], prof
       if (event.key === 'Escape' && !saving) onClose?.()
     }
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
   }, [onClose, saving])
 
   async function save() {
@@ -59,7 +66,7 @@ export default function HomeBetModal({ match, ownPrediction, presence = [], prof
     }
   }
 
-  return (
+  const modalContent = (
     <div className="home-bet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onClose?.() }}>
       <section className="home-bet-modal" role="dialog" aria-modal="true" aria-labelledby={`bet-title-${match.id}`}>
         <header className="home-bet-modal-header">
@@ -125,4 +132,7 @@ export default function HomeBetModal({ match, ownPrediction, presence = [], prof
       </section>
     </div>
   )
+
+  if (typeof document === 'undefined') return modalContent
+  return createPortal(modalContent, document.body)
 }

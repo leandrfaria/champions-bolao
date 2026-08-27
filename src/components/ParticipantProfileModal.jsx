@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import TrophyIcon from './TrophyIcon'
 import UserAvatar, { getAvatarUrl } from './UserAvatar'
 import { supabase } from '../lib/supabase'
@@ -54,7 +55,13 @@ export default function ParticipantProfileModal({ profile, onClose }) {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
   }, [photoOpen, onClose])
 
   useEffect(() => {
@@ -130,7 +137,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const stats = details?.stats
   const rankingLabel = useMemo(() => stats?.rank ? `${stats.rank}º` : '—', [stats?.rank])
 
-  return (
+  const modalContent = (
     <>
       <div className="participant-profile-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }}>
         <section className="participant-profile-modal" role="dialog" aria-modal="true" aria-label={`Perfil de ${target.display_name || 'participante'}`}>
@@ -206,4 +213,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
       )}
     </>
   )
+
+  if (typeof document === 'undefined') return modalContent
+  return createPortal(modalContent, document.body)
 }

@@ -212,8 +212,13 @@ export default function DashboardPage() {
                       return (
                         <div key={item.id} className={`home-standing-row ${item.id === user.id ? 'mine' : ''} ${separated ? 'separated' : ''}`}>
                           <span className={`home-standing-place place-${realIndex + 1}`}>{realIndex + 1}</span>
-                          <UserAvatar profile={item} size="tiny" />
-                          <div><strong>{item.display_name}</strong>{item.id === user.id && gap > 0 && <small>{gap} {gap === 1 ? 'ponto' : 'pontos'} atrás do líder</small>}</div>
+                          <div className="home-standing-player">
+                            <UserAvatar profile={item} size="tiny" />
+                            <div className="home-standing-copy">
+                              <strong>{item.display_name}</strong>
+                              {item.id === user.id && gap > 0 && <small>{gap} {gap === 1 ? 'ponto' : 'pontos'} atrás do líder</small>}
+                            </div>
+                          </div>
                           <b>{item.points}</b>
                         </div>
                       )

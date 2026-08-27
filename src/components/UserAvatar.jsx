@@ -27,6 +27,9 @@ export default function UserAvatar({ profile, size = '', className = '', alt, in
   const [failed, setFailed] = useState(false)
   const [preview, setPreview] = useState(null)
   const avatarRef = useRef(null)
+  const longPressTimerRef = useRef(null)
+  const longPressActiveRef = useRef(false)
+  const suppressClickRef = useRef(false)
   const participantProfile = useParticipantProfile()
   const displayName = profile?.display_name || 'Jogador'
   const path = profile?.avatar_path || null
@@ -50,8 +53,19 @@ export default function UserAvatar({ profile, size = '', className = '', alt, in
   const classes = ['avatar', size, className, canOpen ? 'avatar-interactive' : ''].filter(Boolean).join(' ')
   const hasPhoto = Boolean(url && !failed)
 
+  function isCoarsePointer() {
+    return typeof window !== 'undefined' && Boolean(window.matchMedia?.('(pointer: coarse)').matches)
+  }
+
   function openProfile(event) {
     if (!canOpen) return
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    setPreview(null)
     event.stopPropagation()
     participantProfile.openParticipant(profile)
   }
@@ -61,6 +75,41 @@ export default function UserAvatar({ profile, size = '', className = '', alt, in
     event.preventDefault()
     event.stopPropagation()
     participantProfile.openParticipant(profile)
+  }
+
+  function clearLongPressTimer() {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
+  function handleTouchStart() {
+    if (!hasPhoto || !isCoarsePointer()) return
+    longPressActiveRef.current = false
+    clearLongPressTimer()
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressActiveRef.current = true
+      showPreview()
+    }, 420)
+  }
+
+  function handleTouchEnd(event) {
+    clearLongPressTimer()
+    if (longPressActiveRef.current) {
+      event.preventDefault()
+      event.stopPropagation()
+      longPressActiveRef.current = false
+      suppressClickRef.current = true
+      setPreview(null)
+      window.setTimeout(() => { suppressClickRef.current = false }, 0)
+    }
+  }
+
+  function handleTouchCancel() {
+    clearLongPressTimer()
+    longPressActiveRef.current = false
+    setPreview(null)
   }
 
   function showPreview() {
@@ -84,10 +133,13 @@ export default function UserAvatar({ profile, size = '', className = '', alt, in
         tabIndex={canOpen ? 0 : undefined}
         onClick={openProfile}
         onKeyDown={handleKeyDown}
-        onMouseEnter={showPreview}
+        onMouseEnter={() => { if (!isCoarsePointer()) showPreview() }}
         onMouseLeave={() => setPreview(null)}
-        onFocus={showPreview}
+        onFocus={() => { if (!isCoarsePointer()) showPreview() }}
         onBlur={() => setPreview(null)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         aria-label={canOpen ? `Abrir perfil de ${displayName}` : displayName}
       >
         <span className="avatar-media">
