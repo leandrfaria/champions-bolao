@@ -100,7 +100,7 @@ export default function Layout() {
 
           <div className="sidebar-footer">
             <div className="user-chip">
-              <UserAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} size="sidebar" />
+              <UserAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} size="sidebar" refreshPath />
               <div>
                 <strong>{profile?.display_name || 'Jogador'}</strong>
                 <span>{isAdmin ? 'Administrador · jogador' : 'Jogador'}</span>

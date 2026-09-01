@@ -25,6 +25,7 @@ export default function HomeBetModal({ match, ownPrediction, presence = [], prof
   const profileMap = useMemo(() => new Map(profiles.map((profile) => [profile.id, profile])), [profiles])
   const pendingUsers = presence.filter((item) => !item.has_predicted)
   const predictedCount = presence.filter((item) => item.has_predicted).length
+  const selectedByProfile = match.selected_by_user_id ? profileMap.get(match.selected_by_user_id) : null
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -77,6 +78,13 @@ export default function HomeBetModal({ match, ownPrediction, presence = [], prof
           </div>
           <button type="button" className="home-bet-close" onClick={onClose} disabled={saving} aria-label="Fechar">×</button>
         </header>
+
+        {selectedByProfile && (
+          <div className="home-bet-selected-by">
+            <span>Jogo escolhido por</span>
+            <div><UserAvatar profile={selectedByProfile} size="tiny" interactive={false} /><strong>{selectedByProfile.display_name}</strong></div>
+          </div>
+        )}
 
         <div className="home-bet-matchup">
           <div className="home-bet-team">

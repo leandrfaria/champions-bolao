@@ -22,8 +22,9 @@ export function clearAvatarCache(path) {
   if (path) signedUrlCache.delete(path)
 }
 
-export default function UserAvatar({ profile, size = '', className = '', alt, interactive = true }) {
+export default function UserAvatar({ profile, size = '', className = '', alt, interactive = true, refreshPath = false }) {
   const [url, setUrl] = useState(null)
+  const [resolvedPath, setResolvedPath] = useState(profile?.avatar_path || null)
   const [failed, setFailed] = useState(false)
   const [preview, setPreview] = useState(null)
   const avatarRef = useRef(null)
@@ -32,8 +33,28 @@ export default function UserAvatar({ profile, size = '', className = '', alt, in
   const suppressClickRef = useRef(false)
   const participantProfile = useParticipantProfile()
   const displayName = profile?.display_name || 'Jogador'
-  const path = profile?.avatar_path || null
+  const path = resolvedPath
   const canOpen = Boolean(interactive && profile?.id && participantProfile?.openParticipant)
+
+  useEffect(() => {
+    let active = true
+    const initialPath = profile?.avatar_path || null
+    setResolvedPath(initialPath)
+
+    if (!refreshPath || !profile?.id) return () => { active = false }
+
+    supabase
+      .from('profiles')
+      .select('avatar_path')
+      .eq('id', profile.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!active || error) return
+        setResolvedPath(data?.avatar_path || null)
+      })
+
+    return () => { active = false }
+  }, [profile?.id, profile?.avatar_path, refreshPath])
 
   useEffect(() => {
     let active = true

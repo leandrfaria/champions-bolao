@@ -21,7 +21,7 @@ const TABS = [
 
 const emptySeason = { name: 'Champions League 2026/27' }
 const emptyRound = { name: '', stage: 'Fase de liga', sort_order: 1, season_id: '' }
-const emptyMatch = { home_team: '', away_team: '', match_date: '', match_time: '', round_id: '' }
+const emptyMatch = { home_team: '', away_team: '', match_date: '', match_time: '', round_id: '', selected_by_user_id: '' }
 
 function sanitizeScore(value) {
   if (value === '') return ''
@@ -398,7 +398,7 @@ export default function AdminPage() {
     setMatchSaved(false)
     setMatchDialog({
       mode: 'edit', match,
-      form: { round_id: match.round_id, home_team: match.home_team, away_team: match.away_team, match_date: local[0] || '', match_time: (local[1] || '').slice(0, 5) },
+      form: { round_id: match.round_id, home_team: match.home_team, away_team: match.away_team, match_date: local[0] || '', match_time: (local[1] || '').slice(0, 5), selected_by_user_id: match.selected_by_user_id || '' },
     })
   }
 
@@ -409,12 +409,12 @@ export default function AdminPage() {
   async function saveMatch(event) {
     event.preventDefault()
     const form = matchDialog.form
-    if (!form.round_id || !form.home_team.trim() || !form.away_team.trim() || !form.match_date || !form.match_time) return setError('Preencha todos os dados do jogo.')
+    if (!form.round_id || !form.home_team.trim() || !form.away_team.trim() || !form.match_date || !form.match_time || !form.selected_by_user_id) return setError('Preencha todos os dados do jogo, incluindo quem escolheu a partida.')
     const startDate = new Date(`${form.match_date}T${form.match_time}`)
     if (Number.isNaN(startDate.getTime())) return setError('Informe uma data e horário válidos.')
     const targetRound = rounds.find((round) => round.id === form.round_id)
     if (targetRound?.closed_at) return setError('A rodada selecionada já foi encerrada.')
-    const payload = { round_id: form.round_id, home_team: form.home_team.trim(), away_team: form.away_team.trim(), kickoff_at: startDate.toISOString() }
+    const payload = { round_id: form.round_id, home_team: form.home_team.trim(), away_team: form.away_team.trim(), kickoff_at: startDate.toISOString(), selected_by_user_id: form.selected_by_user_id }
     setBusy(true)
     const response = matchDialog.mode === 'edit'
       ? await supabase.from('matches').update(payload).eq('id', matchDialog.match.id)
@@ -423,7 +423,7 @@ export default function AdminPage() {
     if (response.error) return setError(response.error.message)
     if (matchDialog.mode === 'create') {
       setMatchSaved(true)
-      setMatchDialog((current) => ({ ...current, form: { ...emptyMatch, round_id: current.form.round_id } }))
+      setMatchDialog((current) => ({ ...current, form: { ...emptyMatch, round_id: current.form.round_id, selected_by_user_id: current.form.selected_by_user_id } }))
       flash('Jogo adicionado com sucesso.')
       await load()
     } else {
@@ -969,9 +969,10 @@ export default function AdminPage() {
             <form id="match-admin-form" onSubmit={saveMatch} className="admin-modal-form match-form-modern">
               <label className="field"><span>Rodada</span><select value={matchDialog.form.round_id} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, round_id: event.target.value } })}>{seasonRounds.filter((round) => !round.closed_at).map((round) => <option value={round.id} key={round.id}>{round.name} · {round.stage}</option>)}</select></label>
               <div className="field-grid team-grid"><TeamPicker label="Mandante" value={matchDialog.form.home_team} onChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, home_team: value } })} knownTeams={knownTeams} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} /><TeamPicker label="Visitante" value={matchDialog.form.away_team} onChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, away_team: value } })} knownTeams={knownTeams} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} /></div>
+              <label className="field match-picked-by-field"><span>Escolhido por</span><select value={matchDialog.form.selected_by_user_id} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, selected_by_user_id: event.target.value } })}><option value="">Selecione o participante</option>{participants.map((participant) => <option value={participant.id} key={participant.id}>{participant.display_name}</option>)}</select><small>Participante responsável por escolher esta partida para a rodada.</small></label>
               <div className="datetime-composer"><label className="date-time-field"><span className="date-time-icon">▦</span><div><small>Data</small><input type="date" value={matchDialog.form.match_date} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_date: event.target.value } })} /></div></label><label className="date-time-field"><span className="date-time-icon clock-icon">◷</span><div><small>Horário</small><input type="time" value={matchDialog.form.match_time} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_time: event.target.value } })} /></div></label></div>
               {matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0 && <div className="admin-inline-warning">Já existem {predictionCount(matchDialog.match.id)} palpites neste jogo. Clubes e rodada ficam bloqueados para evitar associar palpites a outro confronto; data e horário ainda podem ser corrigidos antes do início.</div>}
-              <div className="admin-match-preview"><span>Prévia</span><div><TeamCrest team={matchDialog.form.home_team} size="medium" /><strong>{matchDialog.form.home_team || 'Mandante'}</strong><i>×</i><strong>{matchDialog.form.away_team || 'Visitante'}</strong><TeamCrest team={matchDialog.form.away_team} size="medium" /></div><small>{matchDialog.form.match_date || 'Data'} · {matchDialog.form.match_time || 'Horário'}</small></div>
+              <div className="admin-match-preview"><span>Prévia</span><div><TeamCrest team={matchDialog.form.home_team} size="medium" /><strong>{matchDialog.form.home_team || 'Mandante'}</strong><i>×</i><strong>{matchDialog.form.away_team || 'Visitante'}</strong><TeamCrest team={matchDialog.form.away_team} size="medium" /></div><small>{matchDialog.form.match_date || 'Data'} · {matchDialog.form.match_time || 'Horário'}</small>{matchDialog.form.selected_by_user_id && <small className="admin-match-picked-preview">Escolhido por <b>{participants.find((participant) => participant.id === matchDialog.form.selected_by_user_id)?.display_name || 'Participante'}</b></small>}</div>
             </form>
           )}
         </AdminModal>

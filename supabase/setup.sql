@@ -44,6 +44,7 @@ create table if not exists public.matches (
   round_id uuid not null references public.rounds(id) on delete cascade,
   home_team text not null check (length(trim(home_team)) > 0),
   away_team text not null check (length(trim(away_team)) > 0),
+  selected_by_user_id uuid references public.profiles(id) on delete set null,
   kickoff_at timestamptz not null,
   home_score integer check (home_score between 0 and 99),
   away_score integer check (away_score between 0 and 99),
@@ -52,6 +53,9 @@ create table if not exists public.matches (
   check ((home_score is null and away_score is null) or (home_score is not null and away_score is not null)),
   check (lower(trim(home_team)) <> lower(trim(away_team)))
 );
+
+alter table public.matches add column if not exists selected_by_user_id uuid references public.profiles(id) on delete set null;
+create index if not exists idx_matches_selected_by_user on public.matches(selected_by_user_id);
 
 create table if not exists public.predictions (
   id uuid primary key default gen_random_uuid(),

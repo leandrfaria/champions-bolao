@@ -6027,3 +6027,71 @@ select, input, button { max-width: 100%; }
     margin: 0 !important;
   }
 }
+
+
+/* ==========================================================
+   v1.22 — jogo escolhido por + sidebar avatar live refresh
+   ========================================================== */
+.match-picked-by-field > small {
+  margin-top: 5px;
+  color: #8e879b;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.admin-match-picked-preview {
+  margin-top: 7px !important;
+  color: #a99bc9 !important;
+}
+.admin-match-picked-preview b { color: #e8e1fa; }
+.home-bet-selected-by {
+  min-height: 48px;
+  margin: 0 18px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(178,153,235,.08);
+  border-bottom: 1px solid rgba(178,153,235,.08);
+  color: #8f879b;
+  font-size: 10px;
+}
+.home-bet-selected-by > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.home-bet-selected-by strong {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ece7f4;
+  font-size: 11px;
+}
+.sidebar-footer .avatar.sidebar .avatar-media {
+  background: linear-gradient(145deg, #30235f, #171233);
+}
+.sidebar-footer .avatar.sidebar .avatar-media > img {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+@media (max-width: 680px) {
+  .home-bet-selected-by {
+    margin-inline: 14px;
+    min-height: 52px;
+    padding-inline: 4px;
+  }
+  .home-bet-selected-by > span { font-size: 10.5px; }
+  .home-bet-selected-by strong { font-size: 11.5px; }
+}
+.sidebar-footer .avatar.sidebar .avatar-fallback,
+.user-chip .avatar.sidebar .avatar-fallback {
+  margin: 0 !important;
+  color: #f6f1ff !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+}
