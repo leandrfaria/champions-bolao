@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { ParticipantProfileContext } from '../context/ParticipantProfileContext'
 import ParticipantProfileModal from './ParticipantProfileModal'
 import TrophyIcon from './TrophyIcon'
-import UserAvatar from './UserAvatar'
+import SidebarAvatar from './SidebarAvatar'
 import NavIcon from './NavIcon'
 
 const navItems = [
@@ -100,7 +100,7 @@ export default function Layout() {
 
           <div className="sidebar-footer">
             <div className="user-chip">
-              <UserAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} size="sidebar" refreshPath />
+              <SidebarAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} />
               <div>
                 <strong>{profile?.display_name || 'Jogador'}</strong>
                 <span>{isAdmin ? 'Administrador · jogador' : 'Jogador'}</span>

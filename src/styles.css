@@ -6095,3 +6095,64 @@ select, input, button { max-width: 100%; }
   font-weight: 850 !important;
   line-height: 1 !important;
 }
+
+
+/* ==========================================================
+   v1.23 — dedicated desktop sidebar avatar
+   The sidebar no longer reuses UserAvatar because .user-chip text
+   selectors affected the nested span structure used by that component.
+   ========================================================== */
+.sidebar-profile-avatar {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  margin: 0;
+  padding: 0;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(174,135,255,.38);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #38276f, #181537);
+  color: #f7f2ff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025);
+  cursor: pointer;
+}
+.sidebar-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.sidebar-profile-avatar > span {
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  display: grid !important;
+  place-items: center;
+  color: #f7f2ff !important;
+  font-size: 15px !important;
+  font-weight: 850;
+  line-height: 1;
+}
+.sidebar-profile-avatar:hover,
+.sidebar-profile-avatar:focus-visible {
+  border-color: rgba(204,183,255,.58);
+  box-shadow: 0 0 0 4px rgba(139,92,246,.08);
+  outline: none;
+}
+.sidebar-collapsed .sidebar-profile-avatar {
+  width: 46px;
+  height: 46px;
+  flex-basis: 46px;
+}
