@@ -105,7 +105,7 @@ Ao publicar, configure estas variáveis de ambiente no painel da Vercel:
 - Regras de pontuação 0/1/3 documentadas.
 - Placar em mata-mata considera 120 minutos quando houver prorrogação; disputa de pênaltis não entra no placar.
 - Desempate oficial aplicado ao ranking: pontos, placares exatos e resultados corretos.
-- Regras do Pix inicial de R$50 e adicional de R$10 do último colocado.
+- Regras do Pix inicial de R$50, premiação dividida em 70% para o 1º, 20% para o 2º e 10% para o 3º, além do adicional de R$10 pago pelo último colocado ao 1º.
 - Regra de escolha dos seis jogos da fase de liga documentada sem fixar uma ordem de participantes.
 - Regra de sorteio substituto quando um responsável não escolhe seus três jogos dentro do prazo.
 

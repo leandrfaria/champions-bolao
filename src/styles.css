@@ -6156,3 +6156,90 @@ select, input, button { max-width: 100%; }
   height: 46px;
   flex-basis: 46px;
 }
+
+
+/* ==========================================================
+   v1.24 — prize split + desktop sidebar viewport fix
+   ========================================================== */
+@media (min-width: 921px) {
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 252px;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .main-content {
+    grid-column: 2;
+  }
+  .app-shell.sidebar-collapsed .sidebar {
+    width: 78px;
+  }
+}
+
+@media (min-width: 921px) and (max-width: 1180px) {
+  .sidebar {
+    width: 218px;
+  }
+  .app-shell.sidebar-collapsed .sidebar {
+    width: 72px;
+  }
+}
+
+
+/* ==========================================================
+   v1.25 — participant deletion controls
+   ========================================================== */
+.admin-participant-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+}
+.admin-participant-delete {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(239, 93, 124, .24);
+  border-radius: 9px;
+  color: #f09aaa;
+  background: rgba(239, 74, 111, .055);
+  font-size: 10px;
+  font-weight: 850;
+}
+.admin-participant-delete:hover {
+  color: #ffdce3;
+  border-color: rgba(239, 93, 124, .42);
+  background: rgba(239, 74, 111, .11);
+}
+
+@media (max-width: 680px) {
+  .admin-participant-actions {
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    align-self: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+  .admin-participant-actions .compact,
+  .admin-participant-delete {
+    width: 100% !important;
+    min-height: 31px !important;
+    padding-inline: 8px !important;
+    font-size: 9px !important;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1081px) {
+  .admin-participant-table-head,
+  .admin-participant-row {
+    grid-template-columns: minmax(220px,1.4fr) 1fr 1fr 190px;
+  }
+}

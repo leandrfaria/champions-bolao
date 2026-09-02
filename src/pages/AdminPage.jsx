@@ -585,6 +585,33 @@ export default function AdminPage() {
     })
   }
 
+  function askDeleteParticipant(participant) {
+    if (!participant || participant.id === currentProfile?.id) return
+    setAvatarDialog(null)
+    setConfirm({
+      tone: 'danger',
+      eyebrow: 'Participantes',
+      title: `Excluir ${participant.display_name}?`,
+      text: 'O usuário será removido do login e do banco. O perfil, os palpites e as estatísticas dele serão apagados, e a classificação será recalculada. Jogos escolhidos por ele continuam existindo, mas ficam sem responsável associado. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir usuário',
+      action: async () => {
+        const { data, error: deleteError } = await supabase.rpc('delete_participant', { p_user_id: participant.id })
+        if (deleteError) throw deleteError
+
+        const deleted = Array.isArray(data) ? data[0] : data
+        const avatarPath = deleted?.deleted_avatar_path || participant.avatar_path
+        clearAvatarCache(avatarPath)
+        if (avatarPath) {
+          const { error: storageError } = await supabase.storage.from('avatars').remove([avatarPath])
+          if (storageError) console.warn('Usuário excluído, mas não foi possível remover o arquivo da foto:', storageError.message)
+        }
+
+        setParticipants((current) => current.filter((item) => item.id !== participant.id))
+        flash(`${participant.display_name} foi excluído do bolão.`)
+      },
+    })
+  }
+
   function askClearActivities() {
     setConfirm({
       tone: 'danger',
@@ -927,13 +954,16 @@ export default function AdminPage() {
           <section className="admin-participants-head"><div><span className="eyebrow">Equipe do bolão</span><h2>Participantes</h2><p>{participants.length} {participants.length === 1 ? 'participante cadastrado' : 'participantes cadastrados'}</p></div><div className="admin-participant-note">Novos usuários continuam sendo criados pelo painel de Authentication do Supabase.</div></section>
           {participants.length ? (
             <div className="admin-participant-table">
-              <div className="admin-participant-table-head"><span>Participante</span><span>Função</span><span>Foto</span><span /></div>
+              <div className="admin-participant-table-head"><span>Participante</span><span>Função</span><span>Foto</span><span>Ações</span></div>
               {participants.map((participant) => (
                 <div className="admin-participant-row" key={participant.id}>
                   <div className="admin-participant-person"><UserAvatar profile={participant} size="medium" /><div><strong>{participant.display_name}</strong><small className="admin-participant-label-desktop">{participant.id === currentProfile?.id ? 'Você' : 'Participante'}</small>{participant.id === currentProfile?.id && <small className="admin-participant-label-mobile">Você</small>}</div></div>
                   <span>{participant.role === 'admin' ? 'Administrador · jogador' : 'Jogador'}</span>
                   <span>{participant.avatar_path ? 'Foto cadastrada' : 'Usando iniciais'}</span>
-                  <button className="secondary-button compact" type="button" onClick={() => openAvatar(participant)}>{participant.avatar_path ? 'Alterar foto' : 'Adicionar foto'}</button>
+                  <div className="admin-participant-actions">
+                    <button className="secondary-button compact" type="button" onClick={() => openAvatar(participant)}>{participant.avatar_path ? 'Alterar foto' : 'Adicionar foto'}</button>
+                    {participant.id !== currentProfile?.id && <button className="admin-participant-delete" type="button" onClick={() => askDeleteParticipant(participant)}>Excluir</button>}
+                  </div>
                 </div>
               ))}
             </div>

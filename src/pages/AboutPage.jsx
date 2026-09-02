@@ -84,7 +84,13 @@ function RegulationItems({ firstOpen = false }) {
       </RegulationItem>
       <RegulationItem title="Entrada e premiação" subtitle="Como funciona a participação financeira.">
         <p>O Pix de entrada é de <strong>R$ 50</strong>, feito no início da Champions. É preciso ter pago para começar a apostar.</p>
-        <p>Quem terminar em último paga mais <strong>R$ 10</strong> diretamente ao vencedor.</p>
+        <p>A premiação arrecadada com as entradas é dividida entre os três primeiros colocados:</p>
+        <ul>
+          <li><strong>1º lugar — 70%</strong> do valor arrecadado.</li>
+          <li><strong>2º lugar — 20%</strong> do valor arrecadado.</li>
+          <li><strong>3º lugar — 10%</strong> do valor arrecadado.</li>
+        </ul>
+        <p>Quem terminar em último paga mais <strong>R$ 10</strong> diretamente ao 1º colocado.</p>
         <p>O site não processa pagamentos; essa parte continua sendo um combinado do grupo.</p>
       </RegulationItem>
       <RegulationItem title="Regras do sistema" subtitle="Privacidade, prazo e participantes.">
