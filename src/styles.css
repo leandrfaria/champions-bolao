@@ -6568,3 +6568,29 @@ select, input, button { max-width: 100%; }
     100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
   }
 }
+
+/* ==========================================================
+   v1.28 — admin-only navigation placement
+   ========================================================== */
+.admin-nav-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 4px;
+}
+.admin-nav-section .nav-link.admin-only-link {
+  margin-top: 0;
+  border-top: 0;
+  border-radius: 11px;
+  padding-top: 0;
+  min-height: 46px;
+}
+.sidebar-collapsed .admin-nav-section {
+  width: 100%;
+}
+.mobile-more-admin-group {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(177,151,238,.12);
+}

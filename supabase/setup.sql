@@ -547,7 +547,8 @@ begin
     raise exception 'Apenas administradores podem limpar as atividades.';
   end if;
 
-  delete from public.audit_logs;
+  delete from public.audit_logs
+  where id is not null;
 
   insert into public.audit_logs (actor_user_id, action, entity_type, metadata)
   values (

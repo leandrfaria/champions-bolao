@@ -60,12 +60,6 @@ export default function Layout() {
     closeParticipant: () => setProfileTarget(null),
   }), [])
 
-  const displayNavItems = useMemo(() => {
-    const items = [...navItems]
-    if (isAdmin) items.splice(2, 0, { to: '/sorteio', label: 'Sorteio', icon: 'roulette' })
-    return items
-  }, [isAdmin])
-
   const morePaths = ['/meus-palpites', '/podio', '/sobre', '/admin', ...(isAdmin ? ['/sorteio'] : [])]
   const moreIsActive = morePaths.some((path) => location.pathname.startsWith(path))
 
@@ -93,17 +87,23 @@ export default function Layout() {
           </div>
 
           <nav className="main-nav">
-            {displayNavItems.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} title={sidebarCollapsed ? item.label : undefined} aria-label={item.label} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span className="nav-icon"><NavIcon name={item.icon} /></span>
                 <span>{item.label}</span>
               </NavLink>
             ))}
             {isAdmin && (
-              <NavLink to="/admin" title={sidebarCollapsed ? 'Administração' : undefined} aria-label="Administração" className={({ isActive }) => isActive ? 'nav-link active admin-link' : 'nav-link admin-link'}>
-                <span className="nav-icon"><NavIcon name="admin" /></span>
-                <span>Administração</span>
-              </NavLink>
+              <div className="admin-nav-section">
+                <NavLink to="/sorteio" title={sidebarCollapsed ? 'Sorteio' : undefined} aria-label="Sorteio" className={({ isActive }) => isActive ? 'nav-link active admin-only-link' : 'nav-link admin-only-link'}>
+                  <span className="nav-icon"><NavIcon name="roulette" /></span>
+                  <span>Sorteio</span>
+                </NavLink>
+                <NavLink to="/admin" title={sidebarCollapsed ? 'Administração' : undefined} aria-label="Administração" className={({ isActive }) => isActive ? 'nav-link active admin-only-link' : 'nav-link admin-only-link'}>
+                  <span className="nav-icon"><NavIcon name="admin" /></span>
+                  <span>Administração</span>
+                </NavLink>
+              </div>
             )}
           </nav>
 
@@ -128,10 +128,14 @@ export default function Layout() {
           <div className="mobile-more-sheet" role="dialog" aria-label="Mais opções de navegação">
             <div className="mobile-more-handle" />
             <NavLink to="/meus-palpites" className="mobile-more-link"><NavIcon name="predictions" size={19} /><span><strong>Meus palpites</strong><small>Histórico e desempenho pessoal</small></span></NavLink>
-            {isAdmin && <NavLink to="/sorteio" className="mobile-more-link"><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Quem escolhe os jogos da rodada</small></span></NavLink>}
             <NavLink to="/podio" className="mobile-more-link"><NavIcon name="podium" size={19} /><span><strong>Pódio</strong><small>Campeões de cada temporada</small></span></NavLink>
             <NavLink to="/sobre" className="mobile-more-link"><NavIcon name="info" size={19} /><span><strong>Sobre o bolão</strong><small>Regras e funcionamento</small></span></NavLink>
-            {isAdmin && <NavLink to="/admin" className="mobile-more-link"><NavIcon name="admin" size={19} /><span><strong>Administração</strong><small>Gerenciar competição</small></span></NavLink>}
+            {isAdmin && (
+              <div className="mobile-more-admin-group">
+                <NavLink to="/sorteio" className="mobile-more-link"><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Quem escolhe os jogos da rodada</small></span></NavLink>
+                <NavLink to="/admin" className="mobile-more-link"><NavIcon name="admin" size={19} /><span><strong>Administração</strong><small>Gerenciar competição</small></span></NavLink>
+              </div>
+            )}
             <button type="button" className="mobile-more-link mobile-more-logout" onClick={handleLogout}><NavIcon name="logout" size={19} /><span><strong>Sair</strong><small>Encerrar sua sessão</small></span></button>
           </div>
         </div>

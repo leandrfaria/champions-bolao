@@ -71,7 +71,8 @@ begin
     raise exception 'Apenas administradores podem limpar as atividades.';
   end if;
 
-  delete from public.audit_logs;
+  delete from public.audit_logs
+  where id is not null;
 
   -- Marcador interno. A interface não o exibe; ele impede que eventos
   -- derivados de datas históricas reapareçam logo após a limpeza.
