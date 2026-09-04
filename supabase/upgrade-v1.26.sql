@@ -195,7 +195,8 @@ begin
     raise exception 'Apenas administradores podem redefinir a roleta.';
   end if;
 
-  delete from public.roulette_exclusions;
+  delete from public.roulette_exclusions
+  where user_id is not null;
   get diagnostics v_removed = row_count;
 
   insert into public.audit_logs (actor_user_id, action, entity_type, metadata)

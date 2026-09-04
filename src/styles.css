@@ -6437,3 +6437,134 @@ select, input, button { max-width: 100%; }
   .podium-winner .avatar.xl { width: 68px !important; height: 68px !important; }
   .podium-winner > div:last-child strong { font-size: 14px; }
 }
+
+/* ==========================================================
+   v1.27 — roleta sequencial + acesso administrativo
+   ========================================================== */
+.roulette-wheel-shell {
+  position: relative;
+  padding-top: 26px;
+}
+
+.roulette-pointer {
+  position: absolute;
+  z-index: 8;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  pointer-events: none;
+  filter: drop-shadow(0 5px 12px rgba(128,78,235,.34));
+}
+.roulette-pointer > span {
+  color: #b47aff;
+  font-size: 31px;
+  line-height: .75;
+  text-shadow: 0 0 18px rgba(155,93,255,.7);
+}
+.roulette-pointer > small {
+  margin-top: 3px;
+  padding: 3px 7px;
+  border: 1px solid rgba(179,128,255,.24);
+  border-radius: 999px;
+  color: #c9b1f7;
+  background: rgba(17,12,39,.92);
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.roulette-wheel {
+  transform: rotate(var(--roulette-rotation, 0deg));
+  transition: transform var(--roulette-duration, 0ms) cubic-bezier(.12,.74,.14,1);
+  will-change: transform;
+}
+.roulette-stage.is-spinning .roulette-wheel {
+  animation: none !important;
+}
+.roulette-wheel-person > .avatar {
+  transform: rotate(calc(-1 * var(--roulette-rotation, 0deg))) !important;
+  transition: transform var(--roulette-duration, 0ms) cubic-bezier(.12,.74,.14,1);
+  will-change: transform;
+}
+.roulette-stage.is-spinning .roulette-wheel {
+  box-shadow: inset 0 0 55px rgba(118,75,222,.17), 0 28px 80px rgba(0,0,0,.34), 0 0 0 12px rgba(106,67,204,.04), 0 0 50px rgba(117,70,233,.12);
+}
+.roulette-stage.step-first .roulette-pointer > span,
+.roulette-stage.step-second .roulette-pointer > span {
+  animation: roulette-pointer-pulse .58s ease-in-out infinite alternate;
+}
+@keyframes roulette-pointer-pulse {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(4px) scale(1.08); }
+}
+
+.roulette-wheel-center span {
+  min-height: 11px;
+}
+.roulette-stage.step-first .roulette-wheel-center,
+.roulette-stage.step-second .roulette-wheel-center {
+  box-shadow: 0 0 42px rgba(132,75,245,.28), inset 0 0 22px rgba(139,86,255,.08);
+}
+
+.roulette-winner-card {
+  position: relative;
+  overflow: hidden;
+}
+.roulette-slot-number {
+  position: absolute;
+  top: 12px;
+  left: 13px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #8c8299;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(161,135,216,.1);
+  font-size: 10px;
+  font-weight: 950;
+}
+.roulette-winner-card.has-profile .roulette-slot-number {
+  color: #d9c3ff;
+  border-color: rgba(171,119,255,.26);
+  background: rgba(127,74,229,.11);
+}
+.roulette-winner-card.is-arriving {
+  animation: roulette-winner-fly-in .62s cubic-bezier(.16,.8,.2,1.08) both;
+}
+@keyframes roulette-winner-fly-in {
+  0% { opacity: 0; transform: translateX(-82px) scale(.84) rotate(-3deg); filter: blur(3px); }
+  68% { opacity: 1; transform: translateX(7px) scale(1.025) rotate(.4deg); filter: blur(0); }
+  100% { opacity: 1; transform: translateX(0) scale(1) rotate(0); filter: blur(0); }
+}
+.roulette-winner-card.is-arriving::after {
+  content: '';
+  position: absolute;
+  inset: -40% -10%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(204,169,255,.12) 50%, transparent 62%);
+  transform: translateX(-100%);
+  animation: roulette-winner-shine .8s .12s ease-out both;
+}
+@keyframes roulette-winner-shine {
+  to { transform: translateX(100%); }
+}
+
+@media (max-width: 680px) {
+  .roulette-wheel-shell { padding-top: 30px; }
+  .roulette-pointer > span { font-size: 27px; }
+  .roulette-pointer > small { font-size: 7px; }
+  .roulette-slot-number { top: 8px; left: 8px; width: 26px; height: 26px; }
+  .roulette-winner-card.is-arriving { animation-name: roulette-winner-fly-in-mobile; }
+  @keyframes roulette-winner-fly-in-mobile {
+    0% { opacity: 0; transform: translateY(-34px) scale(.84); filter: blur(2px); }
+    70% { opacity: 1; transform: translateY(5px) scale(1.025); filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  }
+}

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -27,7 +28,9 @@ export default function App() {
           <Route path="/meus-palpites" element={<MyPredictionsPage />} />
           <Route path="/classificacao" element={<LeaderboardPage />} />
           <Route path="/atividades" element={<ActivityPage />} />
-          <Route path="/sorteio" element={<RoulettePage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/sorteio" element={<RoulettePage />} />
+          </Route>
           <Route path="/podio" element={<PodiumPage />} />
           <Route path="/sobre" element={<AboutPage />} />
           <Route path="/admin" element={<AdminPage />} />

@@ -10,7 +10,6 @@ import NavIcon from './NavIcon'
 const navItems = [
   { to: '/dashboard', label: 'Início', icon: 'home' },
   { to: '/rodadas', label: 'Rodadas', icon: 'rounds' },
-  { to: '/sorteio', label: 'Sorteio', icon: 'roulette' },
   { to: '/meus-palpites', label: 'Meus palpites', icon: 'predictions' },
   { to: '/classificacao', label: 'Classificação', icon: 'leaderboard' },
   { to: '/podio', label: 'Pódio', icon: 'podium' },
@@ -61,7 +60,14 @@ export default function Layout() {
     closeParticipant: () => setProfileTarget(null),
   }), [])
 
-  const moreIsActive = ['/meus-palpites', '/sorteio', '/podio', '/sobre', '/admin'].some((path) => location.pathname.startsWith(path))
+  const displayNavItems = useMemo(() => {
+    const items = [...navItems]
+    if (isAdmin) items.splice(2, 0, { to: '/sorteio', label: 'Sorteio', icon: 'roulette' })
+    return items
+  }, [isAdmin])
+
+  const morePaths = ['/meus-palpites', '/podio', '/sobre', '/admin', ...(isAdmin ? ['/sorteio'] : [])]
+  const moreIsActive = morePaths.some((path) => location.pathname.startsWith(path))
 
   return (
     <ParticipantProfileContext.Provider value={participantProfileValue}>
@@ -87,7 +93,7 @@ export default function Layout() {
           </div>
 
           <nav className="main-nav">
-            {navItems.map((item) => (
+            {displayNavItems.map((item) => (
               <NavLink key={item.to} to={item.to} title={sidebarCollapsed ? item.label : undefined} aria-label={item.label} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span className="nav-icon"><NavIcon name={item.icon} /></span>
                 <span>{item.label}</span>
@@ -122,7 +128,7 @@ export default function Layout() {
           <div className="mobile-more-sheet" role="dialog" aria-label="Mais opções de navegação">
             <div className="mobile-more-handle" />
             <NavLink to="/meus-palpites" className="mobile-more-link"><NavIcon name="predictions" size={19} /><span><strong>Meus palpites</strong><small>Histórico e desempenho pessoal</small></span></NavLink>
-            <NavLink to="/sorteio" className="mobile-more-link"><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Quem escolhe os jogos da rodada</small></span></NavLink>
+            {isAdmin && <NavLink to="/sorteio" className="mobile-more-link"><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Quem escolhe os jogos da rodada</small></span></NavLink>}
             <NavLink to="/podio" className="mobile-more-link"><NavIcon name="podium" size={19} /><span><strong>Pódio</strong><small>Campeões de cada temporada</small></span></NavLink>
             <NavLink to="/sobre" className="mobile-more-link"><NavIcon name="info" size={19} /><span><strong>Sobre o bolão</strong><small>Regras e funcionamento</small></span></NavLink>
             {isAdmin && <NavLink to="/admin" className="mobile-more-link"><NavIcon name="admin" size={19} /><span><strong>Administração</strong><small>Gerenciar competição</small></span></NavLink>}
