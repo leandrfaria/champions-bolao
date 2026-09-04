@@ -4,6 +4,8 @@ const paths = {
   predictions: <><path d="m5 12 4 4L19 6"/><path d="M4 4h16v16H4z"/></>,
   leaderboard: <><path d="M7 20V10h4v10M13 20V4h4v16M3 20h18"/><path d="M5 10h4M15 4h4"/></>,
   activity: <><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></>,
+  roulette: <><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 4v6M12 14v6M4 12h6M14 12h6M6.3 6.3l4.2 4.2M13.5 13.5l4.2 4.2M17.7 6.3l-4.2 4.2M10.5 13.5l-4.2 4.2"/></>,
+  podium: <><path d="M8 3h8v3a4 4 0 0 1-8 0V3Z"/><path d="M8 5H4v1a4 4 0 0 0 4 4M16 5h4v1a4 4 0 0 1-4 4M12 10v6M8 21h8M9 16h6v5"/></>,
   info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></>,
   admin: <><circle cx="12" cy="12" r="3"/><path d="M19 13.5v-3l-2-.7-.7-1.7.9-1.9-2.1-2.1-1.9.9-1.7-.7L10.5 2h-3l-.7 2-1.7.7-1.9-.9-2.1 2.1.9 1.9-.7 1.7-2 .7v3l2 .7.7 1.7-.9 1.9 2.1 2.1 1.9-.9 1.7.7.7 2h3l.7-2 1.7-.7 1.9.9 2.1-2.1-.9-1.9.7-1.7z"/></>,
   logout: <><path d="M10 5H4v14h6"/><path d="m14 8 4 4-4 4M18 12H8"/></>,

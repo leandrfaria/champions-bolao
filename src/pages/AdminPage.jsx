@@ -627,6 +627,22 @@ export default function AdminPage() {
     })
   }
 
+  function askResetRoulette() {
+    setConfirm({
+      tone: 'danger',
+      eyebrow: 'Sorteio',
+      title: 'Redefinir participantes da roleta?',
+      text: 'Todos os participantes que já foram sorteados voltarão a ficar disponíveis. O histórico dos sorteios anteriores será mantido.',
+      confirmLabel: 'Redefinir roleta',
+      action: async () => {
+        const { data, error: resetError } = await supabase.rpc('reset_round_roulette')
+        if (resetError) throw resetError
+        const count = Number(data || 0)
+        flash(count ? `${count} participantes voltaram para a roleta.` : 'A roleta já estava com todos os participantes disponíveis.')
+      },
+    })
+  }
+
   async function runConfirm() {
     if (!confirm?.action) return
     try {
@@ -642,7 +658,7 @@ export default function AdminPage() {
   }
 
   const tabActions = tab === 'overview'
-    ? <><button className="admin-danger-link admin-clear-activities" type="button" onClick={askClearActivities}>Limpar atividades</button><button className="admin-quiet-button" type="button" onClick={openSeasonCreate}><Icon type="plus" /> Nova temporada</button></>
+    ? <><button className="admin-quiet-button admin-reset-roulette" type="button" onClick={askResetRoulette}>Redefinir roleta</button><button className="admin-danger-link admin-clear-activities" type="button" onClick={askClearActivities}>Limpar atividades</button><button className="admin-quiet-button" type="button" onClick={openSeasonCreate}><Icon type="plus" /> Nova temporada</button></>
     : tab === 'rounds'
       ? <><button className="admin-quiet-button" type="button" onClick={openRoundCreate} disabled={!selectedSeasonId}><Icon type="plus" /> Nova rodada</button><button className="primary-button admin-header-primary" type="button" onClick={() => openMatchCreate()} disabled={!selectedRound}><Icon type="plus" /> Adicionar jogo</button></>
       : null
@@ -659,6 +675,7 @@ export default function AdminPage() {
           <summary aria-label="Mais ações administrativas"><Icon type="dots" /></summary>
           <div>
             <button type="button" onClick={openSeasonCreate}><Icon type="plus" /> Nova temporada</button>
+            <button type="button" onClick={askResetRoulette}>Redefinir participantes da roleta</button>
             <button className="danger" type="button" onClick={askClearActivities}>Limpar atividades</button>
           </div>
         </details>
@@ -773,6 +790,7 @@ export default function AdminPage() {
                   <button type="button" onClick={() => goTab('rounds', currentRound?.id)}><Icon type="calendar" /><span>Gerenciar rodada</span></button>
                   <button type="button" onClick={() => { goTab('rounds', currentRound?.id); window.setTimeout(() => openMatchCreate(currentRound?.id), 0) }}><Icon type="plus" /><span>Adicionar jogo</span></button>
                   <button type="button" onClick={() => goTab('results')}><Icon type="result" /><span>Registrar resultados</span>{pendingResults.length > 0 && <b>{pendingResults.length}</b>}</button>
+                  <button type="button" onClick={askResetRoulette}><Icon type="users" /><span>Redefinir roleta</span></button>
                 </div>
               </section>
 

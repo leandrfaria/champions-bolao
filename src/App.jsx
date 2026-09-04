@@ -10,6 +10,8 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import ActivityPage from './pages/ActivityPage'
 import AboutPage from './pages/AboutPage'
 import AdminPage from './pages/AdminPage'
+import RoulettePage from './pages/RoulettePage'
+import PodiumPage from './pages/PodiumPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/meus-palpites" element={<MyPredictionsPage />} />
           <Route path="/classificacao" element={<LeaderboardPage />} />
           <Route path="/atividades" element={<ActivityPage />} />
+          <Route path="/sorteio" element={<RoulettePage />} />
+          <Route path="/podio" element={<PodiumPage />} />
           <Route path="/sobre" element={<AboutPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Route>

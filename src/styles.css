@@ -6243,3 +6243,197 @@ select, input, button { max-width: 100%; }
     grid-template-columns: minmax(220px,1.4fr) 1fr 1fr 190px;
   }
 }
+
+/* ==========================================================
+   v1.26 — Sorteio + Pódio
+   ========================================================== */
+.roulette-page,
+.podium-page { min-width: 0; }
+
+.roulette-control-panel {
+  display: grid;
+  grid-template-columns: minmax(0,1.35fr) minmax(300px,.65fr);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 18px;
+  padding: 22px 24px;
+  border: 1px solid rgba(161,130,235,.17);
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(23,17,52,.9), rgba(9,9,27,.94));
+}
+.roulette-season-copy h2 { margin: 5px 0 8px; font-size: 24px; letter-spacing: -.035em; }
+.roulette-season-copy p { max-width: 670px; margin: 0; color: #928a9e; font-size: 12px; line-height: 1.65; }
+.roulette-round-control { display: grid; gap: 10px; }
+.roulette-round-control label { display: grid; gap: 7px; }
+.roulette-round-control label > span { color: #a49bad; font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
+.roulette-round-control select {
+  width: 100%; height: 44px; padding: 0 13px; border: 1px solid rgba(169,142,231,.2); border-radius: 10px;
+  color: #eeeaf5; background: #0d0b22; font: inherit; font-size: 12px; font-weight: 750;
+}
+.roulette-pool-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.roulette-pool-stats span { padding: 6px 9px; border-radius: 8px; color: #8f8799; background: rgba(255,255,255,.025); font-size: 10px; }
+.roulette-pool-stats strong { color: #ded8e8; }
+.roulette-spin-button { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.roulette-spin-icon { font-size: 17px; }
+.roulette-admin-note { margin: 0; color: #898293; font-size: 11px; line-height: 1.5; }
+.roulette-flash { margin-bottom: 14px; }
+
+.roulette-stage {
+  position: relative;
+  min-height: 410px;
+  display: grid;
+  grid-template-columns: minmax(320px,.8fr) minmax(420px,1.2fr);
+  align-items: center;
+  gap: 34px;
+  margin-bottom: 18px;
+  padding: 28px 34px;
+  overflow: hidden;
+  border: 1px solid rgba(163,133,235,.17);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 24% 50%, rgba(119,72,231,.15), transparent 31%),
+    linear-gradient(115deg, rgba(15,12,38,.96), rgba(7,8,23,.98));
+}
+.roulette-stage::before,
+.roulette-stage::after { content: ''; position: absolute; pointer-events: none; border-radius: 50%; border: 1px solid rgba(132,90,234,.09); }
+.roulette-stage::before { width: 470px; height: 470px; left: -80px; top: -30px; }
+.roulette-stage::after { width: 310px; height: 310px; right: -90px; bottom: -120px; }
+.roulette-wheel-shell { display: grid; place-items: center; min-width: 0; }
+.roulette-wheel {
+  --wheel-size: 310px;
+  position: relative;
+  width: var(--wheel-size); height: var(--wheel-size);
+  border-radius: 50%;
+  border: 1px solid rgba(172,135,255,.25);
+  box-shadow: inset 0 0 45px rgba(118,75,222,.11), 0 24px 70px rgba(0,0,0,.28), 0 0 0 12px rgba(106,67,204,.025);
+  background: radial-gradient(circle, rgba(29,20,68,.88) 0 29%, rgba(13,11,34,.9) 30% 58%, rgba(41,28,84,.55) 59% 61%, rgba(8,8,24,.9) 62%);
+}
+.roulette-stage.is-spinning .roulette-wheel { animation: roulette-wheel-spin .7s linear infinite; }
+.roulette-wheel-person {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 44px; height: 44px;
+  margin: -22px;
+  transform: rotate(var(--roulette-angle)) translateY(-128px) rotate(calc(-1 * var(--roulette-angle)));
+  z-index: 2;
+}
+.roulette-wheel-person .avatar { box-shadow: 0 0 0 3px rgba(136,94,235,.12), 0 8px 22px rgba(0,0,0,.28); }
+.roulette-wheel-center {
+  position: absolute; inset: 50% auto auto 50%; transform: translate(-50%,-50%);
+  width: 110px; height: 110px; display: grid; place-items: center; align-content: center; gap: 4px;
+  border-radius: 50%; color: #d8c5ff; background: linear-gradient(145deg,#271756,#100d2c); border: 1px solid rgba(182,143,255,.28);
+  box-shadow: 0 0 32px rgba(132,75,245,.18);
+}
+.roulette-wheel-center span { color: #9486aa; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+@keyframes roulette-wheel-spin { to { transform: rotate(360deg); } }
+
+.roulette-result-area { position: relative; z-index: 1; min-width: 0; }
+.roulette-result-area > .eyebrow { display: block; margin-bottom: 13px; }
+.roulette-winner-slots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.roulette-winner-card {
+  min-height: 245px; display: grid; justify-items: center; align-content: center; gap: 8px; padding: 20px 14px;
+  border: 1px dashed rgba(168,139,226,.18); border-radius: 15px; background: rgba(255,255,255,.018); text-align: center;
+  transition: border-color .25s ease, transform .25s ease, background .25s ease;
+}
+.roulette-winner-card.has-profile { border-style: solid; border-color: rgba(169,114,255,.35); background: linear-gradient(155deg,rgba(84,49,165,.18),rgba(16,13,38,.8)); animation: roulette-winner-pop .42s cubic-bezier(.2,.8,.2,1); }
+.roulette-winner-card strong { max-width: 100%; color: #f1edf6; font-size: 16px; overflow-wrap: anywhere; }
+.roulette-winner-card small { color: #8b8295; font-size: 10px; }
+.roulette-winner-placeholder { width: 86px; height: 86px; display: grid; place-items: center; border-radius: 50%; color: #766e84; background: rgba(255,255,255,.025); border: 1px solid rgba(163,137,220,.12); font-size: 27px; font-weight: 900; }
+@keyframes roulette-winner-pop { 0% { opacity: .2; transform: scale(.88) translateY(8px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+
+.roulette-pool-section,
+.roulette-history-section { margin-top: 18px; padding: 19px 20px; border: 1px solid rgba(159,134,215,.13); border-radius: 15px; background: rgba(10,9,29,.7); }
+.roulette-available-list { display: flex; flex-wrap: wrap; gap: 9px; }
+.roulette-available-list > div { min-width: 145px; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid rgba(156,133,211,.1); border-radius: 11px; background: rgba(255,255,255,.018); }
+.roulette-available-list strong { font-size: 11px; }
+.roulette-empty-pool,
+.roulette-history-empty { padding: 18px; border-radius: 11px; color: #888091; background: rgba(255,255,255,.018); font-size: 11px; }
+.roulette-history-list { display: grid; gap: 8px; }
+.roulette-history-list article { display: grid; grid-template-columns: minmax(150px,.45fr) minmax(0,1fr); align-items: center; gap: 14px; min-height: 58px; padding: 9px 12px; border-bottom: 1px solid rgba(162,139,217,.08); }
+.roulette-history-list article:last-child { border-bottom: 0; }
+.roulette-history-round strong,
+.roulette-history-round span { display: block; }
+.roulette-history-round strong { font-size: 11px; }
+.roulette-history-round span { margin-top: 3px; color: #756f7e; font-size: 9px; }
+.roulette-history-winners { display: flex; align-items: center; gap: 9px; }
+.roulette-history-winners > span { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.roulette-history-winners b { font-size: 11px; white-space: nowrap; }
+.roulette-history-winners i { color: #746b81; font-style: normal; font-size: 11px; }
+
+.podium-hero {
+  position: relative; min-height: 170px; display: flex; align-items: center; justify-content: space-between; gap: 30px;
+  margin-bottom: 18px; padding: 25px 29px; overflow: hidden; border: 1px solid rgba(218,172,61,.2); border-radius: 18px;
+  background: radial-gradient(circle at 83% 25%, rgba(229,176,54,.12), transparent 24%), linear-gradient(120deg,rgba(31,22,50,.92),rgba(10,9,28,.96));
+}
+.podium-hero::after { content: ''; position: absolute; width: 270px; height: 270px; right: -80px; top: -90px; border-radius: 50%; border: 1px solid rgba(235,184,69,.1); }
+.podium-hero-copy h2 { margin: 5px 0 8px; font-size: 26px; letter-spacing: -.04em; }
+.podium-hero-copy p { margin: 0; color: #908797; font-size: 12px; }
+.podium-hero-trophy { width: 102px; height: 102px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; color: #efc654; background: radial-gradient(circle,rgba(236,191,73,.14),rgba(236,191,73,.025) 65%,transparent 66%); border: 1px solid rgba(238,191,68,.2); box-shadow: 0 0 36px rgba(229,174,52,.11); }
+.podium-history-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.podium-season-card { min-width: 0; overflow: hidden; border: 1px solid rgba(162,137,219,.14); border-radius: 16px; background: linear-gradient(150deg,rgba(18,14,43,.94),rgba(8,8,24,.96)); }
+.podium-season-card.latest { border-color: rgba(224,178,58,.28); box-shadow: inset 0 1px 0 rgba(238,197,88,.05); }
+.podium-season-card > header { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 18px; border-bottom: 1px solid rgba(161,137,216,.09); }
+.podium-season-card > header span { color: #827988; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
+.podium-season-card > header h2 { margin: 3px 0 0; font-size: 25px; }
+.podium-season-badge { display: inline-flex; align-items: center; gap: 6px; color: #e8bd4b; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+.podium-winners { display: grid; padding: 18px; }
+.podium-winners.shared { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.podium-winner { min-width: 0; display: flex; align-items: center; gap: 15px; padding: 11px; border-radius: 13px; background: rgba(255,255,255,.018); }
+.podium-winner-photo { flex: 0 0 auto; }
+.podium-winner > div:last-child { min-width: 0; }
+.podium-winner > div:last-child span,
+.podium-winner > div:last-child strong,
+.podium-winner > div:last-child small { display: block; }
+.podium-winner > div:last-child span { color: #a387d8; font-size: 8.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .07em; }
+.podium-winner > div:last-child strong { margin-top: 3px; color: #f0edf5; font-size: 16px; overflow-wrap: anywhere; }
+.podium-winner > div:last-child small { margin-top: 4px; color: #7f7787; font-size: 9px; }
+
+.admin-command-actions { flex-wrap: wrap; }
+.admin-reset-roulette { color: #c8b6ec; }
+
+@media (max-width: 1080px) {
+  .roulette-stage { grid-template-columns: minmax(280px,.8fr) minmax(340px,1.2fr); padding-inline: 22px; }
+  .roulette-wheel { --wheel-size: 270px; }
+  .roulette-wheel-person { transform: rotate(var(--roulette-angle)) translateY(-111px) rotate(calc(-1 * var(--roulette-angle))); }
+  .podium-history-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  .roulette-page .page-header,
+  .podium-page .page-header { margin-bottom: 15px; }
+  .roulette-control-panel { grid-template-columns: 1fr; gap: 17px; padding: 16px; border-radius: 14px; }
+  .roulette-season-copy h2 { font-size: 20px; }
+  .roulette-season-copy p { font-size: 11px; }
+  .roulette-round-control select { height: 46px; }
+  .roulette-stage { min-height: 0; grid-template-columns: 1fr; gap: 22px; padding: 22px 13px; border-radius: 15px; }
+  .roulette-wheel { --wheel-size: min(280px, calc(100vw - 76px)); }
+  .roulette-wheel-person { transform: rotate(var(--roulette-angle)) translateY(-112px) rotate(calc(-1 * var(--roulette-angle))); }
+  .roulette-wheel-center { width: 94px; height: 94px; }
+  .roulette-winner-slots { gap: 8px; }
+  .roulette-winner-card { min-height: 186px; padding: 14px 8px; }
+  .roulette-winner-card .avatar.xl { width: 70px !important; height: 70px !important; }
+  .roulette-winner-card strong { font-size: 13px; }
+  .roulette-winner-placeholder { width: 70px; height: 70px; }
+  .roulette-pool-section,
+  .roulette-history-section { padding: 14px; border-radius: 13px; }
+  .roulette-available-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .roulette-available-list > div { min-width: 0; padding: 7px; }
+  .roulette-available-list strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+  .roulette-history-list article { grid-template-columns: 1fr; gap: 8px; padding: 10px 4px; }
+  .roulette-history-winners { flex-wrap: wrap; }
+  .roulette-history-winners b { font-size: 10px; }
+
+  .podium-hero { min-height: 135px; padding: 18px; border-radius: 14px; }
+  .podium-hero-copy h2 { font-size: 21px; }
+  .podium-hero-copy p { max-width: 220px; font-size: 10.5px; line-height: 1.5; }
+  .podium-hero-trophy { width: 72px; height: 72px; }
+  .podium-history-grid { grid-template-columns: 1fr; gap: 10px; }
+  .podium-season-card { border-radius: 14px; }
+  .podium-season-card > header { min-height: 65px; padding: 12px 14px; }
+  .podium-season-card > header h2 { font-size: 21px; }
+  .podium-winners { padding: 12px; }
+  .podium-winners.shared { grid-template-columns: 1fr; gap: 7px; }
+  .podium-winner { padding: 8px; gap: 12px; }
+  .podium-winner .avatar.xl { width: 68px !important; height: 68px !important; }
+  .podium-winner > div:last-child strong { font-size: 14px; }
+}

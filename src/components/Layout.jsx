@@ -10,8 +10,10 @@ import NavIcon from './NavIcon'
 const navItems = [
   { to: '/dashboard', label: 'Início', icon: 'home' },
   { to: '/rodadas', label: 'Rodadas', icon: 'rounds' },
+  { to: '/sorteio', label: 'Sorteio', icon: 'roulette' },
   { to: '/meus-palpites', label: 'Meus palpites', icon: 'predictions' },
   { to: '/classificacao', label: 'Classificação', icon: 'leaderboard' },
+  { to: '/podio', label: 'Pódio', icon: 'podium' },
   { to: '/atividades', label: 'Atividades', icon: 'activity' },
   { to: '/sobre', label: 'Sobre', icon: 'info' },
 ]
@@ -20,6 +22,7 @@ const mobilePrimaryItems = [
   { to: '/dashboard', label: 'Início', icon: 'home' },
   { to: '/rodadas', label: 'Rodadas', icon: 'rounds' },
   { to: '/classificacao', label: 'Classificação', icon: 'leaderboard' },
+  { to: '/podio', label: 'Pódio', icon: 'podium' },
   { to: '/atividades', label: 'Atividades', icon: 'activity' },
 ]
 
@@ -58,7 +61,7 @@ export default function Layout() {
     closeParticipant: () => setProfileTarget(null),
   }), [])
 
-  const moreIsActive = ['/meus-palpites', '/sobre', '/admin'].some((path) => location.pathname.startsWith(path))
+  const moreIsActive = ['/meus-palpites', '/sorteio', '/podio', '/sobre', '/admin'].some((path) => location.pathname.startsWith(path))
 
   return (
     <ParticipantProfileContext.Provider value={participantProfileValue}>
@@ -119,6 +122,8 @@ export default function Layout() {
           <div className="mobile-more-sheet" role="dialog" aria-label="Mais opções de navegação">
             <div className="mobile-more-handle" />
             <NavLink to="/meus-palpites" className="mobile-more-link"><NavIcon name="predictions" size={19} /><span><strong>Meus palpites</strong><small>Histórico e desempenho pessoal</small></span></NavLink>
+            <NavLink to="/sorteio" className="mobile-more-link"><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Quem escolhe os jogos da rodada</small></span></NavLink>
+            <NavLink to="/podio" className="mobile-more-link"><NavIcon name="podium" size={19} /><span><strong>Pódio</strong><small>Campeões de cada temporada</small></span></NavLink>
             <NavLink to="/sobre" className="mobile-more-link"><NavIcon name="info" size={19} /><span><strong>Sobre o bolão</strong><small>Regras e funcionamento</small></span></NavLink>
             {isAdmin && <NavLink to="/admin" className="mobile-more-link"><NavIcon name="admin" size={19} /><span><strong>Administração</strong><small>Gerenciar competição</small></span></NavLink>}
             <button type="button" className="mobile-more-link mobile-more-logout" onClick={handleLogout}><NavIcon name="logout" size={19} /><span><strong>Sair</strong><small>Encerrar sua sessão</small></span></button>

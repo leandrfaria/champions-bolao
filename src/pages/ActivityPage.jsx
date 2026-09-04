@@ -18,6 +18,7 @@ const FILTERS = [
 
 function EventGlyph({ action }) {
   if (action === 'leader_changed' || action === 'second_changed') return <TrophyIcon size={17} />
+  if (action === 'roulette_spun') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M12 4v6M12 14v6M4 12h6M14 12h6M6.5 6.5l4 4M13.5 13.5l4 4M17.5 6.5l-4 4M10.5 13.5l-4 4"/></svg>
   if (action === 'prediction_created' || action === 'prediction_updated') {
     return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>
   }
@@ -204,6 +205,7 @@ function eventDescription(item) {
     case 'season_deleted': return 'A temporada e toda a sua estrutura foram removidas pelo administrador.'
     case 'leader_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
     case 'second_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
+    case 'roulette_spun': return 'Os dois escolhidos saem dos próximos sorteios até a roleta ser redefinida na Administração.'
     default: return ''
   }
 }

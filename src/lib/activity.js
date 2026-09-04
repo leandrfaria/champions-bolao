@@ -11,12 +11,14 @@ const FEED_ACTIONS = new Set([
   'round_deleted',
   'leader_changed',
   'second_changed',
+  'roulette_spun',
 ])
 
 export function activityCategory(action = '') {
   if (action === 'prediction_created' || action === 'prediction_updated') return 'predictions'
   if (action === 'result_updated') return 'results'
   if (action === 'leader_changed' || action === 'second_changed') return 'classification'
+  if (action === 'roulette_spun') return 'rounds'
   if (action.includes('season') || action.includes('round')) return 'rounds'
   return 'other'
 }
@@ -53,12 +55,17 @@ export function activityText(item) {
     case 'round_deleted': return `${metadata.round_name || 'Uma rodada'} foi excluída.`
     case 'leader_changed': return `${actor} assumiu o 1º lugar.`
     case 'second_changed': return `${actor} assumiu a 2ª posição.`
+    case 'roulette_spun': {
+      const names = Array.isArray(metadata.selected_names) ? metadata.selected_names.filter(Boolean) : []
+      const chosen = names.length >= 2 ? `${names[0]} e ${names[1]}` : names[0] || 'Dois participantes'
+      return `A roleta de ${metadata.round_name || 'uma rodada'} foi girada: ${chosen} foram escolhidos para definir os jogos.`
+    }
     default: return 'Uma atividade foi registrada no bolão.'
   }
 }
 
 export function activityTone(action = '') {
-  if (action === 'prediction_created' || action === 'prediction_updated') return 'purple'
+  if (action === 'prediction_created' || action === 'prediction_updated' || action === 'roulette_spun') return 'purple'
   if (action === 'result_updated') return 'green'
   if (action === 'leader_changed') return 'gold'
   if (action === 'second_changed') return 'silver'
