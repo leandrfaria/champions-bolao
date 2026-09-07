@@ -6594,3 +6594,200 @@ select, input, button { max-width: 100%; }
   padding-top: 8px;
   border-top: 1px solid rgba(177,151,238,.12);
 }
+
+/* ==========================================================
+   v1.30 — custom match date/time + normalized local crests
+   ========================================================== */
+.match-datetime-picker {
+  display: grid;
+  grid-template-columns: minmax(0,1.2fr) minmax(210px,.8fr);
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+.match-datetime-control {
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid rgba(177,148,255,.20);
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(145deg, rgba(9,7,23,.82), rgba(19,14,41,.76));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  text-align: left;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+button.match-datetime-control { cursor: pointer; }
+.match-datetime-control:hover,
+.match-datetime-control:focus-within,
+.match-datetime-control.is-open {
+  border-color: rgba(168,126,255,.54);
+  background: linear-gradient(145deg, rgba(18,12,40,.92), rgba(24,16,51,.86));
+  box-shadow: 0 0 0 3px rgba(139,92,246,.075), inset 0 1px 0 rgba(255,255,255,.035);
+  outline: none;
+}
+.match-datetime-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #c8b6ff;
+  background: linear-gradient(145deg, rgba(139,92,246,.18), rgba(76,59,150,.12));
+}
+.match-datetime-icon svg { width: 18px; height: 18px; }
+.match-datetime-copy { min-width: 0; display: block; }
+.match-datetime-copy small {
+  display: block;
+  margin-bottom: 4px;
+  color: #90899d;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.match-datetime-copy strong {
+  display: block;
+  overflow: hidden;
+  color: #f5f2fb;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.match-datetime-copy strong.is-placeholder { color: #827b8e; font-weight: 700; }
+.match-datetime-chevron { color: #8c82a1; font-size: 18px; line-height: 1; }
+.match-time-control { grid-template-columns: 38px minmax(0,1fr); }
+.match-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+}
+.match-time-inputs select {
+  appearance: none;
+  width: 48px;
+  height: 29px;
+  padding: 0 7px;
+  border: 1px solid rgba(177,148,255,.16);
+  border-radius: 8px;
+  outline: 0;
+  color: #fff;
+  background: rgba(7,5,18,.72);
+  font-size: 12px;
+  font-weight: 850;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+}
+.match-time-inputs select:focus { border-color: rgba(167,126,255,.58); box-shadow: 0 0 0 2px rgba(139,92,246,.08); }
+.match-time-inputs b { color: #a99fc0; font-size: 14px; }
+.match-calendar-panel {
+  grid-column: 1 / -1;
+  width: min(390px,100%);
+  margin-top: -2px;
+  padding: 12px;
+  border: 1px solid rgba(177,148,255,.22);
+  border-radius: 14px;
+  background: linear-gradient(155deg, #17122f, #0e0b20);
+  box-shadow: 0 22px 60px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.025);
+  animation: adminCalendarIn .14s ease-out;
+}
+@keyframes adminCalendarIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.match-calendar-head {
+  display: grid;
+  grid-template-columns: 32px minmax(0,1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.match-calendar-head strong { text-align: center; font-size: 11px; color: #f3effa; text-transform: capitalize; }
+.match-calendar-head button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(177,148,255,.12);
+  border-radius: 8px;
+  color: #bdb3cf;
+  background: rgba(255,255,255,.025);
+  font-size: 20px;
+}
+.match-calendar-head button:hover { color: #fff; background: rgba(139,92,246,.1); border-color: rgba(177,148,255,.28); }
+.match-calendar-weekdays,
+.match-calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.match-calendar-weekdays { margin-bottom: 4px; }
+.match-calendar-weekdays span {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
+  color: #777084;
+  font-size: 8px;
+  font-weight: 900;
+}
+.match-calendar-grid button {
+  aspect-ratio: 1;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #d8d3df;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 750;
+}
+.match-calendar-grid button:hover { color: #fff; background: rgba(139,92,246,.10); }
+.match-calendar-grid button.is-outside { color: #4e4859; }
+.match-calendar-grid button.is-today { border-color: rgba(139,92,246,.28); color: #d2c3ff; }
+.match-calendar-grid button.is-selected {
+  border-color: #9b6fff;
+  color: #fff;
+  background: linear-gradient(145deg, #8250e8, #6d55e8);
+  box-shadow: 0 7px 18px rgba(96,65,199,.28);
+}
+.match-calendar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(177,148,255,.1);
+}
+.match-calendar-actions button {
+  padding: 5px 8px;
+  border: 0;
+  color: #a895e5;
+  background: transparent;
+  font-size: 9px;
+  font-weight: 850;
+}
+.match-calendar-actions button:hover { color: #fff; }
+
+/* Local crests supplied by the pool: keep optical size consistent with FotMob logos. */
+.team-crest-club-club-brugge img,
+.team-crest-club-sporting-cp img,
+.team-crest-club-slavia-praha img,
+.team-crest-club-lens img {
+  width: 90%;
+  height: 90%;
+  margin: auto;
+  object-fit: contain;
+}
+.team-crest-club-sporting-cp img { width: 86%; height: 86%; }
+.team-crest-club-slavia-praha img { width: 84%; height: 84%; }
+
+@media (max-width: 680px) {
+  .match-datetime-picker { grid-template-columns: 1fr; }
+  .match-calendar-panel { width: 100%; }
+  .match-datetime-control { min-height: 62px; }
+}

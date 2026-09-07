@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTeamInitials, getTeamLogo } from '../config/teamLogos'
+import { getTeamInitials, getTeamLogo, getTeamSlug } from '../config/teamLogos'
 
 export default function TeamCrest({ team, size = 'medium', className = '' }) {
   const logo = getTeamLogo(team)
@@ -8,7 +8,7 @@ export default function TeamCrest({ team, size = 'medium', className = '' }) {
   useEffect(() => setFailed(false), [logo, team])
 
   return (
-    <span className={`team-crest team-crest-${size} ${className}`.trim()} aria-hidden="true">
+    <span className={`team-crest team-crest-${size} team-crest-club-${getTeamSlug(team)} ${className}`.trim()} aria-hidden="true">
       {logo && !failed ? (
         <img
           src={logo}

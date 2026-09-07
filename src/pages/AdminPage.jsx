@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import AdminModal from '../components/AdminModal'
 import Loading from '../components/Loading'
+import MatchDateTimePicker from '../components/MatchDateTimePicker'
 import NavIcon from '../components/NavIcon'
 import PageHeader from '../components/PageHeader'
 import TeamCrest from '../components/TeamCrest'
@@ -1018,7 +1019,12 @@ export default function AdminPage() {
               <label className="field"><span>Rodada</span><select value={matchDialog.form.round_id} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, round_id: event.target.value } })}>{seasonRounds.filter((round) => !round.closed_at).map((round) => <option value={round.id} key={round.id}>{round.name} · {round.stage}</option>)}</select></label>
               <div className="field-grid team-grid"><TeamPicker label="Mandante" value={matchDialog.form.home_team} onChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, home_team: value } })} knownTeams={knownTeams} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} /><TeamPicker label="Visitante" value={matchDialog.form.away_team} onChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, away_team: value } })} knownTeams={knownTeams} disabled={matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0} /></div>
               <label className="field match-picked-by-field"><span>Escolhido por</span><select value={matchDialog.form.selected_by_user_id} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, selected_by_user_id: event.target.value } })}><option value="">Selecione o participante</option>{participants.map((participant) => <option value={participant.id} key={participant.id}>{participant.display_name}</option>)}</select><small>Participante responsável por escolher esta partida para a rodada.</small></label>
-              <div className="datetime-composer"><label className="date-time-field"><span className="date-time-icon">▦</span><div><small>Data</small><input type="date" value={matchDialog.form.match_date} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_date: event.target.value } })} /></div></label><label className="date-time-field"><span className="date-time-icon clock-icon">◷</span><div><small>Horário</small><input type="time" value={matchDialog.form.match_time} onChange={(event) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_time: event.target.value } })} /></div></label></div>
+              <MatchDateTimePicker
+                date={matchDialog.form.match_date}
+                time={matchDialog.form.match_time}
+                onDateChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_date: value } })}
+                onTimeChange={(value) => setMatchDialog({ ...matchDialog, form: { ...matchDialog.form, match_time: value } })}
+              />
               {matchDialog.mode === 'edit' && predictionCount(matchDialog.match.id) > 0 && <div className="admin-inline-warning">Já existem {predictionCount(matchDialog.match.id)} palpites neste jogo. Clubes e rodada ficam bloqueados para evitar associar palpites a outro confronto; data e horário ainda podem ser corrigidos antes do início.</div>}
               <div className="admin-match-preview"><span>Prévia</span><div><TeamCrest team={matchDialog.form.home_team} size="medium" /><strong>{matchDialog.form.home_team || 'Mandante'}</strong><i>×</i><strong>{matchDialog.form.away_team || 'Visitante'}</strong><TeamCrest team={matchDialog.form.away_team} size="medium" /></div><small>{matchDialog.form.match_date || 'Data'} · {matchDialog.form.match_time || 'Horário'}</small>{matchDialog.form.selected_by_user_id && <small className="admin-match-picked-preview">Escolhido por <b>{participants.find((participant) => participant.id === matchDialog.form.selected_by_user_id)?.display_name || 'Participante'}</b></small>}</div>
             </form>
