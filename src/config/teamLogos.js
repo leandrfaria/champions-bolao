@@ -15,10 +15,10 @@ const TEAM_ENTRIES = [
   { id: 'aston-villa', name: 'Aston Villa', logo: FOTMOB_LOGO(10252), aliases: ['aston villa', 'villa'] },
   { id: 'roma', name: 'Roma', logo: FOTMOB_LOGO(8686), aliases: ['roma', 'as roma'] },
   { id: 'porto', name: 'Porto', logo: FOTMOB_LOGO(9772), aliases: ['porto', 'fc porto'] },
-  { id: 'sporting-cp', name: 'Sporting CP', logo: FOTMOB_LOGO(9773), aliases: ['sporting cp', 'sporting', 'sporting clube de portugal'] },
+  { id: 'sporting-cp', name: 'Sporting CP', logo: '/teams/sporting-cp.png', aliases: ['sporting cp', 'sporting', 'sporting clube de portugal', 'sporting lisboa'] },
   { id: 'psv', name: 'PSV Eindhoven', logo: FOTMOB_LOGO(8649), aliases: ['psv eindhoven', 'psv'] },
   { id: 'real-betis', name: 'Real Betis', logo: FOTMOB_LOGO(8603), aliases: ['real betis', 'betis'] },
-  { id: 'club-brugge', name: 'Club Brugge', logo: FOTMOB_LOGO(8510), aliases: ['club brugge', 'brugge'] },
+  { id: 'club-brugge', name: 'Club Brugge', logo: '/teams/club-brugge.png', aliases: ['club brugge', 'brugge', 'club brugge kv'] },
   { id: 'napoli', name: 'Napoli', logo: FOTMOB_LOGO(9875), aliases: ['napoli', 'ssc napoli'] },
   { id: 'rb-leipzig', name: 'RB Leipzig', logo: FOTMOB_LOGO(178475), aliases: ['rb leipzig', 'leipzig'] },
   { id: 'villarreal', name: 'Villarreal', logo: FOTMOB_LOGO(10205), aliases: ['villarreal', 'villarreal cf'] },
@@ -35,6 +35,8 @@ const TEAM_ENTRIES = [
   { id: 'ajax', name: 'Ajax', logo: FOTMOB_LOGO(8593), aliases: ['ajax', 'afc ajax'] },
   { id: 'marseille', name: 'Marseille', logo: FOTMOB_LOGO(8592), aliases: ['marseille', 'olympique de marseille', 'olympique marseille', 'om'] },
   { id: 'juventus', name: 'Juventus', logo: FOTMOB_LOGO(9885), aliases: ['juventus', 'juventus fc', 'juve'] },
+  { id: 'slavia-praha', name: 'Slavia Praha', logo: '/teams/slavia-praha.png', aliases: ['slavia praha', 'slavia prag', 'slavia prague', 'sk slavia praha'] },
+  { id: 'lens', name: 'Lens', logo: '/teams/lens.png', aliases: ['lens', 'rc lens', 'racing club de lens'] },
 ]
 
 
