@@ -31,13 +31,6 @@ export default function Layout() {
   const location = useLocation()
   const [profileTarget, setProfileTarget] = useState(null)
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try { return window.localStorage.getItem('champions-sidebar-collapsed') === '1' } catch { return false }
-  })
-
-  useEffect(() => {
-    try { window.localStorage.setItem('champions-sidebar-collapsed', sidebarCollapsed ? '1' : '0') } catch { /* storage may be unavailable */ }
-  }, [sidebarCollapsed])
 
   useEffect(() => {
     setMobileMoreOpen(false)
@@ -65,61 +58,54 @@ export default function Layout() {
 
   return (
     <ParticipantProfileContext.Provider value={participantProfileValue}>
-      <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <aside className="sidebar">
-          <div className="sidebar-brand-row">
-            <div className="brand">
+      <div className="app-shell topbar-shell">
+        <header className="topbar" aria-label="Navegação principal do bolão">
+          <div className="topbar-inner">
+            <NavLink to="/dashboard" className="brand topbar-brand" aria-label="Champions Bolão">
               <div className="brand-mark"><TrophyIcon size={23} /></div>
               <div className="brand-copy">
                 <strong>CHAMPIONS</strong>
                 <span>BOLÃO</span>
               </div>
-            </div>
-            <button
-              type="button"
-              className="sidebar-collapse-toggle"
-              onClick={() => setSidebarCollapsed((value) => !value)}
-              aria-label={sidebarCollapsed ? 'Mostrar menu lateral' : 'Ocultar menu lateral'}
-              title={sidebarCollapsed ? 'Mostrar menu lateral' : 'Ocultar menu lateral'}
-            >
-              <NavIcon name={sidebarCollapsed ? 'expand' : 'collapse'} size={17} />
-            </button>
-          </div>
+            </NavLink>
 
-          <nav className="main-nav">
-            {navItems.map((item) => (
-              <NavLink key={item.to} to={item.to} title={sidebarCollapsed ? item.label : undefined} aria-label={item.label} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span className="nav-icon"><NavIcon name={item.icon} /></span>
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
-            {isAdmin && (
-              <div className="admin-nav-section">
-                <NavLink to="/sorteio" title={sidebarCollapsed ? 'Sorteio' : undefined} aria-label="Sorteio" className={({ isActive }) => isActive ? 'nav-link active admin-only-link' : 'nav-link admin-only-link'}>
-                  <span className="nav-icon"><NavIcon name="roulette" /></span>
-                  <span>Sorteio</span>
+            <nav className="topbar-nav">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => isActive ? 'topbar-link active' : 'topbar-link'}
+                >
+                  <span>{item.label}</span>
                 </NavLink>
-                <NavLink to="/admin" title={sidebarCollapsed ? 'Administração' : undefined} aria-label="Administração" className={({ isActive }) => isActive ? 'nav-link active admin-only-link' : 'nav-link admin-only-link'}>
-                  <span className="nav-icon"><NavIcon name="admin" /></span>
-                  <span>Administração</span>
-                </NavLink>
-              </div>
-            )}
-          </nav>
+              ))}
+            </nav>
 
-          <div className="sidebar-footer">
-            <div className="user-chip">
-              <SidebarAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} />
-              <div>
-                <strong>{profile?.display_name || 'Jogador'}</strong>
-                <span>{isAdmin ? 'Administrador · jogador' : 'Jogador'}</span>
+            <div className="topbar-actions">
+              {isAdmin && (
+                <div className="topbar-admin-links">
+                  <NavLink to="/sorteio" className={({ isActive }) => isActive ? 'topbar-link admin-link active' : 'topbar-link admin-link'}>Sorteio</NavLink>
+                  <NavLink to="/admin" className={({ isActive }) => isActive ? 'topbar-link admin-link active' : 'topbar-link admin-link'}>Administração</NavLink>
+                </div>
+              )}
+
+              <div className="topbar-user">
+                <SidebarAvatar key={`${profile?.id || 'guest'}:${profile?.avatar_path || 'no-avatar'}`} profile={profile} />
+                <span className="topbar-user-copy">
+                  <strong>{profile?.display_name || 'Jogador'}</strong>
+                  <small>{isAdmin ? 'Administrador · jogador' : 'Jogador'}</small>
+                </span>
               </div>
+
+              <button type="button" className="topbar-logout" onClick={handleLogout} aria-label="Sair">
+                <NavIcon name="logout" size={16} />
+                <span>Sair</span>
+              </button>
             </div>
-            <button className="sidebar-logout" onClick={handleLogout} title={sidebarCollapsed ? 'Sair' : undefined} aria-label="Sair"><NavIcon name="logout" size={17} /> <span>Sair</span></button>
           </div>
-        </aside>
+        </header>
 
-        <main className="main-content">
+        <main className="main-content topbar-main-content">
           <Outlet />
         </main>
 

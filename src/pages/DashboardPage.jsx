@@ -6,14 +6,26 @@ import HomeMatchRow from '../components/HomeMatchRow'
 import UserAvatar from '../components/UserAvatar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked, formatRelativeTime } from '../lib/utils'
-import { activityText, activityTone, isFeedActivity } from '../lib/activity'
+import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked } from '../lib/utils'
+import { activityText, isFeedActivity, parseMatchName } from '../lib/activity'
 
 function formatDeadline(value) {
   if (!value) return '—'
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
   }).format(new Date(value)).replace('.', '')
+}
+
+function formatRelativeActivity(value) {
+  if (!value) return 'agora'
+  const diffMs = Date.now() - new Date(value).getTime()
+  const diffMin = Math.max(0, Math.round(diffMs / 60000))
+  if (diffMin < 1) return 'agora'
+  if (diffMin < 60) return `há ${diffMin} ${diffMin === 1 ? 'minuto' : 'minutos'}`
+  const diffHr = Math.round(diffMin / 60)
+  if (diffHr < 24) return `há ${diffHr} ${diffHr === 1 ? 'hora' : 'horas'}`
+  const diffDay = Math.round(diffHr / 24)
+  return `há ${diffDay} ${diffDay === 1 ? 'dia' : 'dias'}`
 }
 
 function progressValue(done, total) {
@@ -48,7 +60,7 @@ export default function DashboardPage() {
       if (logError) throw logError
       setSeason(activeSeason)
       setProfiles(profileData || [])
-      setLogs((logData || []).filter(isFeedActivity).slice(0, 5))
+      setLogs((logData || []).filter(isFeedActivity).slice(0, 3))
 
       if (!activeSeason) {
         setRound(null)
@@ -157,103 +169,153 @@ export default function DashboardPage() {
   const myStanding = myRankIndex >= 0 ? leaderboard[myRankIndex] : null
   const leader = leaderboard[0]
   const gap = myStanding && leader ? Math.max(0, leader.points - myStanding.points) : 0
-  const preview = leaderboard.slice(0, 4)
-  if (myStanding && myRankIndex >= 4) preview.push(myStanding)
+  const titleRace = leaderboard.slice(0, 5)
+
+  const heroStatusCopy = pendingCount === 0
+    ? `${ownCount}/${currentMatches.length || 0} palpites enviados. Tudo certo para a rodada.`
+    : `${ownCount}/${currentMatches.length || 0} palpites enviados. Faltam ${pendingCount} ${pendingCount === 1 ? 'palpite' : 'palpites'}.`
 
   return (
-    <div className="page-wrap home-hub sports-surface">
-      <header className="home-round-header">
-        <span className="sports-eyebrow">{season?.name || 'Champions Bolão'}</span>
-        <h1>{round ? (roundInProgress ? `${round.name} está valendo` : `${round.name} encerrada`) : 'Rodada atual'}</h1>
-        {round && <p className="home-round-state-copy">{roundInProgress ? 'A rodada está aberta para seus palpites.' : 'A rodada foi concluída.'}</p>}
-        {round && (
-          <>
-            <div className="home-round-meta">
-              <span><b>{currentMatches.length}</b> {currentMatches.length === 1 ? 'jogo' : 'jogos'}</span>
-              <span><b>{ownCount}</b> {ownCount === 1 ? 'palpite feito' : 'palpites feitos'}</span>
-              <span className={`home-meta-pending ${pendingCount ? 'has-pending' : 'is-complete'}`}><b>{pendingCount}</b> {pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
-              <span className="home-meta-completion"><b>{completion}%</b> concluído</span>
-            </div>
-            <div className="home-progress-line"><i style={{ width: `${completion}%` }} /><span>{completion}% concluído</span></div>
-          </>
-        )}
-      </header>
-
+    <div className="page-wrap home-screen-reference home-reference-surface">
       {error && <div className="form-error">{error}</div>}
 
       {!season || !round ? (
         <EmptyState title="Nenhuma rodada ativa" text="O administrador ainda não cadastrou a temporada e os jogos." />
       ) : (
         <>
-          <section className="round-summary-bar" aria-label="Resumo da rodada">
-            <div><span>Rodada atual</span><strong>{round.name}</strong><small>{round.stage}</small></div>
-            <div><span>Jogos da rodada</span><strong>{currentMatches.length} {currentMatches.length === 1 ? 'jogo' : 'jogos'}</strong><small>{openMatches} abertos · {finishedCount} finalizados</small></div>
-            <div><span>Seus palpites</span><strong>{ownCount}/{currentMatches.length}</strong><small>{completion}% concluído</small><div className="summary-mini-progress"><i style={{ width: `${completion}%` }} /></div></div>
-            <div><span>Próximo prazo</span><strong>{nextDeadline ? formatDeadline(nextDeadline.kickoff_at) : 'Encerrado'}</strong><small>{nextDeadline ? 'Até o início da próxima partida' : 'Nenhum jogo aberto'}</small></div>
+          <header className="home-ref-hero" aria-label="Central da rodada">
+            <div className="home-ref-hero-art" aria-hidden="true" />
+
+            <div className="home-ref-hero-copy">
+              <span className="home-ref-kicker">UEFA Champions League {season?.name?.replace('Champions League ', '') || '2026/27'}</span>
+              <h1>{round.stage || round.name}</h1>
+              <div className="home-ref-subline">
+                <strong>{round.name}</strong>
+                <em>{roundInProgress ? 'Palpites em andamento' : 'Rodada concluída'}</em>
+              </div>
+              <p>{heroStatusCopy}</p>
+
+              <div className="home-ref-metrics" aria-label="Resumo da rodada">
+                <article>
+                  <strong>{currentMatches.length}</strong>
+                  <span>{currentMatches.length === 1 ? 'jogo' : 'jogos'}</span>
+                </article>
+                <article>
+                  <strong>{ownCount}/{currentMatches.length || 0}</strong>
+                  <span>enviados</span>
+                </article>
+                <article>
+                  <strong>{pendingCount}</strong>
+                  <span>{pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
+                </article>
+                <article>
+                  <strong>{completion}%</strong>
+                  <span>concluído</span>
+                </article>
+              </div>
+
+              <div className="home-ref-progress">
+                <div className="home-ref-progress-track" aria-hidden="true">
+                  <i style={{ width: `${completion}%` }} />
+                </div>
+                <b>{completion}%</b>
+              </div>
+            </div>
+            <aside className="home-ref-deadline-card">
+              <div className="home-ref-deadline-icon">◔</div>
+              <div className="home-ref-deadline-copy">
+                <span>Próximo prazo</span>
+                <strong>{nextDeadline ? formatDeadline(nextDeadline.kickoff_at) : 'Encerrado'}</strong>
+                <small>{nextDeadline ? 'Até o início da próxima partida' : 'Nenhum jogo aberto nesta rodada'}</small>
+                <p>{openMatches} partidas abertas · {finishedCount} finalizadas</p>
+              </div>
+            </aside>
+          </header>
+
+          <section className="home-ref-section">
+            <div className="home-ref-section-head">
+              <div className="home-ref-heading-inline">
+                <i className="home-ref-accent" aria-hidden="true" />
+                <h2>Seus palpites</h2>
+                <small>{round.name}</small>
+              </div>
+              <Link to={`/rodadas/${round.id}`}>Ver rodada completa <span>→</span></Link>
+            </div>
+
+            <div className="home-ref-fixtures-grid">
+              {currentMatches.map((match) => (
+                <HomeMatchRow
+                  key={match.id}
+                  match={match}
+                  ownPrediction={ownPredictionMap.get(match.id)}
+                  presence={presence.filter((item) => item.match_id === match.id)}
+                  profiles={profiles}
+                  onSave={savePrediction}
+                />
+              ))}
+            </div>
           </section>
 
-          <div className="home-content-grid">
-            <section className="home-matches-section">
-              <div className="sports-section-heading">
-                <div><span>Rodada atual</span><h2>Seus palpites da rodada</h2></div>
-                <Link to={`/rodadas/${round.id}`}>Ver rodada completa</Link>
+          <div className="home-ref-bottom-grid">
+            <section className="home-ref-panel home-ref-panel-leaderboard">
+              <div className="home-ref-section-head compact">
+                <div className="home-ref-heading-inline">
+                  <i className="home-ref-accent" aria-hidden="true" />
+                  <h2>Classificação</h2>
+                  <small>Top 5</small>
+                </div>
+                <Link to="/classificacao">Ver tabela completa <span>→</span></Link>
               </div>
-              <div className="home-match-list">
-                {currentMatches.length ? currentMatches.map((match) => (
-                  <HomeMatchRow
-                    key={match.id}
-                    match={match}
-                    ownPrediction={ownPredictionMap.get(match.id)}
-                    presence={presence.filter((item) => item.match_id === match.id)}
-                    profiles={profiles}
-                    onSave={savePrediction}
-                  />
-                )) : <EmptyState title="Rodada sem jogos" text="Os jogos desta rodada ainda não foram cadastrados." />}
-              </div>
-            </section>
 
-            <aside className="home-side-column">
-              <section className="sports-panel compact-standings">
-                <div className="sports-panel-title"><h2>Classificação</h2><Link to="/classificacao">Ver tabela completa</Link></div>
-                {!leaderboard.length ? <p className="sports-empty-copy">Nenhum participante na classificação.</p> : (
-                  <div className="home-standing-list">
-                    {preview.map((item, index) => {
-                      const realIndex = leaderboard.findIndex((entry) => entry.id === item.id)
-                      const separated = index === 4 && myRankIndex >= 4
-                      return (
-                        <div key={item.id} className={`home-standing-row ${item.id === user.id ? 'mine' : ''} ${separated ? 'separated' : ''}`}>
-                          <span className={`home-standing-place place-${realIndex + 1}`}>{realIndex + 1}</span>
-                          <div className="home-standing-player">
-                            <UserAvatar profile={item} size="tiny" />
-                            <div className="home-standing-copy">
-                              <strong>{item.display_name}</strong>
-                              {item.id === user.id && gap > 0 && <small>{gap} {gap === 1 ? 'ponto' : 'pontos'} atrás do líder</small>}
-                            </div>
-                          </div>
-                          <b>{item.points}</b>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-                <Link className="sports-panel-footer" to="/classificacao">Ver todos os participantes <span>→</span></Link>
-              </section>
-
-              <section className="sports-panel compact-activity">
-                <div className="sports-panel-title"><h2>Últimas atividades</h2><Link to="/atividades">Ver tudo</Link></div>
-                {!logs.length ? <p className="sports-empty-copy">Nenhuma atividade recente.</p> : (
-                  <div className="home-activity-list">
-                    {logs.map((item) => (
-                      <div className="home-activity-row" key={item.id}>
-                        <span className={`activity-dot ${activityTone(item.action)}`} />
-                        <p>{activityText(item)}</p>
-                        <time>{formatRelativeTime(item.created_at)}</time>
-                      </div>
+              {!leaderboard.length ? <p className="sports-empty-copy">Nenhum participante na classificação.</p> : (
+                <>
+                  <div className="home-ref-leaderboard-strip">
+                    {titleRace.map((item, index) => (
+                      <article key={item.id} className={`home-ref-rank-card place-${index + 1} ${item.id === user.id ? 'is-user' : ''}`}>
+                        <div className="home-ref-rank-avatar"><UserAvatar profile={item} size="tiny" /></div>
+                        <strong>{item.display_name}</strong>
+                        <b>{item.points} pts</b>
+                        {item.id === user.id && <em>Você</em>}
+                      </article>
                     ))}
                   </div>
-                )}
-              </section>
-            </aside>
+                  {myStanding && (
+                    <p className="home-ref-rank-summary">
+                      Você está em <strong>{String(myRankIndex + 1).padStart(2, '0')}º</strong> com <strong>{myStanding.points} pts</strong>
+                      {gap > 0 ? ` · ${gap} ${gap === 1 ? 'ponto' : 'pontos'} atrás do líder` : ' · empatado com a liderança'}.
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+
+            <section className="home-ref-panel home-ref-panel-activity">
+              <div className="home-ref-section-head compact">
+                <div className="home-ref-heading-inline">
+                  <i className="home-ref-accent" aria-hidden="true" />
+                  <h2>Movimento da rodada</h2>
+                  <small>Atividades mais recentes</small>
+                </div>
+                <Link to="/atividades">Ver todas <span>→</span></Link>
+              </div>
+
+              {!logs.length ? <p className="sports-empty-copy">Nenhuma atividade recente.</p> : (
+                <div className="home-ref-activity-list">
+                  {logs.map((item) => {
+                    const matchInfo = parseMatchName(item?.metadata?.match_name || '')
+                    return (
+                      <article className="home-ref-activity-item" key={item.id}>
+                        <time>{formatRelativeActivity(item.created_at)}</time>
+                        <div>
+                          <p>{activityText(item)}</p>
+                          {matchInfo && <span>{matchInfo.home} x {matchInfo.away}</span>}
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
           </div>
         </>
       )}
