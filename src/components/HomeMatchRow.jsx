@@ -37,14 +37,18 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
         </div>
 
         <div className="home-match-teams">
-          <div className="home-team-line">
-            <TeamCrest team={match.home_team} size="medium" />
-            <strong>{match.home_team}</strong>
+          <div className="home-team-line home-team-side">
+            <div className="home-team-chip">
+              <TeamCrest team={match.home_team} size="medium" />
+              <strong title={match.home_team}>{match.home_team}</strong>
+            </div>
           </div>
           <span className="home-versus">×</span>
-          <div className="home-team-line away">
-            <TeamCrest team={match.away_team} size="medium" />
-            <strong>{match.away_team}</strong>
+          <div className="home-team-line away home-team-side">
+            <div className="home-team-chip">
+              <TeamCrest team={match.away_team} size="medium" />
+              <strong title={match.away_team}>{match.away_team}</strong>
+            </div>
           </div>
         </div>
 

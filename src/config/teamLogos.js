@@ -14,7 +14,7 @@ const TEAM_ENTRIES = [
   { id: 'manchester-united', name: 'Manchester United', logo: FOTMOB_LOGO(10260), aliases: ['manchester united', 'man united', 'man utd', 'united'] },
   { id: 'aston-villa', name: 'Aston Villa', logo: FOTMOB_LOGO(10252), aliases: ['aston villa', 'villa'] },
   { id: 'roma', name: 'Roma', logo: FOTMOB_LOGO(8686), aliases: ['roma', 'as roma'] },
-  { id: 'porto', name: 'Porto', logo: FOTMOB_LOGO(9772), aliases: ['porto', 'fc porto'] },
+  { id: 'porto', name: 'Porto', logo: '/teams/porto.png', aliases: ['porto', 'fc porto'] },
   { id: 'sporting-cp', name: 'Sporting CP', logo: '/teams/sporting-cp.png', aliases: ['sporting cp', 'sporting', 'sporting clube de portugal', 'sporting lisboa'] },
   { id: 'psv', name: 'PSV Eindhoven', logo: FOTMOB_LOGO(8649), aliases: ['psv eindhoven', 'psv'] },
   { id: 'real-betis', name: 'Real Betis', logo: FOTMOB_LOGO(8603), aliases: ['real betis', 'betis'] },
