@@ -106,7 +106,9 @@ export default function Layout() {
         </header>
 
         <main className="main-content topbar-main-content">
-          <Outlet />
+          <div key={location.pathname} className="route-scene">
+            <Outlet />
+          </div>
         </main>
 
         <div className={`mobile-more-layer ${mobileMoreOpen ? 'open' : ''}`} aria-hidden={!mobileMoreOpen}>

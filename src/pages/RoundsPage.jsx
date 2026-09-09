@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
-import TeamCrest from '../components/TeamCrest'
-import UserAvatar from '../components/UserAvatar'
+import Loading from '../components/Loading'
+import NavIcon from '../components/NavIcon'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked } from '../lib/utils'
+import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
 
 const stageFilters = [
-  { key: 'all', label: 'Todas' },
-  { key: 'league', label: 'Fase de liga' },
+  { key: 'all', label: 'Todas as fases' },
+  { key: 'league', label: 'Fase de liga / grupos' },
   { key: 'r16', label: 'Oitavas' },
   { key: 'quarters', label: 'Quartas' },
   { key: 'semis', label: 'Semifinal' },
@@ -26,31 +25,43 @@ function stageKey(stage = '') {
   return 'league'
 }
 
+function seasonLabel(season) {
+  if (!season) return 'Champions League'
+  return season.name || 'Champions League'
+}
+
 function roundDates(round) {
-  const matches = [...(round.matches || [])].filter((match) => match.kickoff_at).sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+  const matches = [...(round?.matches || [])]
+    .filter((match) => match.kickoff_at)
+    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   if (!matches.length) return 'Sem data'
+
   const first = new Date(matches[0].kickoff_at)
   const last = new Date(matches.at(-1).kickoff_at)
   const day = (date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date)
-  const month = (date) => new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'America/Sao_Paulo' }).format(date).replace('.', '').toUpperCase()
+  const month = (date) => new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'America/Sao_Paulo' }).format(date).replace('.', '').toLowerCase()
+
   if (first.toDateString() === last.toDateString()) return `${day(first)} ${month(first)}`
   if (first.getMonth() === last.getMonth()) return `${day(first)}–${day(last)} ${month(last)}`
   return `${day(first)} ${month(first)} – ${day(last)} ${month(last)}`
 }
 
-function matchDate(value) {
-  if (!value) return { date: '—', time: '' }
-  const d = new Date(value)
-  return {
-    date: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }).format(d),
-    time: new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).format(d),
-  }
+
+function roundDisplayName(round) {
+  const stage = String(round?.stage || '').trim()
+  const raw = String(round?.name || `Rodada ${round?.sort_order || ''}`).trim()
+  let detail = raw
+  if (stage && raw.toLowerCase().startsWith(stage.toLowerCase())) detail = raw.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
+  if (!detail) detail = `Rodada ${round?.sort_order || ''}`.trim()
+  if (/^\d+\s+de\s+\d+$/i.test(detail)) detail = `Rodada ${detail}`
+  return stage ? `${stage} · ${detail}` : detail
 }
 
-function pointsFeedback(points) {
-  if (points === 3) return { label: 'EXATO', className: 'exact' }
-  if (points === 1) return { label: 'VENCEDOR', className: 'winner' }
-  return { label: 'ERRO', className: 'miss' }
+function roundSecondaryName(round) {
+  const full = roundDisplayName(round)
+  const stage = String(round?.stage || '').trim()
+  if (stage && full.toLowerCase().startsWith(stage.toLowerCase())) return full.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
+  return full
 }
 
 function sortStats(a, b) {
@@ -75,10 +86,10 @@ function placement(value) {
   return value ? `${value}º` : '—'
 }
 
-function movement(previous, current) {
-  if (!current) return '—'
-  if (!previous || previous === current) return `${current}º`
-  return `${previous}º → ${current}º`
+function getRoundStatus(round, currentRound) {
+  if (round.closed_at) return { label: 'Concluída', className: 'closed' }
+  if (currentRound?.id === round.id) return { label: 'Em andamento', className: 'current' }
+  return { label: 'Em breve', className: 'upcoming' }
 }
 
 export default function RoundsPage() {
@@ -93,8 +104,7 @@ export default function RoundsPage() {
   const [presence, setPresence] = useState([])
   const [mode, setMode] = useState('individual')
   const [filter, setFilter] = useState('all')
-  const [roundOrder, setRoundOrder] = useState('asc')
-  const [expanded, setExpanded] = useState(new Set())
+  const [roundOrder, setRoundOrder] = useState('desc')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -129,6 +139,7 @@ export default function RoundsPage() {
       setPresence([])
       return
     }
+
     let cancelled = false
     async function loadSeason() {
       setSeasonLoading(true)
@@ -140,10 +151,12 @@ export default function RoundsPage() {
           .eq('season_id', seasonId)
           .order('sort_order')
         if (roundsError) throw roundsError
+
         const loaded = (roundData || []).map((round) => ({
           ...round,
           matches: [...(round.matches || [])].sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at)),
         }))
+
         const ids = loaded.flatMap((round) => round.matches.map((match) => match.id))
         let predictionData = []
         let presenceData = []
@@ -157,11 +170,11 @@ export default function RoundsPage() {
           predictionData = predictionResult.data || []
           presenceData = presenceResult.data || []
         }
+
         if (!cancelled) {
           setRounds(loaded)
           setPredictions(predictionData)
           setPresence(presenceData)
-          setExpanded(new Set())
         }
       } catch (err) {
         if (!cancelled) setError(err.message)
@@ -169,12 +182,14 @@ export default function RoundsPage() {
         if (!cancelled) setSeasonLoading(false)
       }
     }
+
     loadSeason()
     return () => { cancelled = true }
   }, [seasonId])
 
   const season = seasons.find((item) => item.id === seasonId) || null
   const predictionByUserMatch = useMemo(() => new Map(predictions.map((item) => [`${item.user_id}:${item.match_id}`, item])), [predictions])
+
   const presenceByRound = useMemo(() => {
     const map = new Map()
     rounds.forEach((round) => {
@@ -188,19 +203,19 @@ export default function RoundsPage() {
     const roundMetrics = new Map()
     const snapshots = new Map()
     const cumulative = new Map(profiles.map((profile) => [profile.id, { ...profile, points: 0, exact: 0, winners: 0 }]))
-    let previousPositions = new Map()
 
     rounds.forEach((round) => {
       const finishedMatches = round.matches.filter(hasResult)
       const perPlayer = profiles.map((profile) => {
-        const entries = finishedMatches.map((match) => ({ match, prediction: predictionByUserMatch.get(`${profile.id}:${match.id}`) })).filter((entry) => entry.prediction)
+        const entries = finishedMatches
+          .map((match) => ({ match, prediction: predictionByUserMatch.get(`${profile.id}:${match.id}`) }))
+          .filter((entry) => entry.prediction)
         const scores = entries.map((entry) => calculatePoints(entry.prediction, entry.match))
         const points = scores.reduce((sum, value) => sum + value, 0)
         const exact = entries.filter((entry) => isExactPrediction(entry.prediction, entry.match)).length
         const winners = entries.filter((entry) => didPickWinner(entry.prediction, entry.match)).length
-        const errors = scores.filter((value) => value === 0).length
         const submitted = round.matches.filter((match) => predictionByUserMatch.has(`${profile.id}:${match.id}`)).length
-        return { ...profile, points, exact, winners, errors, submitted }
+        return { ...profile, points, exact, winners, submitted }
       }).sort(sortStats)
 
       roundMetrics.set(round.id, perPlayer)
@@ -212,61 +227,70 @@ export default function RoundsPage() {
         current.winners += stats.winners
       })
       const standing = [...cumulative.values()].sort(sortStats)
-      const positions = buildPositions(standing)
-      snapshots.set(round.id, {
-        standing,
-        positions,
-        previousPositions: new Map(previousPositions),
-      })
-      previousPositions = positions
+      snapshots.set(round.id, { standing, positions: buildPositions(standing) })
     })
+
     return { roundMetrics, snapshots }
   }, [profiles, rounds, predictionByUserMatch])
 
-  const currentRound = useMemo(() => rounds.find((round) => round.matches.some((match) => !hasResult(match))) || null, [rounds])
-  const filteredRounds = useMemo(() => rounds.filter((round) => filter === 'all' || stageKey(round.stage) === filter), [rounds, filter])
-  const historyRounds = [...filteredRounds]
-    .filter((round) => round.id !== currentRound?.id)
-    .sort((a, b) => roundOrder === 'asc' ? a.sort_order - b.sort_order : b.sort_order - a.sort_order)
-  const finalSnapshot = rounds.length ? computed.snapshots.get(rounds.at(-1).id) : null
-  const ownCurrentPosition = finalSnapshot?.positions.get(user.id)
-  const ownSeason = finalSnapshot?.standing.find((item) => item.id === user.id) || { points: 0, exact: 0, winners: 0 }
-  const leader = finalSnapshot?.standing[0] || null
-  const seasonTotalPoints = (finalSnapshot?.standing || []).reduce((sum, item) => sum + item.points, 0)
+  // A Administração usa closed_at como estado operacional da rodada.
+  // A tela de Rodadas segue a mesma fonte de verdade: a primeira rodada não encerrada é a atual.
+  const currentRound = useMemo(() => rounds.find((round) => !round.closed_at) || null, [rounds])
+
+  const filteredRounds = useMemo(() => {
+    const list = rounds.filter((round) => filter === 'all' || stageKey(round.stage) === filter)
+    return [...list].sort((a, b) => roundOrder === 'asc' ? a.sort_order - b.sort_order : b.sort_order - a.sort_order)
+  }, [rounds, filter, roundOrder])
+
+  const latestSnapshot = useMemo(() => {
+    const lastRelevant = [...rounds].reverse().find((round) => round.closed_at || round.id === currentRound?.id) || rounds.at(-1)
+    return lastRelevant ? computed.snapshots.get(lastRelevant.id) : null
+  }, [rounds, currentRound?.id, computed.snapshots])
+
+  const ownCurrentPosition = latestSnapshot?.positions.get(user.id)
+  const ownSeason = latestSnapshot?.standing.find((item) => item.id === user.id) || { points: 0, exact: 0, winners: 0 }
+  const leader = latestSnapshot?.standing[0] || null
+  const seasonTotalPoints = (latestSnapshot?.standing || []).reduce((sum, item) => sum + item.points, 0)
   const seasonAveragePoints = profiles.length ? seasonTotalPoints / profiles.length : 0
 
   function roundStats(round, profileId = user.id) {
     const list = computed.roundMetrics.get(round.id) || []
-    const stats = list.find((item) => item.id === profileId) || { points: 0, exact: 0, winners: 0, errors: 0, submitted: 0 }
+    const stats = list.find((item) => item.id === profileId) || { points: 0, exact: 0, winners: 0, submitted: 0 }
     const snapshot = computed.snapshots.get(round.id)
-    return {
-      ...stats,
-      position: snapshot?.positions.get(profileId),
-      previousPosition: snapshot?.previousPositions.get(profileId),
-    }
+    return { ...stats, position: snapshot?.positions.get(profileId) }
   }
 
-  function toggleRound(roundId) {
-    setExpanded((current) => {
-      const next = new Set(current)
-      if (next.has(roundId)) next.delete(roundId)
-      else next.add(roundId)
-      return next
-    })
+  function generalRoundStats(round) {
+    const players = computed.roundMetrics.get(round.id) || []
+    const roundPresence = presenceByRound.get(round.id) || []
+    const participants = players.filter((player) => player.submitted > 0).length
+    const submitted = roundPresence.filter((item) => item.has_predicted).length
+    const points = players.reduce((sum, player) => sum + player.points, 0)
+    return { participants, submitted, points }
   }
 
   if (loading) return <Loading label="Carregando temporadas..." />
 
+  const currentStats = currentRound ? roundStats(currentRound) : null
+  const currentGeneral = currentRound ? generalRoundStats(currentRound) : null
+  const currentProgress = currentRound
+    ? Math.min(100, mode === 'individual'
+      ? (currentStats.submitted / Math.max(1, currentRound.matches.length)) * 100
+      : (currentGeneral.submitted / Math.max(1, currentRound.matches.length * profiles.length)) * 100)
+    : 0
+
   return (
-    <div className="page-wrap rounds-hub sports-surface">
-      <header className="rounds-page-header">
-        <div>
-          <span className="sports-eyebrow">{season?.name || 'Champions League'}</span>
+    <div className="page-wrap season-rounds-page">
+      <header className="season-rounds-hero">
+        <div className="season-rounds-hero-art" aria-hidden="true" />
+        <div className="season-rounds-heading">
+          <span>{seasonLabel(season)}</span>
           <h1>Rodadas</h1>
-          <p><span className="rounds-copy-desktop">Acompanhe a evolução da temporada, seus resultados e seus palpites em cada rodada.</span><span className="rounds-copy-mobile">Acompanhe a evolução da temporada rodada a rodada.</span></p>
+          <p>Acompanhe sua campanha rodada a rodada.</p>
         </div>
+
         {seasons.length > 0 && (
-          <label className="season-selector">
+          <label className="season-rounds-season-select">
             <span>Temporada</span>
             <select value={seasonId} onChange={(event) => setSeasonId(event.target.value)}>
               {seasons.map((item) => <option value={item.id} key={item.id}>{item.name}{item.is_active ? ' · atual' : ''}</option>)}
@@ -285,169 +309,129 @@ export default function RoundsPage() {
         <EmptyState title="Nenhuma rodada cadastrada" text="Assim que o administrador criar as rodadas, elas aparecem aqui." />
       ) : (
         <>
-          <div className="rounds-toolbar">
-            <div className="view-mode-toggle" role="tablist" aria-label="Modo de visualização">
-              <button className={mode === 'individual' ? 'active' : ''} onClick={() => setMode('individual')}>Individual</button>
-              <button className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>Geral</button>
+          <div className="season-rounds-toolbar">
+            <div className="season-rounds-mode" role="tablist" aria-label="Modo de visualização">
+              <button className={mode === 'individual' ? 'active' : ''} onClick={() => setMode('individual')}>
+                <NavIcon name="predictions" size={19} /> Individual
+              </button>
+              <button className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>
+                <NavIcon name="leaderboard" size={19} /> Geral
+              </button>
             </div>
-            <div className="rounds-toolbar-right">
-              <div className="stage-filter-row" aria-label="Filtrar por fase">
-                {stageFilters.map((item) => (
-                  <button key={item.key} className={filter === item.key ? 'active' : ''} onClick={() => setFilter(item.key)}>{item.label}</button>
-                ))}
-              </div>
-              <label className="round-order-control">
-                <span>Ordem</span>
+
+            <div className="season-rounds-filters">
+              <label>
+                <NavIcon name="rounds" size={18} />
+                <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filtrar por fase">
+                  {stageFilters.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}
+                </select>
+              </label>
+              <label>
+                <span className="season-rounds-sort-icon">⇅</span>
                 <select value={roundOrder} onChange={(event) => setRoundOrder(event.target.value)} aria-label="Ordenar rodadas">
-                  <option value="asc">1 → última</option>
-                  <option value="desc">Última → 1</option>
+                  <option value="desc">Mais recentes</option>
+                  <option value="asc">Mais antigas</option>
                 </select>
               </label>
             </div>
           </div>
 
-          <section className={`rounds-overview-grid ${currentRound ? '' : 'single'}`.trim()}>
+          <section className={`season-rounds-overview ${currentRound ? '' : 'single'}`.trim()}>
             {currentRound && (
-              <div className="current-round-card">
-                <div className="current-round-label">AGORA</div>
-                <div className="current-round-main">
+              <article className="season-current-round-card">
+                <div className="season-current-round-art" aria-hidden="true" />
+                <span className="season-current-badge">● Agora</span>
+                <div className="season-current-title">
+                  <strong>{String(currentRound.sort_order).padStart(2, '0')}</strong>
                   <div>
-                    <span className="current-round-number">{String(currentRound.sort_order).padStart(2, '0')}</span>
-                    <div><h2>{currentRound.name}</h2><p>{roundDates(currentRound)} · {currentRound.stage} · {currentRound.matches.length} {currentRound.matches.length === 1 ? 'jogo' : 'jogos'}</p></div>
+                    <h2>{roundDisplayName(currentRound)}</h2>
+                    <p>{roundDates(currentRound)} · {currentRound.matches.length} {currentRound.matches.length === 1 ? 'jogo' : 'jogos'} <span>● Em andamento</span></p>
                   </div>
-                  {mode === 'individual' ? (() => {
-                    const stats = roundStats(currentRound)
-                    return <div className="current-round-numbers"><div><strong>{stats.submitted}/{currentRound.matches.length}</strong><span>palpites enviados</span></div><div className="positive"><strong>{stats.points}</strong><span>pts conquistados</span></div></div>
-                  })() : (() => {
-                    const submitted = (presenceByRound.get(currentRound.id) || []).filter((item) => item.has_predicted).length
-                    return <div className="current-round-numbers"><div><strong>{profiles.length}</strong><span>participantes</span></div><div><strong>{submitted}</strong><span>palpites enviados</span></div></div>
-                  })()}
                 </div>
-                <div className="current-round-progress"><i style={{ width: `${Math.min(100, mode === 'individual' ? (roundStats(currentRound).submitted / Math.max(1, currentRound.matches.length)) * 100 : ((presenceByRound.get(currentRound.id) || []).filter((item) => item.has_predicted).length / Math.max(1, currentRound.matches.length * profiles.length)) * 100)}%` }} /></div>
-                <Link className="current-round-open-link" to={`/rodadas/${currentRound.id}`}>Abrir rodada e ver palpites →</Link>
-              </div>
+
+                {mode === 'individual' ? (
+                  <div className="season-current-metrics">
+                    <div><strong>{currentStats.submitted}/{currentRound.matches.length}</strong><span>palpites enviados</span></div>
+                    <div className="positive"><strong>{currentStats.points}</strong><span>pontos conquistados</span></div>
+                    <div><strong>{currentStats.exact}</strong><span>placares exatos</span></div>
+                  </div>
+                ) : (
+                  <div className="season-current-metrics">
+                    <div><strong>{currentGeneral.participants}</strong><span>participantes</span></div>
+                    <div><strong>{currentGeneral.submitted}</strong><span>palpites enviados</span></div>
+                    <div className="positive"><strong>{currentGeneral.points}</strong><span>pontos distribuídos</span></div>
+                  </div>
+                )}
+
+                <div className="season-current-progress-row">
+                  <div className="season-current-progress"><i style={{ width: `${currentProgress}%` }} /></div>
+                  <b>{Math.round(currentProgress)}%</b>
+                  <Link to={`/rodadas/${currentRound.id}`}>Ver rodada completa <span>→</span></Link>
+                </div>
+              </article>
             )}
 
-            <div className="season-performance-panel">
-              <span className="performance-title">{mode === 'individual' ? 'Seu desempenho na temporada' : 'Panorama da temporada'}</span>
+            <article className="season-performance-card">
+              <div className="season-performance-head">
+                <div><NavIcon name="leaderboard" size={24} /><h2>{mode === 'individual' ? 'Sua temporada' : 'Panorama da temporada'}</h2></div>
+                <Link to="/classificacao">Ver classificação geral <span>→</span></Link>
+              </div>
+
               {mode === 'individual' ? (
-                <div className="performance-metrics">
-                  <div><span>Total de pontos</span><strong>{ownSeason.points}<small> pts</small></strong></div>
-                  <div><span>Placares exatos</span><strong>{ownSeason.exact}</strong></div>
-                  <div><span>Vencedores</span><strong>{ownSeason.winners}</strong></div>
-                  <div><span>Posição atual</span><strong className="gold">{placement(ownCurrentPosition)}</strong></div>
+                <div className="season-performance-metrics">
+                  <div><NavIcon name="podium" size={22} /><strong>{ownSeason.points}</strong><span>Total de pontos</span></div>
+                  <div><span className="metric-symbol">◎</span><strong>{ownSeason.exact}</strong><span>Placares exatos</span></div>
+                  <div><NavIcon name="leaderboard" size={22} /><strong>{ownSeason.winners}</strong><span>Vencedores</span></div>
+                  <div><span className="metric-symbol">▥</span><strong className="gold">{placement(ownCurrentPosition)}</strong><span>Posição atual</span></div>
                 </div>
               ) : (
-                <div className="performance-metrics general-season-metrics">
-                  <div><span>Pontos distribuídos</span><strong>{seasonTotalPoints}<small> pts</small></strong></div>
-                  <div><span>Participantes</span><strong>{profiles.length}</strong></div>
-                  <div><span>Média por participante</span><strong>{seasonAveragePoints.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}<small> pts</small></strong></div>
-                  <div><span>Maior pontuação</span><strong className="metric-name">{leader?.display_name || '—'}</strong><small>{leader ? `${leader.points} pts` : ''}</small></div>
+                <div className="season-performance-metrics">
+                  <div><span className="metric-symbol">▥</span><strong>{seasonTotalPoints}</strong><span>Pontos distribuídos</span></div>
+                  <div><NavIcon name="leaderboard" size={22} /><strong>{profiles.length}</strong><span>Participantes</span></div>
+                  <div><span className="metric-symbol">≈</span><strong>{seasonAveragePoints.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</strong><span>Média por participante</span></div>
+                  <div><NavIcon name="podium" size={22} /><strong className="metric-name">{leader?.display_name || '—'}</strong><span>{leader ? `${leader.points} pts` : 'Maior pontuação'}</span></div>
                 </div>
               )}
-            </div>
+            </article>
           </section>
 
-          {profiles.length === 0 && mode === 'general' ? (
-            <EmptyState title="Nenhum participante" text="Crie usuários no Supabase para que o desempenho geral possa ser exibido." />
-          ) : (
-            <section className="round-timeline">
-              {!historyRounds.length ? (
-                <div className="rounds-filter-empty">Nenhuma rodada encontrada para este filtro.</div>
-              ) : historyRounds.map((round) => {
-                const stats = roundStats(round)
-                const isExpanded = expanded.has(round.id)
-                const roundPlayers = computed.roundMetrics.get(round.id) || []
-                const finished = round.matches.filter(hasResult).length
-                const status = round.matches.length && round.matches.every(hasResult) ? 'Concluída' : round.matches.some((match) => !isLocked(match)) ? 'Aberta' : 'Aguardando resultado'
-                return (
-                  <article className={`timeline-round ${isExpanded ? 'expanded' : ''}`} key={round.id}>
-                    <div className="round-history-card">
-                      <div className="round-history-summary">
-                        <div className="round-history-identity">
-                          <div><strong>Rodada {String(round.sort_order).padStart(2, '0')} · {roundDates(round)}</strong><span>{round.stage} · {round.matches.length} jogos · {status}</span></div>
-                        </div>
+          <section className="season-round-history">
+            <div className="season-round-history-head">
+              <div><NavIcon name="activity" size={24} /><div><h2>Histórico da temporada</h2><p>Todas as rodadas da {seasonLabel(season)}.</p></div></div>
+            </div>
 
-                        {mode === 'individual' ? (
-                          <div className="round-history-metrics">
-                            <div className="points"><strong>{stats.points}<small> pts</small></strong><span>conquistados</span></div>
-                            <div><strong>{stats.exact}</strong><span>{stats.exact === 1 ? 'placar exato' : 'placares exatos'}</span></div>
-                            <div><strong>{stats.winners}</strong><span>{stats.winners === 1 ? 'vencedor' : 'vencedores'}</span></div>
-                            <div><strong>{stats.errors}</strong><span>{stats.errors === 1 ? 'erro' : 'erros'}</span></div>
-                            <div className="movement"><strong>{movement(stats.previousPosition, stats.position)}</strong><span>na classificação</span></div>
-                          </div>
-                        ) : (
-                          <div className="round-general-preview aggregate">
-                            {(() => {
-                              const participants = roundPlayers.filter((player) => player.submitted > 0).length
-                              const total = roundPlayers.reduce((sum, player) => sum + player.points, 0)
-                              const average = participants ? total / participants : 0
-                              const top = roundPlayers[0]
-                              return <>
-                                <span><b>{total}</b> pts no total</span>
-                                <span><b>{participants}</b> participantes</span>
-                                <span><b>{average.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</b> pts de média</span>
-                                <span><b>{top?.points || 0}</b> maior pontuação</span>
-                              </>
-                            })()}
-                          </div>
-                        )}
-
-                        <div className="round-history-actions">
-                          <Link className="round-open-link" to={`/rodadas/${round.id}`} title="Ver jogos e palpites da rodada">Abrir rodada</Link>
-                          <button className="round-expand-button" onClick={() => toggleRound(round.id)}>{isExpanded ? 'Ver menos' : 'Resumo'} <span>{isExpanded ? '⌃' : '⌄'}</span></button>
-                        </div>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="round-inline-details">
-                          {mode === 'individual' ? (
-                            <div className="individual-round-table">
-                              <div className="round-table-head"><span>Data</span><span>Jogo</span><span>Placar final</span><span>Seu palpite</span><span>Resultado</span><span>Pontos</span></div>
-                              {round.matches.map((match) => {
-                                const prediction = predictionByUserMatch.get(`${user.id}:${match.id}`)
-                                const points = calculatePoints(prediction, match)
-                                const feedback = pointsFeedback(points)
-                                const date = matchDate(match.kickoff_at)
-                                return (
-                                  <div className="round-table-row" key={match.id}>
-                                    <div className="round-match-date"><strong>{date.date}</strong><span>{date.time}</span></div>
-                                    <div className="round-match-teams"><span><TeamCrest team={match.home_team} size="small" />{match.home_team}</span><i>×</i><span><TeamCrest team={match.away_team} size="small" />{match.away_team}</span></div>
-                                    <strong className="round-final-score">{hasResult(match) ? `${match.home_score} × ${match.away_score}` : '—'}</strong>
-                                    <strong className="round-own-score">{prediction ? `${prediction.home_score} × ${prediction.away_score}` : '—'}</strong>
-                                    <span className={`round-result-pill ${hasResult(match) && prediction ? feedback.className : 'neutral'}`}>{hasResult(match) ? (prediction ? feedback.label : 'SEM PALPITE') : 'PENDENTE'}</span>
-                                    <strong className={points > 0 ? 'round-points-positive' : ''}>{hasResult(match) && prediction ? `${points > 0 ? '+' : ''}${points} pts` : '—'}</strong>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          ) : (
-                            <div className="general-round-table">
-                              <div className="general-table-head"><span>Participante</span><span>Pontos</span><span>Exatos</span><span>Vencedores</span><span>Posição</span></div>
-                              {roundPlayers.map((player, index) => {
-                                const snapshot = computed.snapshots.get(round.id)
-                                const currentPosition = snapshot?.positions.get(player.id)
-                                const previousPosition = snapshot?.previousPositions.get(player.id)
-                                return (
-                                  <div className={`general-table-row ${player.id === user.id ? 'mine' : ''}`} key={player.id}>
-                                    <div className="general-player"><span className="general-rank">{index + 1}</span><UserAvatar profile={player} size="tiny" /><strong>{player.display_name}</strong>{player.id === user.id && <small>você</small>}</div>
-                                    <strong className={player.points > 0 ? 'round-points-positive' : ''}>{player.points} pts</strong>
-                                    <span>{player.exact}</span>
-                                    <span>{player.winners}</span>
-                                    <span>{movement(previousPosition, currentPosition)}</span>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
+            {filteredRounds.length > 0 && (
+              <div className="season-round-list">
+                {filteredRounds.map((round) => {
+                  const stats = roundStats(round)
+                  const general = generalRoundStats(round)
+                  const status = getRoundStatus(round, currentRound)
+                  return (
+                    <article className={`season-round-row ${status.className}`} key={round.id}>
+                      <span className="season-round-index">{String(round.sort_order).padStart(2, '0')}</span>
+                      <div className="season-round-name"><strong>{round.stage || round.name}</strong><span>{roundSecondaryName(round)}</span></div>
+                      <div className="season-round-date"><NavIcon name="rounds" size={18} /><span>{roundDates(round)}<small>{round.matches.length} {round.matches.length === 1 ? 'jogo' : 'jogos'}</small></span></div>
+                      {mode === 'individual' ? (
+                        <>
+                          <div className="season-round-stat submitted"><strong>{stats.submitted ? `${stats.submitted}/${round.matches.length}` : '-/-'}</strong><span>palpites</span></div>
+                          <div className="season-round-stat points positive"><strong>{round.closed_at || round.id === currentRound?.id ? stats.points : '-'}</strong><span>pontos</span></div>
+                          <div className="season-round-stat extra"><strong>{round.closed_at || round.id === currentRound?.id ? stats.exact : '-'}</strong><span>exatos</span></div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="season-round-stat submitted"><strong>{general.participants || '-'}</strong><span>participantes</span></div>
+                          <div className="season-round-stat points"><strong>{general.submitted || '-'}</strong><span>palpites</span></div>
+                          <div className="season-round-stat extra positive"><strong>{round.closed_at || round.id === currentRound?.id ? general.points : '-'}</strong><span>pontos</span></div>
+                        </>
                       )}
-                    </div>
-                  </article>
-                )
-              })}
-            </section>
-          )}
+                      <span className={`season-round-status ${status.className}`}>{status.label}</span>
+                      <Link className="season-round-link" to={`/rodadas/${round.id}`}>{round.id === currentRound?.id ? 'Ver rodada completa' : 'Ver detalhes'} <span>→</span></Link>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </section>
         </>
       )}
     </div>

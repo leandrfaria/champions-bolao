@@ -14022,3 +14022,1531 @@ button.match-datetime-control { cursor: pointer; }
     font-size: 11px;
   }
 }
+
+/* ========================================================================== */
+/* v1.46 · Rodadas redesign                                                   */
+/* ========================================================================== */
+.season-rounds-page,
+.round-detail-page {
+  max-width: 1500px;
+  padding-top: 18px;
+  color: #f7f8ff;
+}
+
+.season-rounds-page::before,
+.round-detail-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(51, 86, 210, .14), transparent 33%),
+    linear-gradient(180deg, #030513 0%, #040615 52%, #030513 100%);
+}
+
+.route-scene {
+  animation: routeSceneIn .2s ease-out;
+}
+
+@keyframes routeSceneIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Main rounds hero --------------------------------------------------------- */
+.season-rounds-hero {
+  position: relative;
+  min-height: 230px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 28px;
+  padding: 28px 30px;
+  border: 1px solid rgba(95, 118, 182, .18);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(7, 12, 32, .95), rgba(5, 9, 25, .96));
+}
+
+.season-rounds-hero-art {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(3, 7, 24, .95) 0%, rgba(4, 9, 29, .76) 34%, rgba(7, 18, 60, .36) 67%, rgba(7, 21, 76, .24) 100%),
+    radial-gradient(circle at 60% 38%, rgba(54, 146, 255, .12), transparent 16%),
+    url('/champions-starball-hero.png') center right / cover no-repeat;
+  opacity: .98;
+  pointer-events: none;
+}
+
+.season-rounds-heading,
+.season-rounds-season-select {
+  position: relative;
+  z-index: 1;
+}
+
+.season-rounds-heading {
+  align-self: center;
+  max-width: 700px;
+}
+
+.season-rounds-heading > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #c4cdec;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.season-rounds-heading h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(44px, 4.2vw, 64px);
+  line-height: .95;
+  letter-spacing: -.06em;
+}
+
+.season-rounds-heading p {
+  margin: 12px 0 0;
+  color: #d7def1;
+  font-size: 16px;
+}
+
+.season-rounds-season-select {
+  align-self: start;
+  justify-self: end;
+  width: min(100%, 320px);
+  padding: 13px 16px;
+  border: 1px solid rgba(119, 140, 206, .28);
+  border-radius: 18px;
+  background: rgba(5, 9, 24, .7);
+  backdrop-filter: blur(12px);
+}
+
+.season-rounds-season-select span {
+  display: block;
+  margin-bottom: 3px;
+  color: #aeb9d7;
+  font-size: 11px;
+}
+
+.season-rounds-season-select select {
+  width: 100%;
+  min-width: 0;
+  padding: 0 28px 0 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  outline: 0;
+}
+
+.season-rounds-season-select option,
+.season-rounds-filters option {
+  color: #101222;
+}
+
+/* Toolbar ------------------------------------------------------------------ */
+.season-rounds-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0 16px;
+}
+
+.season-rounds-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  min-width: 300px;
+  padding: 4px;
+  border: 1px solid rgba(107, 127, 190, .26);
+  border-radius: 14px;
+  background: rgba(4, 7, 20, .76);
+}
+
+.season-rounds-mode button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 10px;
+  color: #cbd4ea;
+  background: transparent;
+  font-weight: 700;
+}
+
+.season-rounds-mode button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #7148ed, #6038e4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 8px 20px rgba(87, 53, 217, .18);
+}
+
+.season-rounds-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.season-rounds-filters label {
+  min-width: 190px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid rgba(107, 127, 190, .24);
+  border-radius: 14px;
+  background: rgba(4, 7, 20, .74);
+  color: #d9e0f2;
+}
+
+.season-rounds-filters select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.season-rounds-sort-icon {
+  font-size: 20px;
+  color: #aeb9d7;
+}
+
+/* Overview ----------------------------------------------------------------- */
+.season-rounds-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr);
+  gap: 16px;
+}
+
+.season-current-round-card,
+.season-performance-card {
+  position: relative;
+  min-height: 252px;
+  overflow: hidden;
+  border: 1px solid rgba(104, 124, 192, .24);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(7, 12, 32, .9), rgba(5, 8, 24, .96));
+}
+
+.season-current-round-card {
+  padding: 18px 20px;
+  border-color: rgba(174, 151, 239, .16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+}
+
+.season-current-round-art {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(18, 18, 74, .88), rgba(14, 20, 65, .45) 56%, rgba(16, 21, 64, .28)),
+    url('/champions-starball-hero.png') center right / cover no-repeat;
+  opacity: .42;
+  pointer-events: none;
+}
+
+.season-current-round-card > *:not(.season-current-round-art) {
+  position: relative;
+  z-index: 1;
+}
+
+.season-current-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #8456ff, #6748ef);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.season-current-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.season-current-title > strong {
+  min-width: 82px;
+  color: #fff;
+  font-size: 58px;
+  line-height: .9;
+  letter-spacing: -.06em;
+}
+
+.season-current-title h2 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.12;
+}
+
+.season-current-title p {
+  margin: 0;
+  color: #b8c3dd;
+  font-size: 13px;
+}
+
+.season-current-title p span {
+  margin-left: 8px;
+  color: #57e6a9;
+  font-weight: 700;
+}
+
+.season-current-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 20px;
+}
+
+.season-current-metrics > div {
+  padding-right: 20px;
+}
+
+.season-current-metrics > div + div {
+  padding-left: 20px;
+  border-left: 1px solid rgba(255,255,255,.09);
+}
+
+.season-current-metrics strong {
+  display: block;
+  color: #fff;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.season-current-metrics span {
+  display: block;
+  margin-top: 6px;
+  color: #b8c3dd;
+  font-size: 12px;
+}
+
+.season-current-metrics .positive strong {
+  color: #52e7a9;
+}
+
+.season-current-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.season-current-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+}
+
+.season-current-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8d59ff, #5e82ff 64%, #4fcdf6);
+}
+
+.season-current-progress-row b {
+  color: #dce4ff;
+  font-size: 14px;
+}
+
+.season-current-progress-row a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #8456ff, #694ef4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.season-performance-card {
+  padding: 18px 20px 16px;
+}
+
+.season-performance-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.season-performance-head > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #9b88ff;
+}
+
+.season-performance-head h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+}
+
+.season-performance-head a {
+  color: #b6c8ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.season-performance-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.season-performance-metrics > div {
+  min-height: 116px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  padding: 12px 8px;
+  border: 1px solid rgba(107, 127, 190, .18);
+  border-radius: 14px;
+  background: rgba(5, 8, 23, .5);
+  color: #7988ff;
+  text-align: center;
+}
+
+.season-performance-metrics strong {
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.season-performance-metrics strong.gold {
+  color: #ffd844;
+}
+
+.season-performance-metrics strong.metric-name {
+  max-width: 110px;
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.season-performance-metrics span:last-child {
+  color: #c0cae2;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.metric-symbol {
+  font-size: 23px;
+  line-height: 1;
+}
+
+
+/* History ------------------------------------------------------------------ */
+.season-round-history {
+  margin-top: 22px;
+}
+
+.season-round-history-head > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8f61ff;
+}
+
+.season-round-history-head h2 {
+  margin: 0 0 3px;
+  color: #fff;
+  font-size: 19px;
+}
+
+.season-round-history-head p {
+  margin: 0;
+  color: #b8c2dc;
+  font-size: 12px;
+}
+
+.season-round-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.season-round-row {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 54px minmax(170px, 1.1fr) minmax(145px, .9fr) 94px 86px 78px 140px 150px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border: 1px solid rgba(83, 101, 153, .2);
+  border-radius: 14px;
+  background: rgba(5, 8, 21, .68);
+}
+
+.season-round-row.current {
+  border-color: rgba(120, 142, 206, .34);
+  box-shadow: inset 3px 0 0 rgba(127, 67, 239, .68);
+}
+
+.season-round-index {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(131, 148, 201, .4);
+  border-radius: 50%;
+  color: #dce4f8;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.season-round-row.current .season-round-index {
+  border-color: rgba(143, 165, 225, .42);
+  background: linear-gradient(135deg, rgba(115, 84, 235, .96), rgba(70, 116, 238, .88));
+  color: #fff;
+}
+
+.season-round-name strong,
+.season-round-name span,
+.season-round-date span,
+.season-round-date small,
+.season-round-stat strong,
+.season-round-stat span {
+  display: block;
+}
+
+.season-round-name strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.season-round-name span,
+.season-round-date small,
+.season-round-stat span {
+  margin-top: 3px;
+  color: #9ca9c8;
+  font-size: 10px;
+}
+
+.season-round-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b9c7e4;
+  font-size: 11px;
+}
+
+.season-round-stat {
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid rgba(255,255,255,.06);
+}
+
+.season-round-stat strong {
+  color: #fff;
+  font-size: 16px;
+}
+
+.season-round-stat.positive strong {
+  color: #55e5a7;
+}
+
+.season-round-status {
+  justify-self: start;
+  min-width: 120px;
+  padding: 7px 12px;
+  border: 1px solid rgba(119, 137, 192, .28);
+  border-radius: 999px;
+  color: #c1cbe4;
+  background: rgba(9, 13, 31, .6);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.season-round-status.current {
+  color: #52e4a8;
+  border-color: rgba(58, 214, 155, .35);
+  background: rgba(18, 91, 70, .28);
+}
+
+.season-round-status.closed {
+  color: #9b85ff;
+}
+
+.season-round-link {
+  justify-self: end;
+  color: #c9d8ff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Round detail ------------------------------------------------------------- */
+.round-detail-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 182px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(520px, .92fr);
+  gap: 28px;
+  align-items: end;
+  padding: 18px 22px 20px;
+  border-bottom: 1px solid rgba(107, 127, 190, .16);
+}
+
+.round-detail-hero-art {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(4, 7, 23, .96) 0%, rgba(5, 11, 34, .74) 44%, rgba(7, 20, 67, .34) 100%),
+    url('/champions-starball-hero.png') center right / cover no-repeat;
+  opacity: .96;
+  pointer-events: none;
+}
+
+.round-detail-heading,
+.round-detail-summary {
+  position: relative;
+  z-index: 1;
+}
+
+.round-detail-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-bottom: 12px;
+  padding: 0 14px;
+  border: 1px solid rgba(130, 102, 255, .6);
+  border-radius: 999px;
+  color: #ece8ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.round-detail-heading > span {
+  display: block;
+  color: #b795ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.round-detail-heading h1 {
+  margin: 6px 0 5px;
+  color: #fff;
+  font-size: clamp(30px, 3.3vw, 45px);
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+.round-detail-heading p {
+  margin: 0;
+  color: #b9c4df;
+  font-size: 13px;
+}
+
+.round-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.round-detail-summary > div {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 12px;
+  border: 1px solid rgba(107, 127, 190, .22);
+  border-radius: 14px;
+  background: rgba(6, 10, 29, .68);
+  color: #896cff;
+}
+
+.round-detail-summary > div > svg,
+.round-detail-summary-icon {
+  grid-row: 1 / span 2;
+}
+
+.round-detail-summary span:not(.round-detail-summary-icon) {
+  color: #b9c3dc;
+  font-size: 10px;
+}
+
+.round-detail-summary strong {
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.round-detail-summary-icon {
+  font-size: 22px;
+}
+
+.round-detail-match-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.round-detail-match-card {
+  overflow: hidden;
+  border: 1px solid rgba(174, 151, 239, .12);
+  border-radius: 16px;
+  background: linear-gradient(105deg, rgba(17, 15, 39, .93), rgba(10, 9, 27, .91));
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .12);
+}
+
+.round-detail-match-card.expanded {
+  border-color: rgba(174, 151, 239, .18);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, .14);
+}
+
+.round-detail-match-top {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  color: #b9c3df;
+  font-size: 11px;
+}
+
+.round-detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.round-detail-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.round-detail-status.finished { color: #4ce3a3; }
+.round-detail-status.live { color: #ffd23f; }
+.round-detail-status.open { color: #6da2ff; }
+
+.round-detail-matchup {
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.round-detail-team {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.round-detail-team.home {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.round-detail-team.away {
+  justify-content: flex-start;
+}
+
+.round-detail-team .team-crest-medium {
+  width: 38px;
+  height: 38px;
+}
+
+.round-detail-team strong {
+  min-width: 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+.round-detail-score {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.round-detail-group-area,
+.round-detail-open-area {
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+
+.round-detail-group-toggle,
+.round-detail-open-area {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+}
+
+.round-detail-group-toggle {
+  border: 0;
+  color: #d8dff2;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.round-detail-group-toggle span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.round-detail-group-toggle b,
+.round-detail-open-area b {
+  color: #8b62ff;
+}
+
+.round-detail-open-area {
+  color: #b9c3dc;
+  font-size: 11px;
+}
+
+.round-detail-open-area > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.round-detail-open-area button {
+  border: 0;
+  color: #b88cff;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.round-detail-predictions {
+  padding: 0 10px 10px;
+}
+
+.round-detail-prediction-head,
+.round-detail-prediction-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 64px;
+  align-items: center;
+  gap: 10px;
+}
+
+.round-detail-prediction-head {
+  padding: 7px 9px;
+  color: #9ca8c5;
+  font-size: 10px;
+}
+
+.round-detail-prediction-row {
+  min-height: 34px;
+  padding: 5px 9px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  color: #d9e1f2;
+  font-size: 11px;
+}
+
+.round-detail-prediction-row.mine {
+  border-top-color: transparent;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(75, 54, 188, .48), rgba(23, 41, 96, .54));
+}
+
+.round-detail-player {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.round-detail-player strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-detail-player em {
+  padding: 2px 5px;
+  border-radius: 999px;
+  color: #d9d0ff;
+  background: rgba(125, 83, 255, .24);
+  font-size: 8px;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.round-detail-prediction-row > b.positive {
+  color: #4ce3a3;
+}
+
+.round-detail-show-all {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 4px;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,.05);
+  color: #c8d7ff;
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.round-detail-no-predictions {
+  margin: 8px 8px 2px;
+  color: #9ca8c5;
+  font-size: 11px;
+}
+
+
+/* Responsive --------------------------------------------------------------- */
+@media (max-width: 1220px) {
+  .season-rounds-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .season-performance-card {
+    min-height: 0;
+  }
+
+  .season-round-row {
+    grid-template-columns: 50px minmax(150px, 1.2fr) minmax(130px, 1fr) 86px 78px 72px 126px 126px;
+    gap: 8px;
+  }
+
+  .round-detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .round-detail-summary {
+    max-width: 720px;
+  }
+}
+
+@media (max-width: 920px) {
+  .season-rounds-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .season-rounds-season-select {
+    justify-self: stretch;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .season-rounds-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .season-rounds-filters {
+    justify-content: flex-start;
+  }
+
+  .season-round-row {
+    grid-template-columns: 48px minmax(140px, 1fr) 120px 78px 72px 68px 116px;
+  }
+
+  .season-round-link {
+    grid-column: 2 / -1;
+    justify-self: start;
+    padding-top: 2px;
+  }
+
+  .round-detail-match-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .season-rounds-page,
+  .round-detail-page {
+    padding: 10px 12px 96px;
+  }
+
+  .season-rounds-hero {
+    min-height: 0;
+    gap: 14px;
+    padding: 20px 14px 16px;
+    border-radius: 20px;
+  }
+
+  .season-rounds-hero-art {
+    background:
+      linear-gradient(180deg, rgba(4, 7, 24, .88), rgba(6, 12, 38, .7) 50%, rgba(5, 9, 25, .9)),
+      url('/champions-starball-hero.png') center right / cover no-repeat;
+  }
+
+  .season-rounds-heading > span {
+    display: none;
+  }
+
+  .season-rounds-heading h1 {
+    max-width: 240px;
+    font-size: 36px;
+  }
+
+  .season-rounds-heading p {
+    max-width: 300px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .season-rounds-season-select {
+    max-width: none;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .season-rounds-season-select span {
+    font-size: 10px;
+  }
+
+  .season-rounds-season-select select {
+    font-size: 12px;
+  }
+
+  .season-rounds-toolbar {
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .season-rounds-mode {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .season-rounds-mode button {
+    min-height: 42px;
+    font-size: 13px;
+  }
+
+  .season-rounds-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .season-rounds-filters label {
+    min-width: 0;
+    width: 100%;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 12px;
+  }
+
+  .season-rounds-filters select {
+    font-size: 11px;
+  }
+
+  .season-rounds-overview {
+    gap: 10px;
+  }
+
+  .season-current-round-card,
+  .season-performance-card {
+    min-height: 0;
+    border-radius: 16px;
+  }
+
+  .season-current-round-card {
+    padding: 14px;
+  }
+
+  .season-current-badge {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .season-current-title {
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .season-current-title > strong {
+    min-width: 62px;
+    font-size: 48px;
+  }
+
+  .season-current-title h2 {
+    font-size: 16px;
+  }
+
+  .season-current-title p {
+    font-size: 11px;
+  }
+
+  .season-current-title p span {
+    display: none;
+  }
+
+  .season-current-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 15px;
+  }
+
+  .season-current-metrics > div {
+    padding-right: 12px;
+  }
+
+  .season-current-metrics > div + div {
+    padding-left: 12px;
+  }
+
+  .season-current-metrics > div:nth-child(3) {
+    display: none;
+  }
+
+  .season-current-metrics strong {
+    font-size: 20px;
+  }
+
+  .season-current-metrics span {
+    font-size: 10px;
+  }
+
+  .season-current-progress-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .season-current-progress-row a {
+    grid-column: 1 / -1;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .season-current-progress-row b {
+    font-size: 12px;
+  }
+
+  .season-performance-card {
+    padding: 14px;
+  }
+
+  .season-performance-head a,
+  .season-performance-quote {
+    display: none;
+  }
+
+  .season-performance-head h2 {
+    font-size: 15px;
+  }
+
+  .season-performance-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .season-performance-metrics > div {
+    min-height: 78px;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    justify-items: start;
+    align-content: center;
+    column-gap: 9px;
+    padding: 10px;
+    text-align: left;
+  }
+
+  .season-performance-metrics > div > svg,
+  .season-performance-metrics > div > .metric-symbol {
+    grid-row: 1 / span 2;
+  }
+
+  .season-performance-metrics strong {
+    font-size: 18px;
+  }
+
+  .season-performance-metrics strong.metric-name {
+    max-width: 100px;
+    font-size: 12px;
+  }
+
+  .season-performance-metrics span:last-child {
+    font-size: 10px;
+  }
+
+  .season-round-history {
+    margin-top: 16px;
+  }
+
+  .season-round-history-head h2 {
+    display: none;
+  }
+
+  .season-round-history-head p {
+    font-size: 12px;
+  }
+
+  .season-round-list {
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .season-round-row {
+    min-height: 70px;
+    grid-template-columns: 44px minmax(0, 1fr) 70px auto;
+    grid-template-areas:
+      'index name submitted link'
+      'index date points status';
+    gap: 4px 9px;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .season-round-index {
+    grid-area: index;
+    width: 36px;
+    height: 36px;
+    align-self: center;
+  }
+
+  .season-round-name {
+    grid-area: name;
+    min-width: 0;
+  }
+
+  .season-round-name strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .season-round-name span {
+    display: none;
+  }
+
+  .season-round-date {
+    grid-area: date;
+    min-width: 0;
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .season-round-date svg {
+    display: none;
+  }
+
+  .season-round-date span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .season-round-date small {
+    display: inline;
+    margin: 0 0 0 4px;
+  }
+
+  .season-round-stat {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .season-round-stat.submitted {
+    grid-area: submitted;
+  }
+
+  .season-round-stat.points {
+    grid-area: points;
+  }
+
+  .season-round-stat.extra {
+    display: none;
+  }
+
+  .season-round-stat strong {
+    font-size: 13px;
+  }
+
+  .season-round-stat span {
+    font-size: 9px;
+  }
+
+  .season-round-status {
+    grid-area: status;
+    min-width: 0;
+    justify-self: end;
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .season-round-link {
+    grid-area: link;
+    align-self: start;
+    justify-self: end;
+    width: 26px;
+    height: 26px;
+    overflow: hidden;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .season-round-link span {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    color: #c5d4ff;
+    font-size: 18px;
+  }
+
+  /* Detail mobile */
+  .round-detail-hero {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 10px 4px 14px;
+  }
+
+  .round-detail-hero-art {
+    background:
+      linear-gradient(180deg, rgba(5, 8, 26, .66), rgba(6, 12, 42, .72)),
+      url('/champions-starball-hero.png') top right / cover no-repeat;
+  }
+
+  .round-detail-back {
+    min-height: 32px;
+    margin-bottom: 10px;
+    padding: 0;
+    border: 0;
+    color: #d8ddf2;
+    background: transparent;
+    font-size: 12px;
+  }
+
+  .round-detail-heading > span {
+    font-size: 9px;
+  }
+
+  .round-detail-heading h1 {
+    max-width: 330px;
+    margin-top: 5px;
+    font-size: 25px;
+  }
+
+  .round-detail-heading p {
+    font-size: 12px;
+  }
+
+  .round-detail-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    padding: 9px 0;
+    border: 1px solid rgba(107, 127, 190, .22);
+    border-radius: 14px;
+    background: rgba(5, 9, 27, .66);
+  }
+
+  .round-detail-summary > div {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    justify-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .round-detail-summary > div + div {
+    border-left: 1px solid rgba(255,255,255,.08);
+  }
+
+  .round-detail-summary > div > svg,
+  .round-detail-summary-icon {
+    display: none;
+  }
+
+  .round-detail-summary > div.winners {
+    display: none;
+  }
+
+  .round-detail-summary span:not(.round-detail-summary-icon) {
+    order: 2;
+    font-size: 9px;
+  }
+
+  .round-detail-summary strong {
+    order: 1;
+    font-size: 20px;
+  }
+
+  .round-detail-match-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .round-detail-match-card {
+    border-radius: 14px;
+  }
+
+  .round-detail-match-top {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .round-detail-status {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+
+  .round-detail-matchup {
+    min-height: 62px;
+    grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+    gap: 7px;
+    padding: 9px 10px;
+  }
+
+  .round-detail-team {
+    gap: 7px;
+  }
+
+  .round-detail-team .team-crest-medium {
+    width: 34px;
+    height: 34px;
+  }
+
+  .round-detail-team strong {
+    font-size: 12px;
+  }
+
+  .round-detail-score {
+    font-size: 19px;
+  }
+
+  .round-detail-group-toggle,
+  .round-detail-open-area {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .round-detail-predictions {
+    padding: 0 8px 8px;
+  }
+
+  .round-detail-prediction-head {
+    display: none;
+  }
+
+  .round-detail-prediction-row {
+    grid-template-columns: minmax(0, 1fr) 54px 42px;
+    gap: 8px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .round-detail-player {
+    gap: 6px;
+  }
+
+  .round-detail-player .avatar.tiny {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .round-detail-show-all {
+    min-height: 36px;
+    font-size: 10px;
+  }
+
+  .round-detail-quote {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .season-rounds-page,
+  .round-detail-page {
+    padding-inline: 10px;
+  }
+
+  .season-rounds-filters label {
+    padding-inline: 8px;
+  }
+
+  .season-current-title > strong {
+    min-width: 54px;
+    font-size: 44px;
+  }
+
+  .season-current-title h2 {
+    font-size: 15px;
+  }
+
+  .season-round-row {
+    grid-template-columns: 40px minmax(0, 1fr) 60px auto;
+    gap: 4px 7px;
+  }
+
+  .round-detail-matchup {
+    grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr);
+  }
+
+  .round-detail-team .team-crest-medium {
+    width: 30px;
+    height: 30px;
+  }
+
+  .round-detail-team strong {
+    font-size: 11px;
+  }
+}
+.season-rounds-overview.single { grid-template-columns: 1fr; }
