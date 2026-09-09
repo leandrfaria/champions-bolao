@@ -13622,3 +13622,403 @@ button.match-datetime-control { cursor: pointer; }
     text-align: left;
   }
 }
+
+/* ========================================================================== */
+/* v1.45 · mobile-only home refinements                                       */
+/* ========================================================================== */
+@media (max-width: 760px) {
+  .home-screen-reference {
+    padding-top: 10px;
+    padding-bottom: 96px;
+  }
+
+  .home-ref-hero {
+    min-height: 0;
+    gap: 12px;
+    padding: 14px 12px 12px;
+    border-radius: 18px;
+  }
+
+  .home-ref-hero-copy {
+    gap: 10px;
+    max-width: none;
+  }
+
+  .home-ref-kicker {
+    font-size: 10px;
+    letter-spacing: .24em;
+  }
+
+  .home-ref-hero h1 {
+    max-width: 230px;
+    font-size: 28px;
+    line-height: .96;
+    letter-spacing: -.05em;
+  }
+
+  .home-ref-subline {
+    gap: 6px 12px;
+  }
+
+  .home-ref-subline strong {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .home-ref-subline em,
+  .home-ref-subline span {
+    font-size: 12px;
+  }
+
+  .home-ref-hero-copy p {
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .home-ref-metrics {
+    margin-top: 0;
+    row-gap: 8px;
+  }
+
+  .home-ref-metrics article {
+    min-width: 50%;
+    padding-right: 8px;
+  }
+
+  .home-ref-metrics article + article {
+    padding-left: 8px;
+  }
+
+  .home-ref-metrics strong {
+    font-size: 20px;
+  }
+
+  .home-ref-metrics span {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .home-ref-progress {
+    gap: 8px;
+  }
+
+  .home-ref-progress-track {
+    height: 7px;
+  }
+
+  .home-ref-progress b {
+    font-size: 12px;
+  }
+
+  .home-ref-deadline-card {
+    grid-template-columns: 38px 1fr;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 18px;
+    max-width: 100%;
+  }
+
+  .home-ref-deadline-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  .home-ref-deadline-copy span {
+    margin-bottom: 4px;
+    font-size: 10px;
+    letter-spacing: .22em;
+  }
+
+  .home-ref-deadline-copy strong {
+    font-size: 21px;
+  }
+
+  .home-ref-deadline-copy small,
+  .home-ref-deadline-copy p {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .home-ref-deadline-copy p {
+    padding-top: 10px;
+  }
+
+  .home-ref-section {
+    margin-top: 18px;
+  }
+
+  .home-ref-section-head {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .home-ref-heading-inline {
+    gap: 8px;
+  }
+
+  .home-ref-accent {
+    width: 4px;
+    height: 28px;
+  }
+
+  .home-ref-heading-inline h2 {
+    font-size: 18px;
+  }
+
+  .home-ref-heading-inline small,
+  .home-ref-section-head > a {
+    font-size: 12px;
+  }
+
+  .home-ref-fixtures-grid {
+    gap: 10px;
+  }
+
+  .home-ref-match-card {
+    min-height: 128px;
+    border-radius: 16px;
+  }
+
+  .home-ref-match-top {
+    padding: 10px 12px 9px;
+  }
+
+  .home-ref-match-kickoff {
+    font-size: 10px;
+  }
+
+  .home-ref-match-status {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .home-ref-match-main {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .home-ref-match-teams {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .home-ref-team {
+    gap: 10px;
+  }
+
+  .home-ref-team .team-crest-medium {
+    width: 34px;
+    height: 34px;
+  }
+
+  .home-ref-team strong {
+    font-size: 14px;
+  }
+
+  .home-ref-center-score {
+    font-size: 24px;
+    justify-self: start;
+    line-height: 1;
+  }
+
+  .home-ref-match-side {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    padding-left: 0;
+    padding-top: 4px;
+    border-left: 0;
+    border-top: 0;
+  }
+
+  .home-ref-match-side-open,
+  .home-ref-match-side-finished {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .home-ref-score-block {
+    gap: 4px;
+  }
+
+  .home-ref-score-block span {
+    font-size: 11px;
+  }
+
+  .home-ref-score-block strong {
+    font-size: 18px;
+    letter-spacing: -.04em;
+  }
+
+  .home-ref-match-actions {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: end;
+    gap: 4px;
+  }
+
+  .home-ref-match-actions small {
+    font-size: 11px;
+  }
+
+  .home-ref-edit-link {
+    font-size: 12px;
+  }
+
+  .home-ref-match-feedback {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .home-ref-match-feedback span,
+  .home-ref-match-feedback b {
+    display: inline;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .home-ref-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .home-ref-panel {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .home-ref-panel .home-ref-section-head.compact {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  .home-ref-panel .home-ref-heading-inline {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    align-items: start;
+    column-gap: 10px;
+    row-gap: 4px;
+  }
+
+  .home-ref-panel .home-ref-accent {
+    grid-row: 1 / span 2;
+    width: 4px;
+    height: 34px;
+  }
+
+  .home-ref-panel .home-ref-heading-inline h2 {
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .home-ref-panel .home-ref-heading-inline small {
+    grid-column: 2;
+    font-size: 11px;
+  }
+
+  .home-ref-panel .home-ref-section-head > a {
+    align-self: center;
+    font-size: 12px;
+  }
+
+  .home-ref-leaderboard-strip {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-ref-rank-card {
+    min-height: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'avatar name score'
+      'avatar tag score';
+    align-items: center;
+    gap: 1px 10px;
+  }
+
+  .home-ref-rank-avatar {
+    grid-area: avatar;
+  }
+
+  .home-ref-rank-avatar .avatar.tiny {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .home-ref-rank-card strong {
+    grid-area: name;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+
+  .home-ref-rank-card b {
+    grid-area: score;
+    justify-self: end;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .home-ref-rank-card em {
+    grid-area: tag;
+    margin-top: 2px;
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+
+  .home-ref-rank-summary {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .home-ref-activity-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .home-ref-activity-item,
+  .home-ref-panel-activity .home-ref-activity-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 8px 0;
+  }
+
+  .home-ref-activity-item time {
+    font-size: 11px;
+    gap: 8px;
+  }
+
+  .home-ref-activity-item time::before {
+    width: 7px;
+    height: 7px;
+    margin-top: 4px;
+  }
+
+  .home-ref-activity-item p {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .home-ref-activity-item span {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+}
