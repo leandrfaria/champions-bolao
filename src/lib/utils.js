@@ -39,9 +39,8 @@ export function isExactPrediction(prediction, match) {
 
 export function didPickWinner(prediction, match) {
   if (!prediction || !hasResult(match)) return false
-  const realOutcome = getOutcome(Number(match.home_score), Number(match.away_score))
-  if (realOutcome === 'draw') return false
-  return getOutcome(Number(prediction.home_score), Number(prediction.away_score)) === realOutcome
+  return getOutcome(Number(prediction.home_score), Number(prediction.away_score))
+    === getOutcome(Number(match.home_score), Number(match.away_score))
 }
 
 export function didPredictCorrectOutcome(prediction, match) {

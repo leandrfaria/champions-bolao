@@ -10,13 +10,13 @@ function sortStats(a, b) {
 }
 
 function withRank(rows) {
-  let previous = null
+  let rank = 0
   return rows.map((row, index) => {
+    const previous = rows[index - 1]
     const tied = previous && row.points === previous.points && row.exact === previous.exact && row.winners === previous.winners
-    const rank = tied ? previous.rank : index + 1
-    const next = { ...row, rank }
-    previous = next
-    return next
+    if (index === 0) rank = 1
+    else if (!tied) rank += 1
+    return { ...row, rank }
   })
 }
 
