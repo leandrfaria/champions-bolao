@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
   const leaderboard = useMemo(() => {
     const matchMap = new Map(finishedMatchesAll.map((match) => [match.id, match]))
-    return profiles.map((item) => {
+    const rows = profiles.map((item) => {
       const computed = finishedPredictions
         .filter((prediction) => prediction.user_id === item.id)
         .map((prediction) => ({ prediction, match: matchMap.get(prediction.match_id) }))
@@ -131,6 +131,14 @@ export default function DashboardPage() {
       const winners = computed.filter((entry) => didPickWinner(entry.prediction, entry.match)).length
       return { ...item, points, exact, winners }
     }).sort((a, b) => b.points - a.points || b.exact - a.exact || b.winners - a.winners || a.display_name.localeCompare(b.display_name))
+
+    let rank = 0
+    return rows.map((row, index) => {
+      const previous = rows[index - 1]
+      if (index === 0) rank = 1
+      else if (!(previous && row.points === previous.points && row.exact === previous.exact && row.winners === previous.winners)) rank += 1
+      return { ...row, rank }
+    })
   }, [profiles, finishedPredictions, finishedMatchesAll])
 
   async function savePrediction(matchId, homeScore, awayScore) {
@@ -281,7 +289,7 @@ export default function DashboardPage() {
                   </div>
                   {myStanding && (
                     <p className="home-ref-rank-summary">
-                      Você está em <strong>{String(myRankIndex + 1).padStart(2, '0')}º</strong> com <strong>{myStanding.points} pts</strong>
+                      Você está em <strong>{String(myStanding.rank || myRankIndex + 1).padStart(2, '0')}º</strong> com <strong>{myStanding.points} pts</strong>
                       {gap > 0 ? ` · ${gap} ${gap === 1 ? 'ponto' : 'pontos'} atrás do líder` : ' · empatado com a liderança'}.
                     </p>
                   )}

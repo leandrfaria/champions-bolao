@@ -87,11 +87,12 @@ export default function RoundDetailMatchCard({
                 </div>
                 {visibleRows.length ? visibleRows.map((prediction) => {
                   const points = calculatePoints(prediction, match)
+                  const pointsClass = !finished ? '' : points === 3 ? 'exact' : points === 1 ? 'winner' : 'miss'
                   return (
                     <div className={`round-detail-prediction-row ${prediction.user_id === currentUserId ? 'mine' : ''}`} key={prediction.id}>
                       <span className="round-detail-player"><UserAvatar profile={prediction.profiles} size="tiny" /><strong>{prediction.profiles?.display_name || 'Jogador'}</strong>{prediction.user_id === currentUserId && <em>você</em>}</span>
                       <strong>{score(prediction.home_score, prediction.away_score)}</strong>
-                      <b className={finished && points > 0 ? 'positive' : ''}>{finished ? `${points > 0 ? '+' : ''}${points}` : '—'}</b>
+                      <b className={pointsClass}>{finished ? `${points > 0 ? '+' : ''}${points}` : '—'}</b>
                     </div>
                   )
                 }) : <p className="round-detail-no-predictions">Nenhum palpite registrado para esta partida.</p>}

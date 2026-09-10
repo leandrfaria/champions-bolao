@@ -34,12 +34,6 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
   const feedback = buildResult(points)
   const predictedCount = presence.filter((item) => item.has_predicted).length
   const totalParticipants = presence.length
-  const status = finished
-    ? { label: 'Finalizado', className: 'finished' }
-    : locked
-      ? { label: 'Encerrado', className: 'locked' }
-      : { label: 'Aberto', className: 'open' }
-
   const realScore = formatScore(match.home_score, match.away_score)
   const pickScore = ownPrediction ? formatScore(ownPrediction.home_score, ownPrediction.away_score) : '—x—'
 
@@ -48,7 +42,6 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
       <article className={`home-ref-match-card ${finished ? 'is-finished' : locked ? 'is-locked' : 'is-open'}`}>
         <div className="home-ref-match-top">
           <span className="home-ref-match-kickoff">{formatKickoff(match.kickoff_at)}</span>
-          <span className={`home-ref-match-status ${status.className}`}><i />{status.label}</span>
         </div>
 
         <div className="home-ref-match-main">

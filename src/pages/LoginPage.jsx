@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import TrophyIcon from '../components/TrophyIcon'
 
 export default function LoginPage() {
   const { user, login, loading } = useAuth()
@@ -41,7 +40,7 @@ export default function LoginPage() {
         <div className="orb orb-one" />
         <div className="orb orb-two" />
         <div className="star-field">✦ · ✦ · ✦ · ✦</div>
-        <div className="login-trophy"><TrophyIcon size={118} /></div>
+        <div className="login-trophy"><img src="/champions-bolao-logo-sketch.png" alt="" className="login-sketch-logo" /></div>
         <div className="login-copy">
           <span>NOITES DE CHAMPIONS</span>
           <h1>Palpite fechado.<br />Resenha garantida.</h1>
@@ -51,9 +50,8 @@ export default function LoginPage() {
 
       <div className="login-panel">
         <form className="login-card" onSubmit={handleSubmit}>
-          <div className="brand login-brand">
-            <div className="brand-mark"><TrophyIcon size={25} /></div>
-            <div><strong>CHAMPIONS</strong><span>BOLÃO</span></div>
+          <div className="brand login-brand login-brand-logo">
+            <img src="/champions-bolao-logo-sketch.png" alt="Champions Bolão" className="brand-logo-image login-brand-image" />
           </div>
 
           <div className="login-heading">

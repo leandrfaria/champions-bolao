@@ -3,7 +3,6 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ParticipantProfileContext } from '../context/ParticipantProfileContext'
 import ParticipantProfileModal from './ParticipantProfileModal'
-import TrophyIcon from './TrophyIcon'
 import SidebarAvatar from './SidebarAvatar'
 import NavIcon from './NavIcon'
 
@@ -61,12 +60,11 @@ export default function Layout() {
       <div className="app-shell topbar-shell">
         <header className="topbar" aria-label="Navegação principal do bolão">
           <div className="topbar-inner">
-            <NavLink to="/dashboard" className="brand topbar-brand" aria-label="Champions Bolão">
-              <div className="brand-mark"><TrophyIcon size={23} /></div>
-              <div className="brand-copy">
+            <NavLink to="/dashboard" className="brand topbar-brand topbar-brand-wordmark" aria-label="Champions Bolão">
+              <span className="brand-copy">
                 <strong>CHAMPIONS</strong>
                 <span>BOLÃO</span>
-              </div>
+              </span>
             </NavLink>
 
             <nav className="topbar-nav">
