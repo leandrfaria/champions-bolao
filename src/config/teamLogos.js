@@ -1,6 +1,7 @@
 const FOTMOB_LOGO = (id) => `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`
 
 const TEAM_ENTRIES = [
+  { id: 'aek', name: 'Aek', logo: '/teams/aek.png', aliases: ['aek', 'a e k', 'aek athens', 'aek fc'] },
   { id: 'real-madrid', name: 'Real Madrid', logo: FOTMOB_LOGO(8633), aliases: ['real madrid', 'real madrid cf'] },
   { id: 'barcelona', name: 'Barcelona', logo: FOTMOB_LOGO(8634), aliases: ['barcelona', 'fc barcelona', 'barça', 'barca'] },
   { id: 'atletico-madrid', name: 'Atlético de Madrid', logo: FOTMOB_LOGO(9906), aliases: ['atletico de madrid', 'atlético de madrid', 'atletico madrid', 'atlético madrid', 'atleti'] },
@@ -16,7 +17,7 @@ const TEAM_ENTRIES = [
   { id: 'roma', name: 'Roma', logo: FOTMOB_LOGO(8686), aliases: ['roma', 'as roma'] },
   { id: 'porto', name: 'Porto', logo: '/teams/porto.png', aliases: ['porto', 'fc porto'] },
   { id: 'sporting-cp', name: 'Sporting CP', logo: '/teams/sporting-cp.png', aliases: ['sporting cp', 'sporting', 'sporting clube de portugal', 'sporting lisboa'] },
-  { id: 'psv', name: 'PSV Eindhoven', logo: FOTMOB_LOGO(8649), aliases: ['psv eindhoven', 'psv'] },
+  { id: 'psv', name: 'PSV', logo: '/teams/psv.png', aliases: ['psv', 'psv eindhoven'] },
   { id: 'real-betis', name: 'Real Betis', logo: FOTMOB_LOGO(8603), aliases: ['real betis', 'betis'] },
   { id: 'club-brugge', name: 'Club Brugge', logo: '/teams/club-brugge.png', aliases: ['club brugge', 'brugge', 'club brugge kv'] },
   { id: 'napoli', name: 'Napoli', logo: FOTMOB_LOGO(9875), aliases: ['napoli', 'ssc napoli'] },
@@ -28,7 +29,7 @@ const TEAM_ENTRIES = [
   { id: 'galatasaray', name: 'Galatasaray', logo: FOTMOB_LOGO(8637), aliases: ['galatasaray', 'gala'] },
   { id: 'fenerbahce', name: 'Fenerbahçe', logo: '/teams/fenerbahce.png', aliases: ['fenerbahce', 'fenerbahçe', 'fener'] },
   { id: 'shakhtar', name: 'Shakhtar Donetsk', logo: FOTMOB_LOGO(10159), aliases: ['shakhtar donetsk', 'shakhtar'] },
-  { id: 'bodo-glimt', name: 'Bodø/Glimt', logo: FOTMOB_LOGO(2619), aliases: ['bodo glimt', 'bodø glimt', 'bodø/glimt', 'bodo/glimt'] },
+  { id: 'bodo-glimt', name: 'Bodø/Glimt', logo: '/teams/bodo-glimt.png', aliases: ['bodo glimt', 'bodø glimt', 'bodø/glimt', 'bodo/glimt'] },
   { id: 'stuttgart', name: 'Stuttgart', logo: FOTMOB_LOGO(10269), aliases: ['stuttgart', 'vfb stuttgart'] },
   { id: 'como', name: 'Como', logo: '/teams/como.png', aliases: ['como', 'como 1907'] },
   { id: 'chelsea', name: 'Chelsea', logo: FOTMOB_LOGO(8455), aliases: ['chelsea', 'chelsea fc'] },
@@ -37,6 +38,8 @@ const TEAM_ENTRIES = [
   { id: 'juventus', name: 'Juventus', logo: FOTMOB_LOGO(9885), aliases: ['juventus', 'juventus fc', 'juve'] },
   { id: 'slavia-praha', name: 'Slavia Praha', logo: '/teams/slavia-praha.png', aliases: ['slavia praha', 'slavia prag', 'slavia prague', 'sk slavia praha'] },
   { id: 'lens', name: 'Lens', logo: '/teams/lens.png', aliases: ['lens', 'rc lens', 'racing club de lens'] },
+  { id: 'sabah-fk', name: 'Sabah FK', logo: '/teams/sabah-fk.png', aliases: ['sabah fk', 'sabah', 'sabah fk baku'] },
+  { id: 'viking-fk', name: 'Viking FK', logo: '/teams/viking-fk.png', aliases: ['viking fk', 'viking', 'viking stavanger'] },
 ]
 
 
