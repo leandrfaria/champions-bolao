@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { getAvatarUrl } from './UserAvatar'
 import { useParticipantProfile } from '../context/ParticipantProfileContext'
 
-export default function SidebarAvatar({ profile }) {
+export default function SidebarAvatar({ profile, onClick, expanded, triggerRef, menuTrigger = false }) {
   const [avatarPath, setAvatarPath] = useState(profile?.avatar_path || null)
   const [url, setUrl] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -50,15 +50,22 @@ export default function SidebarAvatar({ profile }) {
 
   function openProfile(event) {
     event.stopPropagation()
+    if (onClick) {
+      onClick(event)
+      return
+    }
     if (profile?.id) participantProfile?.openParticipant?.(profile)
   }
 
   return (
     <button
       type="button"
+      ref={triggerRef}
       className="sidebar-profile-avatar"
       onClick={openProfile}
-      aria-label={`Abrir perfil de ${displayName}`}
+      aria-label={menuTrigger ? `Abrir menu da conta de ${displayName}` : `Abrir perfil de ${displayName}`}
+      aria-expanded={menuTrigger ? Boolean(expanded) : undefined}
+      aria-controls={menuTrigger ? 'site-profile-dropdown-v2' : undefined}
       title={displayName}
     >
       {url && !failed ? (
