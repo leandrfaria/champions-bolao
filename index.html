@@ -11,8 +11,29 @@
       (() => {
         const isMobileHome = () => (window.location.pathname === '/dashboard' || window.location.pathname === '/')
           && window.matchMedia?.('(max-width: 820px)').matches
+        const isMobileLogin = () => window.location.pathname === '/login'
+          && window.matchMedia?.('(max-width: 680px)').matches
         const navigation = performance.getEntriesByType?.('navigation')?.[0]
         const isReload = navigation?.type === 'reload' || (!navigation && performance.navigation?.type === 1)
+
+        if (isMobileLogin() && isReload) {
+          const previousScrollRestoration = 'scrollRestoration' in history
+            ? history.scrollRestoration
+            : null
+          const startLoginAtTop = () => window.scrollTo(0, 0)
+          const restoreScrollRestoration = () => {
+            if (previousScrollRestoration !== null) history.scrollRestoration = previousScrollRestoration
+          }
+
+          if (previousScrollRestoration !== null) history.scrollRestoration = 'manual'
+          document.addEventListener('DOMContentLoaded', startLoginAtTop, { once: true })
+          window.addEventListener('pageshow', (event) => {
+            if (!event.persisted) startLoginAtTop()
+          }, { once: true })
+          window.addEventListener('pagehide', restoreScrollRestoration, { once: true })
+          window.addEventListener('popstate', restoreScrollRestoration, { once: true })
+        }
+
         if (isMobileHome() && isReload) {
           const storageKey = `champions-home-scroll:${window.location.pathname}${window.location.search}`
           let position = { x: 0, y: 0 }

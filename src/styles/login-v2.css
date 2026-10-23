@@ -270,13 +270,21 @@
 }
 
 @media (max-width: 680px) {
+  body:has(.login-v2) {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    background: #071022;
+  }
+
   .login-v2 {
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
     min-height: 100vh;
     min-height: 100svh;
+    min-height: 100dvh;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
     background: #071022;
   }
 
@@ -408,12 +416,12 @@
   .login-v2-scene::before {
     z-index: 0;
     background-image:
-      linear-gradient(145deg, rgba(5, 12, 28, .44), rgba(5, 12, 28, .72)),
+      linear-gradient(145deg, rgba(5, 12, 28, .24), rgba(5, 12, 28, .48)),
       url('/images/login-stadium-celebration.webp');
     background-position: center;
     background-size: cover;
-    filter: blur(18px);
-    opacity: .82;
+    filter: blur(8px);
+    opacity: .34;
     transform: scale(1.06);
   }
 
@@ -431,8 +439,8 @@
     max-height: none;
     object-fit: contain;
     object-position: center;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 82%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 82%, transparent 100%);
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .login-v2-photo-shade {
