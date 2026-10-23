@@ -39,18 +39,17 @@ export default function LoginPage() {
   return (
     <main className="login-v2" aria-busy={loading}>
       <section className="login-v2-scene" aria-label="Comemoração dos participantes com a taça da Champions League">
-        <img
-          className="login-v2-photo"
-          src="/images/login-stadium-celebration.webp"
-          alt="Participantes comemoram juntos no estádio ao lado da taça da Champions League"
-          fetchPriority="high"
-          decoding="async"
-        />
+        <picture className="login-v2-picture">
+          <source media="(min-width: 961px)" srcSet="/images/login-stadium-celebration-desktop.webp" />
+          <img
+            className="login-v2-photo"
+            src="/images/login-stadium-celebration.webp"
+            alt="Participantes comemoram juntos no estádio ao lado da taça da Champions League"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
         <div className="login-v2-photo-shade" aria-hidden="true" />
-        <div className="login-v2-editorial">
-          <p>A Champions é nossa.</p>
-          <span>Palpite a palpite, a disputa pelo título começa aqui.</span>
-        </div>
       </section>
 
       <section className="login-v2-auth" aria-label="Acesso à área privada">
