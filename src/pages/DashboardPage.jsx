@@ -26,7 +26,9 @@ function formatRoundLabel(round) {
     if (remaining) return /\brodada\b/i.test(remaining) ? remaining : `Rodada ${remaining}`
     return 'Rodada atual'
   }
-  return /\brodada\b/i.test(name) ? name : `Rodada ${name}`
+  const withoutPhasePrefix = name.replace(/^fase\b[^-–—|·:]*[-–—|·:]\s*/i, '').trim()
+  if (!withoutPhasePrefix) return 'Rodada atual'
+  return /\brodada\b/i.test(withoutPhasePrefix) ? withoutPhasePrefix : `Rodada ${withoutPhasePrefix}`
 }
 
 function formatRelativeActivity(value) {
