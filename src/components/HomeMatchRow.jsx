@@ -25,7 +25,7 @@ function pointFeedback(points) {
   return { label: 'Sem pontos', value: '0 pts', tone: 'miss' }
 }
 
-export default function HomeMatchRow({ match, ownPrediction, presence = [], presenceStatus = 'ready', presenceUpdatedAt, profiles = [], onSave }) {
+export default function HomeMatchRow({ match, ownPrediction, presence = [], presenceStatus = 'ready', profiles = [], onSave }) {
   const [betModalOpen, setBetModalOpen] = useState(false)
 
   const finished = hasResult(match)
@@ -36,6 +36,8 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
   const totalParticipants = presence.length
   const realScore = formatScore(match.home_score, match.away_score)
   const pickScore = ownPrediction ? formatScore(ownPrediction.home_score, ownPrediction.away_score) : null
+  const centerScore = finished ? realScore : pickScore || '—x—'
+  const [centerHome, centerAway] = centerScore.split('x')
   const status = finished ? 'Resultado oficial' : locked ? 'Aguardando resultado' : 'Palpites abertos'
   const statusTone = finished ? 'finished' : locked ? 'locked' : 'open'
 
@@ -47,14 +49,15 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
           <span className={`home-v2-match-state state-${statusTone}`}><i aria-hidden="true" />{status}</span>
         </div>
 
-        <div className="home-v2-matchup" role="group" aria-label={`${match.home_team} ${finished ? realScore : 'contra'} ${match.away_team}`}>
+        <div className="home-v2-matchup" role="group" aria-label={`${match.home_team} ${finished ? `resultado oficial ${realScore}` : `seu palpite ${centerScore}`} ${match.away_team}`}>
           <div className="home-v2-team home">
             <strong title={match.home_team}>{match.home_team}</strong>
             <TeamCrest team={match.home_team} size="medium" />
           </div>
-          <strong className={`home-v2-match-score ${finished ? 'has-result' : ''}`} aria-label={finished ? `Resultado ${realScore}` : 'Confronto'}>
-            {finished ? realScore : <span aria-hidden="true">×</span>}
-          </strong>
+          <div className={`home-v2-match-score ${finished ? 'is-official' : pickScore ? 'is-prediction' : 'is-pending'}`} aria-label={finished ? `Resultado oficial ${realScore}` : pickScore ? `Seu palpite ${pickScore}` : 'Palpite pendente'}>
+            <small>{finished ? 'Oficial' : 'Seu palpite'}</small>
+            <strong><span>{centerHome}</span><i aria-hidden="true">×</i><span>{centerAway}</span></strong>
+          </div>
           <div className="home-v2-team away">
             <TeamCrest team={match.away_team} size="medium" />
             <strong title={match.away_team}>{match.away_team}</strong>
@@ -62,16 +65,13 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
         </div>
 
         <div className="home-v2-match-footer">
-          <div className="home-v2-my-pick">
-            <span>Seu palpite</span>
-            {pickScore ? (
-              <strong>{pickScore}</strong>
-            ) : (
-              <strong className="no-prediction">{finished ? 'Sem palpite' : locked ? 'Não enviado' : 'Pendente'}</strong>
-            )}
-            {finished && ownPrediction && <em className={`home-v2-points ${feedback.tone}`}><span>{feedback.label}</span><b>{feedback.value}</b></em>}
-            {!finished && locked && ownPrediction && <em className="home-v2-awaiting">Aguardando resultado</em>}
-          </div>
+          {finished && (
+            <div className="home-v2-my-pick">
+              <span>Seu palpite</span>
+              <strong className={!pickScore ? 'no-prediction' : ''}>{pickScore || 'Sem palpite'}</strong>
+              {ownPrediction && <em className={`home-v2-points ${feedback.tone}`}><span>{feedback.label}</span><b>{feedback.value}</b></em>}
+            </div>
+          )}
 
           <div className="home-v2-match-actions">
             {presenceStatus === 'ready' && totalParticipants > 0 && (
@@ -94,7 +94,6 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
           ownPrediction={ownPrediction}
           presence={presence}
           presenceStatus={presenceStatus}
-          presenceUpdatedAt={presenceUpdatedAt}
           profiles={profiles}
           onSave={onSave}
           onClose={() => setBetModalOpen(false)}

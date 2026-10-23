@@ -92,7 +92,6 @@ export default function DashboardPage() {
   const [predictions, setPredictions] = useState([])
   const [presence, setPresence] = useState([])
   const [presenceStatus, setPresenceStatus] = useState('idle')
-  const [presenceUpdatedAt, setPresenceUpdatedAt] = useState(null)
   const [profiles, setProfiles] = useState([])
   const [finishedPredictions, setFinishedPredictions] = useState([])
   const [finishedMatchesAll, setFinishedMatchesAll] = useState([])
@@ -114,14 +113,13 @@ export default function DashboardPage() {
       if (logError) throw logError
       setSeason(activeSeason)
       setProfiles(profileData || [])
-      setLogs((logData || []).filter(isFeedActivity).slice(0, 3))
+      setLogs((logData || []).filter(isFeedActivity).slice(0, 5))
 
       if (!activeSeason) {
         setRound(null)
         setFinishedPredictions([])
         setFinishedMatchesAll([])
         setPresence([])
-        setPresenceUpdatedAt(null)
         setPresenceStatus('empty')
         return
       }
@@ -148,12 +146,10 @@ export default function DashboardPage() {
         if (presenceError) throw presenceError
         setPredictions(predictionData || [])
         setPresence(presenceData || [])
-        setPresenceUpdatedAt(new Date())
-        setPresenceStatus('ready')
+        setPresenceStatus(presenceData?.length ? 'ready' : 'empty')
       } else {
         setPredictions([])
         setPresence([])
-        setPresenceUpdatedAt(null)
         setPresenceStatus('empty')
       }
 
@@ -247,11 +243,11 @@ export default function DashboardPage() {
         <EmptyState title="Nenhuma rodada ativa" text="O administrador ainda não cadastrou a temporada e os jogos." />
       ) : (
         <>
-          <section className="home-v2-context" aria-labelledby="home-v2-phase">
+          <section className="home-v2-context" aria-label="Resumo da competição">
             <div className="home-v2-context-main">
               <span className="home-v2-season">{season.name || 'UEFA Champions League'}</span>
-              <h1 id="home-v2-phase">{round.stage || round.name}</h1>
-                <p className="home-v2-round"><strong>{formatRoundLabel(round)}</strong></p>
+              <h1>{round.stage || round.name}</h1>
+              <p className="home-v2-round"><strong>{formatRoundLabel(round)}</strong></p>
               <div className="home-v2-progress-line">
                 <span>{ownCount} de {currentMatches.length} palpites enviados</span>
                 <span>{completion}%</span>
@@ -274,12 +270,9 @@ export default function DashboardPage() {
             </aside>
           </section>
 
-          <section className="home-v2-section home-v2-predictions" aria-labelledby="home-v2-predictions-title">
+          <section className="home-v2-section home-v2-predictions" aria-label="Rodada atual: seus palpites">
             <div className="home-v2-section-head">
-              <div>
-                <span className="home-v2-section-kicker">Rodada atual</span>
-                <h2 id="home-v2-predictions-title">Seus palpites</h2>
-              </div>
+              <span className="home-v2-section-kicker">Rodada atual</span>
               <Link className="home-v2-text-link" to={`/rodadas/${round.id}`}>Ver rodada completa <span aria-hidden="true">→</span></Link>
             </div>
 
@@ -292,7 +285,6 @@ export default function DashboardPage() {
                     ownPrediction={ownPredictionMap.get(match.id)}
                     presence={presence.filter((item) => item.match_id === match.id)}
                     presenceStatus={presenceStatus}
-                    presenceUpdatedAt={presenceUpdatedAt}
                     profiles={profiles}
                     onSave={savePrediction}
                   />
@@ -304,12 +296,9 @@ export default function DashboardPage() {
           </section>
 
           <div className="home-v2-competition-grid">
-            <section className="home-v2-panel home-v2-leaderboard" aria-labelledby="home-v2-leaderboard-title">
+            <section className="home-v2-panel home-v2-leaderboard" aria-label="Corrida pelo título: classificação">
               <div className="home-v2-section-head home-v2-panel-head">
-                <div>
-                  <span className="home-v2-section-kicker">Corrida pelo título</span>
-                  <h2 id="home-v2-leaderboard-title">Classificação</h2>
-                </div>
+                <span className="home-v2-section-kicker">Corrida pelo título</span>
                 <Link className="home-v2-text-link" to="/classificacao">Ver classificação <span aria-hidden="true">→</span></Link>
               </div>
 
@@ -341,12 +330,9 @@ export default function DashboardPage() {
               )}
             </section>
 
-            <section className="home-v2-panel home-v2-movement" aria-labelledby="home-v2-movement-title">
+            <section className="home-v2-panel home-v2-movement" aria-label="Acontecimentos recentes">
               <div className="home-v2-section-head home-v2-panel-head">
-                <div>
-                  <span className="home-v2-section-kicker">Acontecimentos recentes</span>
-                  <h2 id="home-v2-movement-title">Movimento da rodada</h2>
-                </div>
+                <span className="home-v2-section-kicker">Acontecimentos recentes</span>
                 <Link className="home-v2-text-link" to="/atividades">Todas as atividades <span aria-hidden="true">→</span></Link>
               </div>
 

@@ -17,21 +17,11 @@ function formatKickoff(value) {
   }).format(new Date(value)).replace('.', '')
 }
 
-function formatPresenceTime(value) {
-  if (!value) return ''
-  return new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Sao_Paulo',
-  }).format(new Date(value))
-}
-
 export default function HomeBetModal({
   match,
   ownPrediction,
   presence = [],
   presenceStatus = 'ready',
-  presenceUpdatedAt,
   profiles = [],
   onSave,
   onClose,
@@ -53,7 +43,6 @@ export default function HomeBetModal({
   const pendingUsers = presence.filter((item) => !item.has_predicted)
   const visibleUsers = presenceTab === 'submitted' ? submittedUsers : pendingUsers
   const selectedByProfile = match.selected_by_user_id ? profileMap.get(match.selected_by_user_id) : null
-  const presenceTime = formatPresenceTime(presenceUpdatedAt)
 
   useEffect(() => {
     const previousFocus = document.activeElement
@@ -141,9 +130,9 @@ export default function HomeBetModal({
       <section ref={dialogRef} className="home-bet-modal home-bet-modal-v2" role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby={`bet-title-${match.id}`}>
         <header className="home-bet-modal-header">
           <div>
-            <span className="sports-eyebrow">Palpite da rodada</span>
-            <h2 id={`bet-title-${match.id}`}>{ownPrediction ? 'Alterar palpite' : 'Fazer palpite'}</h2>
-            <p><time dateTime={match.kickoff_at}>{formatKickoff(match.kickoff_at)}</time></p>
+            <span className="sports-eyebrow">PALPITE DA RODADA</span>
+            <h2 id={`bet-title-${match.id}`}>{ownPrediction ? 'Editar palpite' : 'Novo palpite'}</h2>
+            <p><time dateTime={match.kickoff_at}>{formatKickoff(match.kickoff_at)}</time><span aria-hidden="true"> · </span>{match.home_team} x {match.away_team}</p>
           </div>
           <button ref={closeButtonRef} type="button" className="home-bet-close" onClick={() => onCloseRef.current?.()} disabled={saving} aria-label="Fechar">×</button>
         </header>
@@ -156,43 +145,33 @@ export default function HomeBetModal({
             </div>
           )}
 
-          <div className="home-bet-matchup home-bet-matchup-v2">
-            <div className="home-bet-team home-bet-team-v2">
-              <div className="home-bet-team-identity">
-                <small>Mandante</small>
-                <div><TeamCrest team={match.home_team} size="large" /><strong>{match.home_team}</strong></div>
-              </div>
+          <div className="home-bet-matchup home-bet-matchup-v2" aria-label={`${match.home_team} contra ${match.away_team}`}>
+            <div className="home-bet-team-identity home-bet-team-home">
+              <small>Mandante</small>
+              <div><TeamCrest team={match.home_team} size="large" /><strong>{match.home_team}</strong></div>
+            </div>
+            <div className="home-bet-score-control home-bet-score-home">
               <ScorePicker value={homeScore} onChange={setHomeScore} disabled={saving} ariaLabel={`Gols de ${match.home_team}`} />
             </div>
-
             <span className="home-bet-x home-bet-x-v2" aria-hidden="true">×</span>
-
-            <div className="home-bet-team home-bet-team-v2 away">
-              <div className="home-bet-team-identity">
-                <small>Visitante</small>
-                <div><TeamCrest team={match.away_team} size="large" /><strong>{match.away_team}</strong></div>
-              </div>
+            <div className="home-bet-score-control home-bet-score-away">
               <ScorePicker value={awayScore} onChange={setAwayScore} disabled={saving} ariaLabel={`Gols de ${match.away_team}`} />
+            </div>
+            <div className="home-bet-team-identity home-bet-team-away">
+              <small>Visitante</small>
+              <div><TeamCrest team={match.away_team} size="large" /><strong>{match.away_team}</strong></div>
             </div>
           </div>
 
-          <p className="home-bet-tip">Digite o placar ou ajuste com − e +.</p>
           {message && <div className="home-bet-error" role="alert">{message}</div>}
 
           <section className="home-bet-pending home-bet-attendance" aria-labelledby={`bet-attendance-title-${match.id}`}>
             <div className="home-bet-attendance-heading">
-              <div>
-                <span className="home-bet-attendance-kicker">Participação</span>
-                <h3 id={`bet-attendance-title-${match.id}`}>Quem já enviou</h3>
-              </div>
+              <h3 id={`bet-attendance-title-${match.id}`}>Participação</h3>
               {presenceStatus === 'ready' && presence.length > 0 && (
                 <p className="home-bet-attendance-total">{submittedUsers.length} de {presence.length} enviaram</p>
               )}
             </div>
-
-            {presenceStatus === 'ready' && presenceUpdatedAt && (
-              <p className="home-bet-attendance-updated">Consulta atualizada às <time dateTime={new Date(presenceUpdatedAt).toISOString()}>{presenceTime}</time></p>
-            )}
 
             {presenceStatus === 'loading' && <p className="home-bet-attendance-state" role="status">Atualizando participação…</p>}
             {presenceStatus === 'error' && <p className="home-bet-attendance-state is-error" role="status">Não foi possível consultar a participação agora. Tente novamente mais tarde.</p>}
