@@ -437,9 +437,11 @@
 }
 
 @media (max-width: 820px) {
+  .page-wrap.home-v2-page { padding-top: 0; }
+
   .home-v3-mobile {
     min-width: 0;
-    padding: 10px 0 18px;
+    padding: 0 0 18px;
     color: #f2f5ff;
   }
 

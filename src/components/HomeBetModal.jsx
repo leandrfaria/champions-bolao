@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import ScorePicker from './ScorePicker'
 import TeamCrest from './TeamCrest'
 import UserAvatar from './UserAvatar'
+import { acquirePageScrollLock } from '../lib/pageScrollLock'
 import '../styles/home-bet-modal-v2.css'
 
 function formatKickoff(value) {
@@ -47,8 +48,7 @@ export default function HomeBetModal({
 
   useEffect(() => {
     const previousFocus = document.activeElement
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const releaseScrollLock = acquirePageScrollLock({ freezePosition: mobile })
     const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus())
 
     function onKeyDown(event) {
@@ -81,10 +81,10 @@ export default function HomeBetModal({
     return () => {
       window.cancelAnimationFrame(focusFrame)
       document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus()
+      releaseScrollLock()
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true })
     }
-  }, [])
+  }, [mobile])
 
   async function save() {
     if (saving) return

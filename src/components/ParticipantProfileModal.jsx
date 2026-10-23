@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TrophyIcon from './TrophyIcon'
 import UserAvatar, { getAvatarUrl } from './UserAvatar'
+import { acquirePageScrollLock } from '../lib/pageScrollLock'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
 
@@ -148,12 +149,11 @@ export default function ParticipantProfileModal({ profile, onClose }) {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const releaseScrollLock = acquirePageScrollLock()
 
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
+      releaseScrollLock()
     }
   }, [photoOpen, onClose])
 

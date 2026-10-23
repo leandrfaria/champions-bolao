@@ -1,13 +1,10 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { acquirePageScrollLock } from '../lib/pageScrollLock'
 
 export default function AdminModal({ title, eyebrow, children, onClose, wide = false, footer }) {
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
+    return acquirePageScrollLock()
   }, [])
 
   const modalContent = (

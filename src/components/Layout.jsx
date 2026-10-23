@@ -5,6 +5,7 @@ import { ParticipantProfileContext } from '../context/ParticipantProfileContext'
 import ParticipantProfileModal from './ParticipantProfileModal'
 import SidebarAvatar from './SidebarAvatar'
 import NavIcon from './NavIcon'
+import { acquirePageScrollLock } from '../lib/pageScrollLock'
 import '../styles/layout-redesign.css'
 
 const primaryNavItems = [
@@ -88,9 +89,8 @@ export default function Layout() {
 
   useEffect(() => {
     if (!mobileMoreOpen) return undefined
-    const previousOverflow = document.body.style.overflow
+    const releaseScrollLock = acquirePageScrollLock()
     const previouslyFocused = document.activeElement
-    document.body.style.overflow = 'hidden'
     const firstItem = mobileMoreSheet.current?.querySelector('a, button:not(:disabled)')
     firstItem?.focus()
 
@@ -116,7 +116,7 @@ export default function Layout() {
     }
     document.addEventListener('keydown', onKeyDown)
     return () => {
-      document.body.style.overflow = previousOverflow
+      releaseScrollLock()
       document.removeEventListener('keydown', onKeyDown)
       if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus()
     }
