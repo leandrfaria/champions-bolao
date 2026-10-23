@@ -53,16 +53,10 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="login-v2-auth" aria-labelledby="login-v2-title">
+      <section className="login-v2-auth" aria-label="Acesso à área privada">
         <form className="login-v2-form" onSubmit={handleSubmit}>
-          <div className="login-v2-brand" aria-label="Champions Bolão">
-            <img src="/favicon.svg" alt="" width="42" height="42" />
-            <span><strong>CHAMPIONS</strong><b>BOLÃO</b></span>
-          </div>
-
           <div className="login-v2-heading">
             <span className="login-v2-eyebrow">ÁREA PRIVADA</span>
-            <h1 id="login-v2-title">Entre na competição.</h1>
             <p>Acesse sua conta para acompanhar a rodada e seus palpites.</p>
           </div>
 
