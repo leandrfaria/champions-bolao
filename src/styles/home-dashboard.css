@@ -602,3 +602,160 @@
   .home-v3-rank-row { grid-template-columns: 22px 40px minmax(0, 1fr) auto; gap: 6px; }
   .home-v3-rank-avatar { width: 40px !important; height: 40px !important; min-width: 40px; flex-basis: 40px !important; }
 }
+
+/* Mobile-only finish for the Matchday home. Desktop selectors stay untouched. */
+@media (max-width: 820px) {
+  .home-v3-matchday {
+    padding: 11px 0 13px;
+    border-bottom-color: rgba(158, 177, 223, .16);
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(67, 104, 185, .19), transparent 54%),
+      linear-gradient(112deg, rgba(31, 45, 84, .2), rgba(8, 14, 29, 0) 72%);
+  }
+  .home-v3-matchday::after {
+    top: -90px;
+    right: -35px;
+    width: 150px;
+    height: 150px;
+    border-color: rgba(163, 190, 243, .045);
+    box-shadow: 0 0 0 14px rgba(163, 190, 243, .012), 0 0 0 28px rgba(163, 190, 243, .01);
+  }
+  .home-v3-matchday-main { gap: 4px; }
+  .home-v3-season { color: #a9bce0; font-size: 9px; letter-spacing: .15em; }
+  .home-v3-matchday h1 { margin-top: 2px; font-size: clamp(25px, 7vw, 30px); letter-spacing: -.045em; }
+  .home-v3-phase { margin-bottom: 2px; color: #b9c7e1; font-size: 13px; }
+  .home-v3-progress-line { font-size: 11px; }
+  .home-v3-progress-track { height: 3px; }
+  .home-v3-deadline { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; margin-top: 11px; padding-top: 9px; }
+  .home-v3-deadline > span { grid-column: 1 / -1; }
+  .home-v3-deadline strong { font-size: 15px; }
+  .home-v3-deadline small { justify-self: end; max-width: 48%; text-align: right; font-size: 10px; }
+
+  .home-v3-section { margin-top: 25px; }
+  .home-v3-fixtures-section { margin-top: 21px; }
+  .home-v3-matchday-list { border-color: rgba(138, 158, 204, .17); border-radius: 12px; background: linear-gradient(140deg, rgba(15, 26, 49, .83), rgba(7, 13, 27, .82)); }
+  .home-v3-fixture { padding: 9px 11px 8px; transition: background-color .15s ease, border-color .15s ease; }
+  .home-v3-fixture.is-actionable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .home-v3-fixture.is-actionable:active { background: rgba(126, 103, 183, .11); }
+  .home-v3-fixture.is-actionable:focus-visible { position: relative; z-index: 1; outline: 2px solid #b8a0ef; outline-offset: -2px; }
+  .home-v3-fixture-meta { min-height: 18px; }
+  .home-v3-scoreboard { grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr); gap: 7px; padding: 8px 0 7px; }
+  .home-v3-club { grid-template-columns: minmax(0, 1fr) !important; justify-items: center; align-content: center; gap: 4px; text-align: center !important; }
+  .home-v3-club .team-crest-medium { width: 27px; height: 27px; flex-basis: 27px; }
+  .home-v3-club strong { width: 100%; max-width: 130px; display: -webkit-box; overflow: hidden; font-size: 11px; line-height: 1.17; text-align: center; overflow-wrap: anywhere; -webkit-line-clamp: 2; }
+  .home-v3-score { gap: 4px; }
+  .home-v3-score small { font-size: 8px; letter-spacing: .08em; }
+  .home-v3-score strong { gap: 5px; font-size: 21px; }
+  .home-v3-score strong span { min-width: 14px; }
+  .home-v3-score strong i { font-size: 14px; }
+  .home-v3-fixture-footer { min-height: 29px; padding-top: 5px; }
+  .home-v3-open-action { min-height: 27px; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid rgba(179, 157, 235, .2); border-radius: 7px; color: #d9cdf5; background: rgba(114, 83, 181, .1); font-size: 10px; font-weight: 730; }
+  .home-v3-open-action i { color: #ad9bd5; font-size: 12px; font-style: normal; }
+  .home-v3-fixture-pick { flex-wrap: wrap; }
+
+  .home-v3-mobile-card {
+    display: block;
+    padding: 14px 12px 12px;
+    border: 1px solid rgba(139, 158, 202, .16);
+    border-radius: 15px;
+    color: inherit;
+    background: linear-gradient(145deg, rgba(15, 25, 47, .78), rgba(8, 14, 29, .88));
+    box-shadow: inset 0 1px rgba(255, 255, 255, .025), 0 8px 22px rgba(1, 5, 15, .12);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-v3-mobile-card:focus-visible { outline: 2px solid #b8a0ef; outline-offset: 3px; }
+  .home-v3-mobile-card:active { border-color: rgba(181, 157, 236, .32); background-color: rgba(118, 92, 183, .08); }
+  .home-v3-mobile-card .home-v3-section-head { margin: 0 0 10px; }
+  .home-v3-mobile-card .home-v3-section-head h2 { color: #cbd6eb; }
+  .home-v3-mobile-card .home-v3-rank-list { border-top-color: rgba(148, 163, 204, .13); }
+  .home-v3-mobile-card .home-v3-rank-row { min-height: 62px; padding-block: 6px; }
+  .home-v3-mobile-card .home-v3-rank-summary { margin-top: 9px; border-radius: 0 8px 8px 0; }
+  .home-v3-mobile-card .home-v3-timeline-list { margin-left: 9px; }
+  .home-v3-mobile-card .home-v3-timeline-item { padding-bottom: 14px; }
+  .home-v3-mobile-card .home-v3-timeline-item:last-child { padding-bottom: 1px; }
+  .home-v3-mobile-card .home-v3-empty { padding: 10px 0 4px; }
+}
+
+@media (max-width: 390px) {
+  .home-v3-scoreboard { grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr); gap: 5px; }
+  .home-v3-fixture { padding-inline: 9px; }
+  .home-v3-club .team-crest-medium { width: 25px; height: 25px; flex-basis: 25px; }
+  .home-v3-club strong { font-size: 10.5px; }
+  .home-v3-mobile-card { padding-inline: 10px; }
+}
+
+@media (max-width: 375px) {
+  .home-v3-scoreboard { grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); gap: 4px; }
+  .home-v3-club .team-crest-medium { width: 24px; height: 24px; flex-basis: 24px; }
+  .home-v3-club strong { font-size: 10px; }
+}
+
+@media (max-width: 820px) {
+  .home-bet-backdrop.home-bet-backdrop-v2.is-mobile {
+    place-items: end center !important;
+    padding: 0 !important;
+    padding-top: env(safe-area-inset-top) !important;
+  }
+  .home-bet-backdrop-v2 .home-bet-modal-v2.is-mobile {
+    align-self: end;
+    justify-self: stretch;
+    width: 100% !important;
+    max-width: 560px;
+    max-height: min(92dvh, 820px) !important;
+    margin-inline: auto !important;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    border-radius: 22px 22px 0 0 !important;
+    border-bottom: 0 !important;
+  }
+  .home-bet-modal-v2.is-mobile .home-bet-modal-header {
+    min-height: 62px !important;
+    padding: 9px 16px !important;
+  }
+  .home-bet-modal-v2.is-mobile .home-bet-modal-header h2 { font-size: 18px !important; }
+  .home-bet-modal-v2.is-mobile .home-bet-modal-header p { max-width: calc(100vw - 88px); font-size: 10px; }
+  .home-bet-modal-v2.is-mobile .home-bet-close { width: 40px; height: 40px; flex-basis: 40px; }
+  .home-bet-modal-v2.is-mobile .home-bet-modal-content { padding: 0 16px 12px; }
+  .home-bet-modal-v2.is-mobile .home-bet-selected-by { min-height: 24px; margin-top: 5px; }
+  .home-bet-modal-v2.is-mobile .home-bet-matchup-v2 {
+    grid-template-columns: minmax(44px, .8fr) minmax(66px, 1.1fr) 14px minmax(66px, 1.1fr) minmax(44px, .8fr);
+    grid-template-areas: 'home home-score separator away-score away';
+    gap: 6px !important;
+    margin: 11px 0 13px;
+    padding: 12px 8px !important;
+    border-radius: 15px;
+  }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity { gap: 5px; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity > small { font-size: 7px; letter-spacing: .08em; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity > div { gap: 4px; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity .team-crest-large { width: 32px; height: 32px; flex-basis: 32px; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity strong { font-size: 9px; line-height: 1.15; -webkit-line-clamp: 3; }
+  .home-bet-modal-v2.is-mobile .home-bet-score-control .score-picker { height: 46px; grid-template-columns: 28px minmax(20px, 1fr) 28px; border-radius: 11px; }
+  .home-bet-modal-v2.is-mobile .home-bet-score-control .score-picker button { min-width: 28px; font-size: 18px; }
+  .home-bet-modal-v2.is-mobile .home-bet-score-control .score-picker input { font-size: 20px; }
+  .home-bet-modal-v2.is-mobile .home-bet-x-v2 { font-size: 16px; }
+  .home-bet-modal-v2.is-mobile .home-bet-attendance { padding-top: 10px !important; }
+  .home-bet-modal-v2.is-mobile .home-bet-attendance-tabs { margin-top: 7px; }
+  .home-bet-modal-v2.is-mobile .home-bet-attendance-list { max-height: min(24dvh, 180px); grid-template-columns: minmax(0, 1fr); gap: 4px; margin-top: 6px; }
+  .home-bet-modal-v2.is-mobile .home-bet-person-v2 { min-height: 40px; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; padding: 4px 8px; border-radius: 9px; }
+  .home-bet-modal-v2.is-mobile .home-bet-person-v2 .avatar { width: 26px; height: 26px; min-width: 26px; flex-basis: 26px; }
+  .home-bet-modal-v2.is-mobile .home-bet-actions { position: static !important; min-height: 64px; justify-content: stretch; gap: 9px; padding: 9px 14px calc(10px + env(safe-area-inset-bottom)) !important; }
+  .home-bet-modal-v2.is-mobile .home-bet-actions button { flex: 1; min-width: 0; min-height: 44px; border-radius: 11px; }
+}
+
+@media (max-width: 380px) {
+  .home-bet-modal-v2.is-mobile .home-bet-modal-header { padding-inline: 12px !important; }
+  .home-bet-modal-v2.is-mobile .home-bet-modal-content { padding-inline: 10px; }
+  .home-bet-modal-v2.is-mobile .home-bet-matchup-v2 { grid-template-columns: minmax(39px, .72fr) minmax(62px, 1.1fr) 12px minmax(62px, 1.1fr) minmax(39px, .72fr); gap: 4px !important; padding-inline: 6px !important; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity .team-crest-large { width: 29px; height: 29px; flex-basis: 29px; }
+  .home-bet-modal-v2.is-mobile .home-bet-team-identity strong { font-size: 8.5px; }
+  .home-bet-modal-v2.is-mobile .home-bet-score-control .score-picker { grid-template-columns: 26px minmax(18px, 1fr) 26px; }
+  .home-bet-modal-v2.is-mobile .home-bet-score-control .score-picker button { min-width: 26px; }
+  .home-bet-modal-v2.is-mobile .home-bet-actions { gap: 7px; padding-inline: 9px; }
+  .home-bet-modal-v2.is-mobile .home-bet-actions button { padding-inline: 7px; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v3-fixture,
+  .home-v3-mobile-card { transition: none !important; }
+}

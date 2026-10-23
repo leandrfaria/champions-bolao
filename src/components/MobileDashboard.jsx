@@ -155,10 +155,9 @@ export default function MobileDashboard({
         )}
       </section>
 
-      <section className="home-v3-section home-v3-leaderboard" aria-label="Corrida pelo título">
+      <Link to="/classificacao" className="home-v3-section home-v3-mobile-card home-v3-leaderboard" aria-label="Abrir classificação: corrida pelo título">
         <div className="home-v3-section-head">
           <h2>Corrida pelo título</h2>
-          <Link to="/classificacao">Ver classificação <span aria-hidden="true">→</span></Link>
         </div>
         {!titleRace.length ? <p className="home-v3-empty">Nenhum participante na classificação.</p> : (
           <>
@@ -166,7 +165,7 @@ export default function MobileDashboard({
               {titleRace.map((item) => (
                 <li key={item.id} className={`home-v3-rank-row ${item.rank <= 3 ? `place-${item.rank}` : ''} ${item.id === userId ? 'is-user' : ''}`}>
                   <span className="home-v3-rank-position">{item.rank}º</span>
-                  <UserAvatar profile={item} size="tiny" className="home-v3-rank-avatar" />
+                  <UserAvatar profile={item} size="tiny" className="home-v3-rank-avatar" interactive={false} />
                   <span className="home-v3-rank-name" title={item.display_name}>
                     <span className="home-v3-rank-label">{item.display_name}</span>
                     {item.id === userId && <small>Você</small>}
@@ -186,12 +185,11 @@ export default function MobileDashboard({
             )}
           </>
         )}
-      </section>
+      </Link>
 
-      <section className="home-v3-section home-v3-timeline" aria-label="Acontecimentos recentes">
+      <Link to="/atividades" className="home-v3-section home-v3-mobile-card home-v3-timeline" aria-label="Abrir todas as atividades recentes">
         <div className="home-v3-section-head">
           <h2>Acontecimentos recentes</h2>
-          <Link to="/atividades">Todas as atividades <span aria-hidden="true">→</span></Link>
         </div>
         {!recentActivities.length ? <p className="home-v3-empty">Nenhuma atividade recente.</p> : (
           <ol className="home-v3-timeline-list">
@@ -218,7 +216,7 @@ export default function MobileDashboard({
             })}
           </ol>
         )}
-      </section>
+      </Link>
     </div>
   )
 }

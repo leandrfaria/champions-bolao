@@ -40,11 +40,29 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
   const [centerHome, centerAway] = centerScore.split('x')
   const status = finished ? 'Resultado oficial' : locked ? 'Aguardando resultado' : 'Palpites abertos'
   const statusTone = finished ? 'finished' : locked ? 'locked' : 'open'
+  const canOpenMobilePick = !finished && !locked
+
+  function openBetModal() {
+    if (canOpenMobilePick) setBetModalOpen(true)
+  }
+
+  function handleMobileKeyDown(event) {
+    if (!canOpenMobilePick || (event.key !== 'Enter' && event.key !== ' ')) return
+    event.preventDefault()
+    openBetModal()
+  }
 
   return (
     <>
       {variant === 'mobile' ? (
-        <article className={`home-v3-fixture ${finished ? 'is-finished' : locked ? 'is-locked' : 'is-open'}`}>
+        <article
+          className={`home-v3-fixture ${finished ? 'is-finished' : locked ? 'is-locked' : 'is-open'} ${canOpenMobilePick ? 'is-actionable' : ''}`}
+          role={canOpenMobilePick ? 'button' : undefined}
+          tabIndex={canOpenMobilePick ? 0 : undefined}
+          aria-label={canOpenMobilePick ? `${ownPrediction ? 'Editar' : 'Fazer'} palpite: ${match.home_team} contra ${match.away_team}, às ${kickoffTime}` : undefined}
+          onClick={canOpenMobilePick ? openBetModal : undefined}
+          onKeyDown={handleMobileKeyDown}
+        >
           <div className="home-v3-fixture-meta">
             <time dateTime={match.kickoff_at}>{kickoffTime}</time>
             <span className={`home-v3-fixture-state state-${statusTone}`}><i aria-hidden="true" />{status}</span>
@@ -79,9 +97,7 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
                     {predictedCount}/{totalParticipants} enviaram
                   </small>
                 )}
-                {!locked && <button type="button" onClick={() => setBetModalOpen(true)} aria-label={`${ownPrediction ? 'Editar' : 'Fazer'} palpite para ${match.home_team} contra ${match.away_team}`}>
-                  {ownPrediction ? 'Editar palpite' : 'Apostar'} <span aria-hidden="true">→</span>
-                </button>}
+                {!locked && <span className="home-v3-open-action" aria-hidden="true">{ownPrediction ? 'Editar' : 'Apostar'} <i>→</i></span>}
               </>
             )}
           </div>
@@ -142,6 +158,7 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
           profiles={profiles}
           onSave={onSave}
           onClose={() => setBetModalOpen(false)}
+          mobile={variant === 'mobile'}
         />
       )}
     </>

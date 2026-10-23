@@ -25,6 +25,7 @@ export default function HomeBetModal({
   profiles = [],
   onSave,
   onClose,
+  mobile = false,
 }) {
   const [homeScore, setHomeScore] = useState(ownPrediction?.home_score != null ? String(ownPrediction.home_score) : '0')
   const [awayScore, setAwayScore] = useState(ownPrediction?.away_score != null ? String(ownPrediction.away_score) : '0')
@@ -126,8 +127,8 @@ export default function HomeBetModal({
   }
 
   const modalContent = (
-    <div className="home-bet-backdrop home-bet-backdrop-v2" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onCloseRef.current?.() }}>
-      <section ref={dialogRef} className="home-bet-modal home-bet-modal-v2" role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby={`bet-title-${match.id}`}>
+    <div className={`home-bet-backdrop home-bet-backdrop-v2${mobile ? ' is-mobile' : ''}`} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onCloseRef.current?.() }}>
+      <section ref={dialogRef} className={`home-bet-modal home-bet-modal-v2${mobile ? ' is-mobile' : ''}`} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby={`bet-title-${match.id}`}>
         <header className="home-bet-modal-header">
           <div>
             <span className="sports-eyebrow">PALPITE DA RODADA</span>
