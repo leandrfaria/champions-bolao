@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import '../styles/login-v2.css'
 
 export default function LoginPage() {
   const { user, login, loading } = useAuth()
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -35,63 +37,80 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-visual" aria-hidden="true">
-        <div className="orb orb-one" />
-        <div className="orb orb-two" />
-        <div className="star-field">✦ · ✦ · ✦ · ✦</div>
-        <div className="login-trophy"><img src="/champions-bolao-logo-sketch.png" alt="" className="login-sketch-logo" /></div>
-        <div className="login-copy">
-          <span>NOITES DE CHAMPIONS</span>
-          <h1>Palpite fechado.<br />Resenha garantida.</h1>
-          <p>Faça seu placar, acompanhe a rodada e descubra quem vai chegar na final do bolão por cima.</p>
+    <main className="login-v2" aria-busy={loading}>
+      <section className="login-v2-scene" aria-label="Comemoração dos participantes com a taça da Champions League">
+        <img
+          className="login-v2-photo"
+          src="/images/login-stadium-celebration.webp"
+          alt="Participantes comemoram juntos no estádio ao lado da taça da Champions League"
+          fetchPriority="high"
+          decoding="async"
+        />
+        <div className="login-v2-photo-shade" aria-hidden="true" />
+        <div className="login-v2-editorial">
+          <p>A Champions é nossa.</p>
+          <span>Palpite a palpite, a disputa pelo título começa aqui.</span>
         </div>
-      </div>
+      </section>
 
-      <div className="login-panel">
-        <form className="login-card" onSubmit={handleSubmit}>
-          <div className="brand login-brand login-brand-logo">
-            <img src="/champions-bolao-logo-sketch.png" alt="Champions Bolão" className="brand-logo-image login-brand-image" />
+      <section className="login-v2-auth" aria-labelledby="login-v2-title">
+        <form className="login-v2-form" onSubmit={handleSubmit}>
+          <div className="login-v2-brand" aria-label="Champions Bolão">
+            <img src="/favicon.svg" alt="" width="42" height="42" />
+            <span><strong>CHAMPIONS</strong><b>BOLÃO</b></span>
           </div>
 
-          <div className="login-heading">
-            <span className="eyebrow">Área privada</span>
-            <h2>Entrar no bolão</h2>
-            <p>Use o usuário criado pelo administrador e sua senha.</p>
+          <div className="login-v2-heading">
+            <span className="login-v2-eyebrow">ÁREA PRIVADA</span>
+            <h1 id="login-v2-title">Entre na competição.</h1>
+            <p>Acesse sua conta para acompanhar a rodada e seus palpites.</p>
           </div>
 
-          <label className="field">
+          <label className="login-v2-field">
             <span>Usuário</span>
             <input
+              name="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              placeholder="seu nome"
+              placeholder="Seu usuário"
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck="false"
               required
             />
           </label>
 
-          <label className="field">
+          <label className="login-v2-field">
             <span>Senha</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-            />
+            <span className="login-v2-password-wrap">
+              <input
+                name="password"
+                type={passwordVisible ? 'text' : 'password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Digite sua senha"
+                autoComplete="current-password"
+                required
+              />
+              <button
+                className="login-v2-reveal"
+                type="button"
+                onClick={() => setPasswordVisible((visible) => !visible)}
+                aria-label={passwordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={passwordVisible}
+              >
+                {passwordVisible ? 'Ocultar' : 'Mostrar'}
+              </button>
+            </span>
           </label>
 
-          {error && <div className="form-error">{error}</div>}
+          {error && <p className="login-v2-error" role="alert">{error}</p>}
 
-          <button className="primary-button login-button" disabled={submitting}>
-            {submitting ? 'Entrando...' : 'Entrar'}
+          <button className="login-v2-submit" type="submit" disabled={submitting || loading}>
+            {submitting ? <><span className="login-v2-spinner" aria-hidden="true" />Entrando...</> : 'Entrar no bolão'}
           </button>
-
-          <p className="login-note">Os palpites dos outros jogadores só aparecem quando chegar o horário de início da partida.</p>
         </form>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }
