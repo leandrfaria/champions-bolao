@@ -56,7 +56,7 @@ export default function DashboardPage() {
       if (logError) throw logError
       setSeason(activeSeason)
       setProfiles(profileData || [])
-      setLogs((logData || []).filter(isFeedActivity).slice(0, 4))
+      setLogs((logData || []).filter(isFeedActivity).slice(0, 12))
 
       if (!activeSeason) {
         setRound(null)
@@ -306,7 +306,7 @@ export default function DashboardPage() {
 
               {!logs.length ? <p className="home-v2-empty">Nenhuma atividade recente.</p> : (
                 <ul className="home-v2-activity-list">
-                  {logs.map((item) => {
+                  {logs.slice(0, 4).map((item) => {
                     const category = activityCategory(item.action)
                     const summary = activitySummary(item)
                     const matchName = item?.metadata?.match_name || ''

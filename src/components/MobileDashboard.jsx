@@ -44,6 +44,18 @@ function activityIconName(action) {
   return 'rounds'
 }
 
+function uniqueRecentActivities(items) {
+  const seenMatches = new Set()
+  return items.filter((item) => {
+    const matchName = String(item?.metadata?.match_name || '').trim()
+    if (!matchName) return true
+    const key = matchName.toLocaleLowerCase('pt-BR')
+    if (seenMatches.has(key)) return false
+    seenMatches.add(key)
+    return true
+  }).slice(0, 4)
+}
+
 function getActivityDetail(item, summary, matchName) {
   const matchInfo = parseMatchName(matchName)
   const activityDetail = matchInfo && matchName && summary.detail?.toLocaleLowerCase('pt-BR').startsWith(matchName.toLocaleLowerCase('pt-BR'))
@@ -82,6 +94,7 @@ export default function MobileDashboard({
     })
     return grouped
   }, [presence])
+  const recentActivities = useMemo(() => uniqueRecentActivities(logs), [logs])
   const roundTitle = roundProgress.position && roundProgress.total
     ? `Rodada ${roundProgress.position} de ${roundProgress.total}`
     : formatRoundLabel(round)
@@ -180,9 +193,9 @@ export default function MobileDashboard({
           <h2>Acontecimentos recentes</h2>
           <Link to="/atividades">Todas as atividades <span aria-hidden="true">→</span></Link>
         </div>
-        {!logs.length ? <p className="home-v3-empty">Nenhuma atividade recente.</p> : (
+        {!recentActivities.length ? <p className="home-v3-empty">Nenhuma atividade recente.</p> : (
           <ol className="home-v3-timeline-list">
-            {logs.slice(0, 4).map((item) => {
+            {recentActivities.map((item) => {
               const category = activityCategory(item.action)
               const summary = activitySummary(item)
               const matchName = item?.metadata?.match_name || ''
