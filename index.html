@@ -7,6 +7,42 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content="Bolão privado da Champions League" />
     <title>Champions Bolão</title>
+    <script>
+      (() => {
+        const isMobileHome = () => (window.location.pathname === '/dashboard' || window.location.pathname === '/')
+          && window.matchMedia?.('(max-width: 820px)').matches
+        const navigation = performance.getEntriesByType?.('navigation')?.[0]
+        const isReload = navigation?.type === 'reload' || (!navigation && performance.navigation?.type === 1)
+        if (isMobileHome() && isReload) {
+          const storageKey = `champions-home-scroll:${window.location.pathname}${window.location.search}`
+          let position = { x: 0, y: 0 }
+          try {
+            const savedPosition = JSON.parse(sessionStorage.getItem(storageKey) || 'null')
+            if (Number.isFinite(savedPosition?.x) && Number.isFinite(savedPosition?.y)) position = savedPosition
+          } catch {
+            // An unavailable or invalid session value should start the Home at its top.
+          }
+
+          history.scrollRestoration = 'manual'
+          window.__championsHomeReloadScroll = { storageKey, position }
+        }
+
+        window.addEventListener('pagehide', () => {
+          if (!isMobileHome()) return
+          const storageKey = `champions-home-scroll:${window.location.pathname}${window.location.search}`
+          const body = document.body
+          const fixedBodyTop = body && getComputedStyle(body).position === 'fixed'
+            ? Number.parseFloat(body.style.top)
+            : Number.NaN
+          const y = Number.isFinite(fixedBodyTop) ? Math.max(0, -fixedBodyTop) : window.scrollY
+          try {
+            sessionStorage.setItem(storageKey, JSON.stringify({ x: window.scrollX, y }))
+          } catch {
+            // Scroll restoration remains safe if storage is unavailable.
+          }
+        }, { once: true })
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
@@ -116,6 +116,29 @@ export default function DashboardPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  useLayoutEffect(() => {
+    const pendingRestore = window.__championsHomeReloadScroll
+    if (loading || !pendingRestore) return
+
+    window.__championsHomeReloadScroll = null
+    try {
+      sessionStorage.removeItem(pendingRestore.storageKey)
+    } catch {
+      // The pending in-memory position is enough for this page load.
+    }
+
+    const matchday = document.querySelector('.home-v3-matchday')
+    const savedY = Math.max(0, pendingRestore.position.y)
+    // iOS Safari can persist a small viewport/toolbar offset as page scroll.
+    // Treat any reload position inside the matchday header as the Home's top.
+    const restoreY = isMobileHome && matchday && savedY < matchday.getBoundingClientRect().height
+      ? 0
+      : savedY
+
+    window.scrollTo(Math.max(0, pendingRestore.position.x), restoreY)
+    if ('scrollRestoration' in history) history.scrollRestoration = 'auto'
+  }, [loading, isMobileHome])
 
   const ownPredictionMap = useMemo(() => {
     const map = new Map()
