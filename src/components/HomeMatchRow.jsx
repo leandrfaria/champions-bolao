@@ -25,7 +25,7 @@ function pointFeedback(points) {
   return { label: 'Sem pontos', value: '0 pts', tone: 'miss' }
 }
 
-export default function HomeMatchRow({ match, ownPrediction, presence = [], profiles = [], onSave }) {
+export default function HomeMatchRow({ match, ownPrediction, presence = [], presenceStatus = 'ready', presenceUpdatedAt, profiles = [], onSave }) {
   const [betModalOpen, setBetModalOpen] = useState(false)
 
   const finished = hasResult(match)
@@ -74,7 +74,7 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
           </div>
 
           <div className="home-v2-match-actions">
-            {totalParticipants > 0 && (
+            {presenceStatus === 'ready' && totalParticipants > 0 && (
               <small aria-label={`${predictedCount} de ${totalParticipants} participantes enviaram palpites`}>
                 {predictedCount}/{totalParticipants} <span>participantes</span>
               </small>
@@ -93,6 +93,8 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], prof
           match={match}
           ownPrediction={ownPrediction}
           presence={presence}
+          presenceStatus={presenceStatus}
+          presenceUpdatedAt={presenceUpdatedAt}
           profiles={profiles}
           onSave={onSave}
           onClose={() => setBetModalOpen(false)}

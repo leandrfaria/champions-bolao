@@ -17,6 +17,18 @@ function formatDeadline(value) {
   }).format(new Date(value)).replace('.', '')
 }
 
+function formatRoundLabel(round) {
+  const name = String(round?.name || '').trim()
+  const stage = String(round?.stage || '').trim()
+  if (!name) return 'Rodada atual'
+  if (stage && name.toLocaleLowerCase('pt-BR').startsWith(stage.toLocaleLowerCase('pt-BR'))) {
+    const remaining = name.slice(stage.length).replace(/^\s*[-–—|·:]\s*/, '').trim()
+    if (remaining) return /\brodada\b/i.test(remaining) ? remaining : `Rodada ${remaining}`
+    return 'Rodada atual'
+  }
+  return /\brodada\b/i.test(name) ? name : `Rodada ${name}`
+}
+
 function formatRelativeActivity(value) {
   if (!value) return 'agora'
   const diffMs = Date.now() - new Date(value).getTime()
@@ -77,6 +89,8 @@ export default function DashboardPage() {
   const [round, setRound] = useState(null)
   const [predictions, setPredictions] = useState([])
   const [presence, setPresence] = useState([])
+  const [presenceStatus, setPresenceStatus] = useState('idle')
+  const [presenceUpdatedAt, setPresenceUpdatedAt] = useState(null)
   const [profiles, setProfiles] = useState([])
   const [finishedPredictions, setFinishedPredictions] = useState([])
   const [finishedMatchesAll, setFinishedMatchesAll] = useState([])
@@ -86,6 +100,7 @@ export default function DashboardPage() {
   async function load() {
     setLoading(true)
     setError('')
+    setPresenceStatus('loading')
     try {
       const [{ data: activeSeason, error: seasonError }, { data: profileData, error: profileError }, { data: logData, error: logError }] = await Promise.all([
         supabase.from('seasons').select('*').eq('is_active', true).maybeSingle(),
@@ -103,6 +118,9 @@ export default function DashboardPage() {
         setRound(null)
         setFinishedPredictions([])
         setFinishedMatchesAll([])
+        setPresence([])
+        setPresenceUpdatedAt(null)
+        setPresenceStatus('empty')
         return
       }
 
@@ -128,9 +146,13 @@ export default function DashboardPage() {
         if (presenceError) throw presenceError
         setPredictions(predictionData || [])
         setPresence(presenceData || [])
+        setPresenceUpdatedAt(new Date())
+        setPresenceStatus('ready')
       } else {
         setPredictions([])
         setPresence([])
+        setPresenceUpdatedAt(null)
+        setPresenceStatus('empty')
       }
 
       const allFinishedMatches = usableRounds.flatMap((item) => item.matches || []).filter(hasResult)
@@ -142,6 +164,7 @@ export default function DashboardPage() {
       if (finishedResult.error) throw finishedResult.error
       setFinishedPredictions(finishedResult.data || [])
     } catch (err) {
+      setPresenceStatus('error')
       setError(err.message)
     } finally {
       setLoading(false)
@@ -223,11 +246,10 @@ export default function DashboardPage() {
       ) : (
         <>
           <section className="home-v2-context" aria-labelledby="home-v2-phase">
-            <div className="home-v2-context-art" aria-hidden="true" />
             <div className="home-v2-context-main">
               <span className="home-v2-season">{season.name || 'UEFA Champions League'}</span>
               <h1 id="home-v2-phase">{round.stage || round.name}</h1>
-              <p className="home-v2-round">Rodada <strong>{round.name}</strong></p>
+                <p className="home-v2-round"><strong>{formatRoundLabel(round)}</strong></p>
               <div className="home-v2-progress-line">
                 <span>{ownCount} de {currentMatches.length} palpites enviados</span>
                 <span>{completion}%</span>
@@ -267,6 +289,8 @@ export default function DashboardPage() {
                     match={match}
                     ownPrediction={ownPredictionMap.get(match.id)}
                     presence={presence.filter((item) => item.match_id === match.id)}
+                    presenceStatus={presenceStatus}
+                    presenceUpdatedAt={presenceUpdatedAt}
                     profiles={profiles}
                     onSave={savePrediction}
                   />
@@ -329,16 +353,23 @@ export default function DashboardPage() {
                   {logs.map((item) => {
                     const category = activityCategory(item.action)
                     const summary = activitySummary(item)
-                    const matchInfo = parseMatchName(item?.metadata?.match_name || '')
+                    const matchName = item?.metadata?.match_name || ''
+                    const matchInfo = parseMatchName(matchName)
                     const tone = activityTone(item.action)
+                    const activityDetail = matchInfo && matchName && summary.detail?.toLocaleLowerCase('pt-BR').startsWith(matchName.toLocaleLowerCase('pt-BR'))
+                      ? item.action === 'result_updated' && item.metadata?.result ? `Resultado oficial: ${item.metadata.result}` : ''
+                      : summary.detail
                     return (
                       <li className={`home-v2-activity-item tone-${activityTone(item.action)}`} key={item.id}>
                         <span className={`home-v2-activity-mark category-${category}`} aria-hidden="true" />
                         <div className="home-v2-activity-copy">
-                          <div><strong>{summary.title}</strong><time dateTime={item.created_at}>{formatRelativeActivity(item.created_at)}</time></div>
-                          <p>{summary.detail}</p>
+                          <div className="home-v2-activity-topline">
+                            <span className={`home-v2-activity-category tone-${tone}`}>{getActivityLabel(category)}</span>
+                            <time dateTime={item.created_at}>{formatRelativeActivity(item.created_at)}</time>
+                          </div>
+                          <strong className="home-v2-activity-title">{summary.title}</strong>
+                          {activityDetail && <p>{activityDetail}</p>}
                           {matchInfo && <span className="home-v2-activity-match">{matchInfo.home} <i aria-hidden="true">×</i> {matchInfo.away}</span>}
-                          <span className={`home-v2-activity-category tone-${tone}`}>{getActivityLabel(category)}</span>
                         </div>
                       </li>
                     )

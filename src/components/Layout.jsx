@@ -169,7 +169,7 @@ export default function Layout() {
                     setDesktopMoreOpen((value) => !value)
                   }}
                 >
-                  Mais <span aria-hidden="true">⌄</span>
+                  Mais
                 </button>
                 {desktopMoreOpen && (
                   <div className="site-more-menu-v2" id="site-more-menu-v2">
