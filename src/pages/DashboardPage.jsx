@@ -113,7 +113,7 @@ export default function DashboardPage() {
       if (logError) throw logError
       setSeason(activeSeason)
       setProfiles(profileData || [])
-      setLogs((logData || []).filter(isFeedActivity).slice(0, 5))
+      setLogs((logData || []).filter(isFeedActivity).slice(0, 4))
 
       if (!activeSeason) {
         setRound(null)

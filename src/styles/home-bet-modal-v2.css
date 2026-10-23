@@ -1,179 +1,170 @@
 .home-bet-backdrop.home-bet-backdrop-v2 {
-  padding: 28px;
-  background: rgba(1, 4, 14, .79);
-  backdrop-filter: blur(13px);
+  display: grid !important;
+  place-items: center !important;
+  justify-content: initial !important;
+  align-items: initial !important;
+  padding: 24px !important;
+  background: rgba(1, 4, 14, .78) !important;
+  backdrop-filter: blur(12px);
 }
 
 .home-bet-backdrop-v2 .home-bet-modal-v2 {
-  width: min(760px, 100%);
-  max-height: min(850px, calc(100dvh - 56px));
+  align-self: center;
+  justify-self: center;
+  width: min(600px, 100%) !important;
+  height: auto !important;
+  max-height: min(760px, calc(100dvh - 48px)) !important;
+  margin: 0 auto !important;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 1px solid rgba(130, 157, 218, .25);
-  border-radius: 25px;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  overflow: hidden !important;
+  border: 1px solid rgba(142, 163, 216, .22) !important;
+  border-right: 1px solid rgba(142, 163, 216, .22) !important;
+  border-radius: 22px !important;
   background:
-    radial-gradient(ellipse at 84% 0%, rgba(56, 77, 155, .2), transparent 42%),
-    linear-gradient(155deg, #101a32 0%, #0b1225 56%, #080e1d 100%);
-  box-shadow: 0 34px 100px rgba(0, 0, 0, .66), inset 0 1px rgba(255, 255, 255, .05);
+    radial-gradient(ellipse at 50% 0%, rgba(63, 78, 145, .17), transparent 48%),
+    linear-gradient(155deg, #101a31 0%, #0b1223 58%, #080e1b 100%) !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .62), inset 0 1px rgba(255, 255, 255, .05) !important;
+  animation: homeBetDialogIn .18s ease both !important;
 }
 
+@keyframes homeBetDialogIn { from { opacity: .4; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .home-bet-modal-v2:focus { outline: none; }
-.home-bet-modal-v2 .home-bet-modal-header { min-height: 70px; align-items: center; padding: 13px 24px; border-color: rgba(154, 176, 222, .14); }
-.home-bet-modal-v2 .sports-eyebrow { color: #96aacf; font-size: 9px; letter-spacing: .15em; }
-.home-bet-modal-v2 .home-bet-modal-header h2 { margin: 3px 0 2px; color: #f7f8fc; font-size: 21px; line-height: 1.12; }
-.home-bet-modal-v2 .home-bet-modal-header p { margin: 0; color: #9eacc5; font-size: 11px; line-height: 1.35; text-transform: none; }
-.home-bet-modal-v2 .home-bet-close { width: 40px; height: 40px; border-color: rgba(173, 191, 227, .18); color: #d9e1f1; background: rgba(255, 255, 255, .045); }
-.home-bet-modal-v2 .home-bet-close:hover:not(:disabled) { border-color: rgba(199, 185, 255, .42); background: rgba(157, 132, 221, .13); }
+.home-bet-modal-v2 .home-bet-modal-header { min-height: 68px !important; align-items: center; padding: 12px 20px !important; border-color: rgba(154, 176, 222, .13); }
+.home-bet-modal-v2 .sports-eyebrow { color: #9eafd0; font-size: 9px; letter-spacing: .14em; }
+.home-bet-modal-v2 .home-bet-modal-header h2 { margin: 3px 0 3px; color: #f7f8fc; font-size: 20px !important; line-height: 1.12; }
+.home-bet-modal-v2 .home-bet-modal-header p { display: -webkit-box; max-width: 470px; margin: 0; overflow: hidden; color: #a8b4ca; font-size: 11px; line-height: 1.35; text-transform: none; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.home-bet-modal-v2 .home-bet-close { width: 38px; height: 38px; flex: 0 0 38px; border-color: rgba(173, 191, 227, .16); color: #d9e1f1; background: rgba(255, 255, 255, .04); }
+.home-bet-modal-v2 .home-bet-close:hover:not(:disabled) { border-color: rgba(199, 185, 255, .4); background: rgba(157, 132, 221, .12); }
 .home-bet-modal-v2 .home-bet-close:focus-visible { outline: 2px solid #c5adff; outline-offset: 2px; }
 
 .home-bet-modal-content {
   min-height: 0;
   overflow: auto;
-  padding: 0 24px 19px;
+  padding: 0 20px 15px;
   overscroll-behavior: contain;
   scrollbar-color: rgba(142, 158, 198, .32) transparent;
 }
 
 .home-bet-modal-v2 .home-bet-selected-by {
   width: fit-content;
-  min-height: 30px;
+  min-height: 26px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 8px 0 0 auto;
-  padding: 3px 9px 3px 5px;
+  gap: 7px;
+  margin: 7px 0 0 auto;
+  padding: 2px 8px 2px 5px;
   border: 1px solid rgba(154, 176, 222, .1);
   border-radius: 99px;
-  background: rgba(255, 255, 255, .025);
+  background: rgba(255, 255, 255, .022);
 }
 
-.home-bet-modal-v2 .home-bet-selected-by > span { color: #8998b2; font-size: 10px; }
-.home-bet-modal-v2 .home-bet-selected-by > div { min-width: 0; display: flex; align-items: center; gap: 6px; }
-.home-bet-modal-v2 .home-bet-selected-by .avatar { width: 22px; height: 22px; flex: 0 0 22px; }
-.home-bet-modal-v2 .home-bet-selected-by strong { max-width: 148px; overflow: hidden; color: #c5cfe0; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.home-bet-modal-v2 .home-bet-selected-by > span { color: #929fb5; font-size: 9px; }
+.home-bet-modal-v2 .home-bet-selected-by > div { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.home-bet-modal-v2 .home-bet-selected-by .avatar { width: 19px; height: 19px; flex: 0 0 19px; }
+.home-bet-modal-v2 .home-bet-selected-by strong { max-width: 135px; overflow: hidden; color: #c5cfe0; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 
 .home-bet-modal-v2 .home-bet-matchup-v2 {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(112px, .76fr) 24px minmax(112px, .76fr) minmax(120px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(84px, 1.05fr) 22px minmax(84px, 1.05fr) minmax(0, 1fr);
   grid-template-areas: 'home home-score separator away-score away';
   align-items: center;
-  gap: 10px;
-  margin: 18px 0 21px;
-  padding: 20px 18px;
+  gap: 8px !important;
+  margin: 14px 0 17px;
+  padding: 15px 13px !important;
   border: 1px solid rgba(143, 165, 214, .16);
-  border-radius: 19px;
+  border-radius: 17px;
   background:
-    radial-gradient(ellipse at center, rgba(85, 102, 167, .11), transparent 58%),
-    linear-gradient(135deg, rgba(18, 29, 55, .88), rgba(9, 15, 29, .84));
+    radial-gradient(ellipse at center, rgba(93, 103, 165, .13), transparent 58%),
+    linear-gradient(140deg, rgba(18, 29, 54, .86), rgba(9, 15, 29, .9));
   box-shadow: inset 0 1px rgba(255, 255, 255, .035);
 }
 
-.home-bet-modal-v2 .home-bet-team-identity { min-width: 0; display: grid; gap: 8px; }
+.home-bet-modal-v2 .home-bet-team-identity { min-width: 0; display: grid; justify-items: center; gap: 6px; }
 .home-bet-modal-v2 .home-bet-team-home { grid-area: home; }
 .home-bet-modal-v2 .home-bet-team-away { grid-area: away; }
-.home-bet-modal-v2 .home-bet-team-identity > small { color: #8394b5; font-size: 9px; font-weight: 730; letter-spacing: .1em; text-transform: uppercase; }
-.home-bet-modal-v2 .home-bet-team-identity > div { min-width: 0; display: flex; align-items: center; gap: 9px; }
-.home-bet-modal-v2 .home-bet-team-away > div { justify-content: flex-end; }
-.home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 43px; height: 43px; flex: 0 0 43px; }
-.home-bet-modal-v2 .home-bet-team-identity strong { min-width: 0; color: #f2f5fc; font-size: 14px; font-weight: 740; line-height: 1.23; overflow-wrap: anywhere; }
-.home-bet-modal-v2 .home-bet-team-away > div strong { text-align: right; }
-
+.home-bet-modal-v2 .home-bet-team-identity > small { color: #8999b8; font-size: 8px; font-weight: 730; letter-spacing: .1em; text-transform: uppercase; }
+.home-bet-modal-v2 .home-bet-team-identity > div { width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 39px; height: 39px; flex: 0 0 39px; }
+.home-bet-modal-v2 .home-bet-team-identity strong { display: -webkit-box; max-width: 100%; min-width: 0; overflow: hidden; color: #f2f5fc; font-size: 12px; font-weight: 730; line-height: 1.2; text-align: center; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .home-bet-modal-v2 .home-bet-score-control { min-width: 0; }
 .home-bet-modal-v2 .home-bet-score-home { grid-area: home-score; }
 .home-bet-modal-v2 .home-bet-score-away { grid-area: away-score; }
-.home-bet-modal-v2 .home-bet-score-control .score-picker { width: 100%; min-width: 0; height: 54px; grid-template-columns: 34px minmax(32px, 1fr) 34px; border-color: rgba(139, 162, 213, .25); border-radius: 13px; background: rgba(4, 9, 22, .74); box-shadow: 0 5px 16px rgba(0, 0, 0, .2); }
-.home-bet-modal-v2 .home-bet-score-control .score-picker button { min-width: 34px; color: #d7caff; background: rgba(135, 110, 193, .14); font-size: 21px; }
-.home-bet-modal-v2 .home-bet-score-control .score-picker button:hover:not(:disabled) { color: #fff; background: rgba(147, 119, 213, .28); }
-.home-bet-modal-v2 .home-bet-score-control .score-picker input { min-width: 0; color: #fff; background: rgba(13, 23, 47, .6); font-size: 23px; font-variant-numeric: tabular-nums; }
-.home-bet-modal-v2 .home-bet-x-v2 { grid-area: separator; align-self: center; margin: 0; color: #8997b3; font-size: 22px; font-weight: 680; text-align: center; }
+.home-bet-modal-v2 .home-bet-score-control .score-picker { width: 100%; min-width: 0; height: 50px; grid-template-columns: 32px minmax(28px, 1fr) 32px; border-color: rgba(151, 167, 210, .25); border-radius: 12px; background: rgba(4, 9, 22, .76); box-shadow: 0 5px 15px rgba(0, 0, 0, .18), inset 0 1px rgba(255, 255, 255, .035); }
+.home-bet-modal-v2 .home-bet-score-control .score-picker button { min-width: 32px; color: #ded2ff; background: rgba(135, 110, 193, .14); font-size: 20px; }
+.home-bet-modal-v2 .home-bet-score-control .score-picker button:hover:not(:disabled) { color: #fff; background: rgba(147, 119, 213, .27); }
+.home-bet-modal-v2 .home-bet-score-control .score-picker button:focus-visible { position: relative; z-index: 1; outline: 2px solid #c5adff; outline-offset: -3px; }
+.home-bet-modal-v2 .home-bet-score-control .score-picker input { min-width: 0; color: #fff; background: rgba(13, 23, 47, .58); font-size: 22px; font-weight: 760; font-variant-numeric: tabular-nums; }
+.home-bet-modal-v2 .home-bet-x-v2 { grid-area: separator; align-self: center; margin: 0; color: #a2aec6; font-size: 19px; font-weight: 680; text-align: center; }
 
-.home-bet-modal-v2 .home-bet-error { margin: -7px 0 17px; padding: 10px 12px; border: 1px solid rgba(239, 109, 139, .2); border-radius: 10px; color: #e6a1b0; background: rgba(239, 85, 122, .06); font-size: 12px; }
+.home-bet-modal-v2 .home-bet-error { margin: -5px 0 13px; padding: 9px 11px; border: 1px solid rgba(239, 109, 139, .2); border-radius: 10px; color: #e6a1b0; background: rgba(239, 85, 122, .06); font-size: 12px; }
 
-.home-bet-modal-v2 .home-bet-attendance {
-  margin: 0;
-  padding: 16px 0 0;
-  border: 0;
-  border-top: 1px solid rgba(154, 176, 222, .14);
-  background: transparent;
-}
-
-.home-bet-attendance-heading { min-height: 27px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.home-bet-attendance-heading h3 { margin: 0; color: #edf1fa; font-size: 15px; font-weight: 730; }
-.home-bet-attendance-total { margin: 0; color: #c4d1e8; font-size: 12px; font-weight: 680; font-variant-numeric: tabular-nums; }
-.home-bet-attendance-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 11px 0 0; padding: 4px; border: 1px solid rgba(148, 168, 211, .13); border-radius: 12px; background: rgba(4, 9, 21, .58); }
-.home-bet-attendance-tabs button { min-width: 0; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; border: 1px solid transparent; border-radius: 9px; color: #aab7cf; background: transparent; font: inherit; font-size: 12px; font-weight: 710; cursor: pointer; }
-.home-bet-attendance-tabs button span { min-width: 22px; padding: 2px 5px; border-radius: 99px; color: #adb9d0; background: rgba(255, 255, 255, .07); font-size: 10px; font-variant-numeric: tabular-nums; }
-.home-bet-attendance-tabs button[aria-selected='true'] { border-color: rgba(164, 143, 219, .2); color: #f0eaff; background: rgba(117, 91, 174, .2); }
+.home-bet-modal-v2 .home-bet-attendance { margin: 0 !important; padding: 12px 0 0 !important; border: 0; border-top: 1px solid rgba(154, 176, 222, .13); background: transparent !important; }
+.home-bet-attendance-heading { min-height: 24px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.home-bet-attendance-heading h3 { margin: 0; color: #edf1fa; font-size: 14px; font-weight: 720; }
+.home-bet-attendance-total { margin: 0; color: #c4d1e8; font-size: 11px; font-weight: 680; font-variant-numeric: tabular-nums; }
+.home-bet-attendance-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 8px 0 0; padding: 3px; border: 1px solid rgba(148, 168, 211, .12); border-radius: 11px; background: rgba(4, 9, 21, .54); }
+.home-bet-attendance-tabs button { min-width: 0; min-height: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 8px; color: #aab7cf; background: transparent; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.home-bet-attendance-tabs button span { min-width: 20px; padding: 2px 5px; border-radius: 99px; color: #adb9d0; background: rgba(255, 255, 255, .07); font-size: 9px; font-variant-numeric: tabular-nums; }
+.home-bet-attendance-tabs button[aria-selected='true'] { border-color: rgba(164, 143, 219, .18); color: #f0eaff; background: rgba(117, 91, 174, .19); }
 .home-bet-attendance-tabs button[aria-selected='true'] span { color: #e3d7ff; background: rgba(162, 135, 223, .2); }
 .home-bet-attendance-tabs button:focus-visible { outline: 2px solid #c5adff; outline-offset: 2px; }
-.home-bet-attendance-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 7px; margin-top: 9px; }
-.home-bet-modal-v2 .home-bet-person-v2 { min-width: 0; min-height: 42px; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 9px; border: 1px solid rgba(147, 166, 205, .12); border-radius: 11px; color: #d6dfef; background: rgba(255, 255, 255, .025); font-size: 11px; }
-.home-bet-modal-v2 .home-bet-person-v2 .avatar { width: 27px; height: 27px; min-width: 27px; flex: 0 0 27px; }
-.home-bet-modal-v2 .home-bet-person-v2.is-submitted { border-color: rgba(103, 191, 157, .16); background: rgba(49, 117, 94, .07); }
+.home-bet-attendance-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr)); gap: 6px; max-height: 160px; overflow: auto; margin-top: 7px; padding: 1px 2px 1px 0; overscroll-behavior: contain; scrollbar-color: rgba(142, 158, 198, .28) transparent; }
+.home-bet-modal-v2 .home-bet-person-v2 { min-width: 0; min-height: 38px; display: grid; grid-template-columns: 25px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 4px 8px; border: 1px solid rgba(147, 166, 205, .1); border-radius: 10px; color: #d6dfef; background: rgba(255, 255, 255, .022); font-size: 10px; }
+.home-bet-modal-v2 .home-bet-person-v2 .avatar { width: 24px; height: 24px; min-width: 24px; flex: 0 0 24px; }
+.home-bet-modal-v2 .home-bet-person-v2.is-submitted { border-color: rgba(103, 191, 157, .14); background: rgba(49, 117, 94, .06); }
 .home-bet-modal-v2 .home-bet-person-v2.is-pending { color: #afb9cb; }
 .home-bet-person-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.home-bet-person-state { color: #86d3b1; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.home-bet-person-state { color: #86d3b1; font-size: 9px; font-weight: 700; white-space: nowrap; }
 .home-bet-person-v2.is-pending .home-bet-person-state { color: #9aa6bc; }
 .home-bet-attendance-state,
-.home-bet-attendance-empty { margin: 10px 0 0; padding: 10px 12px; border: 1px solid rgba(147, 166, 205, .1); border-radius: 10px; color: #aab7ce; background: rgba(255, 255, 255, .025); font-size: 12px; line-height: 1.4; }
+.home-bet-attendance-empty { margin: 8px 0 0; padding: 9px 10px; border: 1px solid rgba(147, 166, 205, .09); border-radius: 9px; color: #aab7ce; background: rgba(255, 255, 255, .022); font-size: 11px; line-height: 1.4; }
 .home-bet-attendance-state.is-error { color: #e1a9b5; }
 
-.home-bet-modal-v2 .home-bet-actions {
-  min-height: 68px;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 11px 24px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(154, 176, 222, .15);
-  background: rgba(6, 11, 23, .97);
-}
-
-.home-bet-modal-v2 .home-bet-actions button { min-width: 132px; min-height: 44px; border-radius: 11px; font-size: 13px; font-weight: 740; }
-.home-bet-modal-v2 .home-bet-actions .secondary-button { border: 1px solid rgba(157, 174, 209, .2); color: #c4cee0; background: rgba(255, 255, 255, .035); }
-.home-bet-modal-v2 .home-bet-actions .primary-button { border: 1px solid rgba(177, 155, 235, .42); color: #fff; background: linear-gradient(110deg, #745eb1, #586ca8); box-shadow: 0 7px 20px rgba(60, 67, 132, .2); }
+.home-bet-modal-v2 .home-bet-actions { position: static !important; min-height: 60px; align-items: center; justify-content: flex-end; gap: 8px; padding: 8px 20px calc(9px + env(safe-area-inset-bottom)) !important; border-top: 1px solid rgba(154, 176, 222, .13); background: rgba(6, 11, 23, .97) !important; }
+.home-bet-modal-v2 .home-bet-actions button { min-width: 120px; min-height: 40px; border-radius: 10px; font-size: 12px; font-weight: 730; }
+.home-bet-modal-v2 .home-bet-actions .secondary-button { border: 1px solid rgba(157, 174, 209, .18); color: #c4cee0; background: rgba(255, 255, 255, .03); }
+.home-bet-modal-v2 .home-bet-actions .primary-button { border: 1px solid rgba(177, 155, 235, .38); color: #fff; background: linear-gradient(110deg, #705ba9, #596b9f); box-shadow: 0 6px 17px rgba(60, 67, 132, .17); }
 .home-bet-modal-v2 .home-bet-actions button:focus-visible { outline: 2px solid #c5adff; outline-offset: 2px; }
 
 @media (max-width: 700px) {
-  .home-bet-backdrop.home-bet-backdrop-v2 { place-items: end center; padding: 0; }
-  .home-bet-backdrop-v2 .home-bet-modal-v2 { width: 100%; max-height: min(94dvh, 860px); border-radius: 23px 23px 0 0; }
-  .home-bet-modal-v2 .home-bet-modal-header { min-height: 68px; padding: 10px 17px; }
-  .home-bet-modal-v2 .home-bet-modal-header h2 { font-size: 19px; }
-  .home-bet-modal-v2 .home-bet-modal-header p { max-width: calc(100vw - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .home-bet-modal-v2 .home-bet-modal-content { padding: 0 17px 14px; }
-  .home-bet-modal-v2 .home-bet-matchup-v2 { grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); grid-template-areas: 'home . away' 'home-score separator away-score'; gap: 10px 8px; margin: 14px 0 17px; padding: 14px 12px; border-radius: 16px; }
-  .home-bet-modal-v2 .home-bet-team-home > div { justify-content: flex-start; }
-  .home-bet-modal-v2 .home-bet-team-away > div { justify-content: flex-end; }
-  .home-bet-modal-v2 .home-bet-team-identity { gap: 5px; }
+  .home-bet-backdrop.home-bet-backdrop-v2 { place-items: end center !important; padding: 0 !important; }
+  .home-bet-backdrop-v2 .home-bet-modal-v2 { align-self: end; justify-self: stretch; width: 100% !important; max-height: min(92dvh, 800px) !important; border-radius: 22px 22px 0 0 !important; }
+  .home-bet-modal-v2 .home-bet-modal-header { min-height: 64px !important; padding: 9px 16px !important; }
+  .home-bet-modal-v2 .home-bet-modal-header h2 { font-size: 18px !important; }
+  .home-bet-modal-v2 .home-bet-modal-header p { max-width: calc(100vw - 95px); -webkit-line-clamp: 1; }
+  .home-bet-modal-v2 .home-bet-modal-content { padding: 0 16px 12px; }
+  .home-bet-modal-v2 .home-bet-matchup-v2 { grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr); grid-template-areas: 'home . away' 'home-score separator away-score'; gap: 8px 7px !important; margin: 12px 0 14px; padding: 12px 10px !important; border-radius: 15px; }
+  .home-bet-modal-v2 .home-bet-team-identity { gap: 4px; }
   .home-bet-modal-v2 .home-bet-team-identity > small { font-size: 8px; }
-  .home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 36px; height: 36px; flex-basis: 36px; }
-  .home-bet-modal-v2 .home-bet-team-identity > div { gap: 7px; }
-  .home-bet-modal-v2 .home-bet-team-identity strong { font-size: 12px; }
-  .home-bet-modal-v2 .home-bet-score-control .score-picker { height: 50px; grid-template-columns: 36px minmax(28px, 1fr) 36px; }
+  .home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 34px; height: 34px; flex-basis: 34px; }
+  .home-bet-modal-v2 .home-bet-team-identity strong { font-size: 11px; }
+  .home-bet-modal-v2 .home-bet-score-control .score-picker { height: 48px; grid-template-columns: 36px minmax(27px, 1fr) 36px; }
   .home-bet-modal-v2 .home-bet-score-control .score-picker button { min-width: 36px; }
   .home-bet-modal-v2 .home-bet-score-control .score-picker input { font-size: 21px; }
-  .home-bet-modal-v2 .home-bet-x-v2 { font-size: 19px; }
-  .home-bet-modal-v2 .home-bet-attendance { padding-top: 13px; }
-  .home-bet-modal-v2 .home-bet-person-v2 { min-height: 40px; padding: 4px 7px; }
-  .home-bet-modal-v2 .home-bet-actions { min-height: 66px; justify-content: stretch; padding: 10px 15px calc(12px + env(safe-area-inset-bottom)); }
+  .home-bet-modal-v2 .home-bet-attendance { margin: 0 !important; padding: 11px 0 0 !important; }
+  .home-bet-modal-v2 .home-bet-attendance-list { max-height: 132px; grid-template-columns: minmax(0, 1fr); }
+  .home-bet-modal-v2 .home-bet-person-v2 { min-height: 38px; }
+  .home-bet-modal-v2 .home-bet-actions { position: static !important; min-height: 60px; justify-content: stretch; padding: 8px 14px calc(10px + env(safe-area-inset-bottom)) !important; }
   .home-bet-modal-v2 .home-bet-actions button { flex: 1; min-width: 0; }
 }
 
 @media (max-width: 380px) {
-  .home-bet-modal-v2 .home-bet-modal-content { padding-inline: 12px; }
-  .home-bet-modal-v2 .home-bet-matchup-v2 { grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr); gap: 9px 5px; padding: 12px 9px; }
-  .home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 31px; height: 31px; flex-basis: 31px; }
-  .home-bet-modal-v2 .home-bet-team-identity strong { font-size: 11px; }
-  .home-bet-modal-v2 .home-bet-score-control .score-picker { grid-template-columns: 32px minmax(24px, 1fr) 32px; }
-  .home-bet-modal-v2 .home-bet-score-control .score-picker button { min-width: 32px; }
-  .home-bet-modal-v2 .home-bet-attendance-heading { gap: 8px; }
-  .home-bet-modal-v2 .home-bet-attendance-heading h3 { font-size: 14px; }
-  .home-bet-modal-v2 .home-bet-attendance-total { font-size: 11px; }
-  .home-bet-modal-v2 .home-bet-person-v2 { grid-template-columns: 25px minmax(0, 1fr) auto; gap: 6px; padding-inline: 6px; font-size: 10px; }
-  .home-bet-modal-v2 .home-bet-person-v2 .avatar { width: 24px; height: 24px; min-width: 24px; flex-basis: 24px; }
+  .home-bet-modal-v2 .home-bet-modal-content { padding-inline: 11px; }
+  .home-bet-modal-v2 .home-bet-matchup-v2 { grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr); gap: 7px 5px; padding: 11px 8px; }
+  .home-bet-modal-v2 .home-bet-team-identity .team-crest-large { width: 30px; height: 30px; flex-basis: 30px; }
+  .home-bet-modal-v2 .home-bet-team-identity strong { font-size: 10px; }
+  .home-bet-modal-v2 .home-bet-score-control .score-picker { grid-template-columns: 33px minmax(24px, 1fr) 33px; }
+  .home-bet-modal-v2 .home-bet-score-control .score-picker button { min-width: 33px; }
+  .home-bet-modal-v2 .home-bet-attendance-heading { gap: 7px; }
+  .home-bet-modal-v2 .home-bet-attendance-heading h3 { font-size: 13px; }
+  .home-bet-modal-v2 .home-bet-attendance-total { font-size: 10px; }
+  .home-bet-modal-v2 .home-bet-person-v2 { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px; padding-inline: 6px; font-size: 10px; }
+  .home-bet-modal-v2 .home-bet-person-v2 .avatar { width: 23px; height: 23px; min-width: 23px; flex-basis: 23px; }
   .home-bet-modal-v2 .home-bet-person-state { font-size: 9px; }
-  .home-bet-modal-v2 .home-bet-actions { gap: 8px; padding-inline: 10px; }
-  .home-bet-modal-v2 .home-bet-actions button { padding-inline: 8px; font-size: 12px; }
+  .home-bet-modal-v2 .home-bet-actions { gap: 7px; padding-inline: 9px; }
+  .home-bet-modal-v2 .home-bet-actions button { padding-inline: 7px; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
