@@ -3,92 +3,35 @@ import { Link } from 'react-router-dom'
 import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
 import HomeMatchRow from '../components/HomeMatchRow'
+import MobileDashboard from '../components/MobileDashboard'
 import UserAvatar from '../components/UserAvatar'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked } from '../lib/utils'
 import { activityCategory, activityTone, isFeedActivity, parseMatchName } from '../lib/activity'
+import { activitySummary, formatDeadline, formatRelativeActivity, formatRoundLabel, getActivityLabel, progressValue } from '../lib/dashboardPresentation'
 import '../styles/home-dashboard.css'
 
-function formatDeadline(value) {
-  if (!value) return '—'
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
-  }).format(new Date(value)).replace('.', '')
-}
+function useIsMobileHome() {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 820px)').matches)
 
-function formatRoundLabel(round) {
-  const name = String(round?.name || '').trim()
-  const stage = String(round?.stage || '').trim()
-  if (!name) return 'Rodada atual'
-  if (stage && name.toLocaleLowerCase('pt-BR').startsWith(stage.toLocaleLowerCase('pt-BR'))) {
-    const remaining = name.slice(stage.length).replace(/^\s*[-–—|·:]\s*/, '').trim()
-    if (remaining) return /\brodada\b/i.test(remaining) ? remaining : `Rodada ${remaining}`
-    return 'Rodada atual'
-  }
-  const withoutPhasePrefix = name.replace(/^fase\b[^-–—|·:]*[-–—|·:]\s*/i, '').trim()
-  if (!withoutPhasePrefix) return 'Rodada atual'
-  return /\brodada\b/i.test(withoutPhasePrefix) ? withoutPhasePrefix : `Rodada ${withoutPhasePrefix}`
-}
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 820px)')
+    const update = (event) => setIsMobile(event.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
 
-function formatRelativeActivity(value) {
-  if (!value) return 'agora'
-  const diffMs = Date.now() - new Date(value).getTime()
-  const diffMin = Math.max(0, Math.round(diffMs / 60000))
-  if (diffMin < 1) return 'agora'
-  if (diffMin < 60) return `há ${diffMin} ${diffMin === 1 ? 'minuto' : 'minutos'}`
-  const diffHr = Math.round(diffMin / 60)
-  if (diffHr < 24) return `há ${diffHr} ${diffHr === 1 ? 'hora' : 'horas'}`
-  const diffDay = Math.round(diffHr / 24)
-  return `há ${diffDay} ${diffDay === 1 ? 'dia' : 'dias'}`
-}
-
-function activitySummary(item) {
-  const metadata = item.metadata || {}
-  const actor = item.profiles?.display_name || 'Participante'
-  const match = metadata.match_name || 'uma partida'
-  const round = metadata.round_name || 'Rodada'
-  const season = metadata.season_name || 'Temporada'
-
-  switch (item.action) {
-    case 'prediction_created': return { title: `${actor} enviou um palpite`, detail: match }
-    case 'prediction_updated': return { title: `${actor} atualizou um palpite`, detail: match }
-    case 'result_updated': return { title: 'Resultado registrado', detail: `${match}${metadata.result ? ` · ${metadata.result}` : ''}` }
-    case 'round_created': return { title: 'Rodada aberta', detail: round }
-    case 'round_started': return { title: 'Rodada iniciada', detail: round }
-    case 'round_finished': return { title: 'Rodada encerrada', detail: round }
-    case 'round_deleted': return { title: 'Rodada removida', detail: round }
-    case 'roulette_spun': {
-      const names = Array.isArray(metadata.selected_names) ? metadata.selected_names.filter(Boolean) : []
-      return { title: 'Sorteio realizado', detail: names.length ? names.join(' · ') : round }
-    }
-    case 'season_created': return { title: 'Temporada criada', detail: season }
-    case 'season_activated': return { title: 'Temporada iniciada', detail: season }
-    case 'season_deleted': return { title: 'Temporada removida', detail: season }
-    case 'leader_changed': return { title: 'Mudança na liderança', detail: `${actor} assumiu o 1º lugar` }
-    case 'second_changed': return { title: 'Mudança na classificação', detail: `${actor} assumiu a 2ª posição` }
-    default: return { title: 'Atividade registrada', detail: '' }
-  }
-}
-
-function getActivityLabel(category) {
-  if (category === 'predictions') return 'Palpite'
-  if (category === 'results') return 'Resultado'
-  if (category === 'classification') return 'Classificação'
-  if (category === 'rounds') return 'Competição'
-  return 'Atividade'
-}
-
-function progressValue(done, total) {
-  if (!total) return 0
-  return Math.round((done / total) * 100)
+  return isMobile
 }
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const isMobileHome = useIsMobileHome()
   const [loading, setLoading] = useState(true)
   const [season, setSeason] = useState(null)
   const [round, setRound] = useState(null)
+  const [roundProgress, setRoundProgress] = useState({ position: 0, total: 0 })
   const [predictions, setPredictions] = useState([])
   const [presence, setPresence] = useState([])
   const [presenceStatus, setPresenceStatus] = useState('idle')
@@ -117,6 +60,7 @@ export default function DashboardPage() {
 
       if (!activeSeason) {
         setRound(null)
+        setRoundProgress({ position: 0, total: 0 })
         setFinishedPredictions([])
         setFinishedMatchesAll([])
         setPresence([])
@@ -133,6 +77,8 @@ export default function DashboardPage() {
 
       const usableRounds = rounds || []
       const currentRound = usableRounds.find((item) => (item.matches || []).some((match) => !hasResult(match))) || usableRounds.at(-1) || null
+      const currentRoundPosition = currentRound ? usableRounds.findIndex((item) => item.id === currentRound.id) + 1 : 0
+      setRoundProgress({ position: currentRoundPosition, total: usableRounds.length })
       if (currentRound) currentRound.matches = [...(currentRound.matches || [])].sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
       setRound(currentRound)
 
@@ -241,6 +187,28 @@ export default function DashboardPage() {
 
       {!season || !round ? (
         <EmptyState title="Nenhuma rodada ativa" text="O administrador ainda não cadastrou a temporada e os jogos." />
+      ) : isMobileHome ? (
+        <MobileDashboard
+          season={season}
+          round={round}
+          roundProgress={roundProgress}
+          currentMatches={currentMatches}
+          ownPredictionMap={ownPredictionMap}
+          ownCount={ownCount}
+          completion={completion}
+          nextDeadline={nextDeadline}
+          presence={presence}
+          presenceStatus={presenceStatus}
+          profiles={profiles}
+          savePrediction={savePrediction}
+          titleRace={titleRace}
+          userId={user.id}
+          myStanding={myStanding}
+          leader={leader}
+          gap={gap}
+          firstPlaceIsShared={firstPlaceIsShared}
+          logs={logs}
+        />
       ) : (
         <>
           <section className="home-v2-context" aria-label="Resumo da competição">

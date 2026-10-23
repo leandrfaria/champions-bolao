@@ -25,7 +25,7 @@ function pointFeedback(points) {
   return { label: 'Sem pontos', value: '0 pts', tone: 'miss' }
 }
 
-export default function HomeMatchRow({ match, ownPrediction, presence = [], presenceStatus = 'ready', profiles = [], onSave }) {
+export default function HomeMatchRow({ match, ownPrediction, presence = [], presenceStatus = 'ready', profiles = [], onSave, variant = 'desktop', kickoffTime }) {
   const [betModalOpen, setBetModalOpen] = useState(false)
 
   const finished = hasResult(match)
@@ -43,6 +43,50 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
 
   return (
     <>
+      {variant === 'mobile' ? (
+        <article className={`home-v3-fixture ${finished ? 'is-finished' : locked ? 'is-locked' : 'is-open'}`}>
+          <div className="home-v3-fixture-meta">
+            <time dateTime={match.kickoff_at}>{kickoffTime}</time>
+            <span className={`home-v3-fixture-state state-${statusTone}`}><i aria-hidden="true" />{status}</span>
+          </div>
+
+          <div className="home-v3-scoreboard" role="group" aria-label={`${match.home_team} ${finished ? `resultado oficial ${realScore}` : `seu palpite ${centerScore}`} ${match.away_team}`}>
+            <div className="home-v3-club home">
+              <TeamCrest team={match.home_team} size="medium" />
+              <strong title={match.home_team}>{match.home_team}</strong>
+            </div>
+            <div className={`home-v3-score ${finished ? 'is-official' : pickScore ? 'is-prediction' : 'is-pending'}`} aria-label={finished ? `Resultado oficial ${realScore}` : pickScore ? `Seu palpite ${pickScore}` : 'Palpite pendente'}>
+              <small>{finished ? 'Oficial' : 'Palpite'}</small>
+              <strong><span>{centerHome}</span><i aria-hidden="true">×</i><span>{centerAway}</span></strong>
+            </div>
+            <div className="home-v3-club away">
+              <TeamCrest team={match.away_team} size="medium" />
+              <strong title={match.away_team}>{match.away_team}</strong>
+            </div>
+          </div>
+
+          <div className="home-v3-fixture-footer">
+            {finished ? (
+              <div className="home-v3-fixture-pick">
+                <span>Seu palpite</span>
+                <strong className={!pickScore ? 'no-prediction' : ''}>{pickScore || 'Sem palpite'}</strong>
+                {ownPrediction && <em className={`home-v3-points ${feedback.tone}`}><span>{feedback.label}</span><b>{feedback.value}</b></em>}
+              </div>
+            ) : (
+              <>
+                {presenceStatus === 'ready' && totalParticipants > 0 && (
+                  <small className="home-v3-participation" aria-label={`${predictedCount} de ${totalParticipants} participantes enviaram palpites`}>
+                    {predictedCount}/{totalParticipants} enviaram
+                  </small>
+                )}
+                {!locked && <button type="button" onClick={() => setBetModalOpen(true)} aria-label={`${ownPrediction ? 'Editar' : 'Fazer'} palpite para ${match.home_team} contra ${match.away_team}`}>
+                  {ownPrediction ? 'Editar palpite' : 'Apostar'} <span aria-hidden="true">→</span>
+                </button>}
+              </>
+            )}
+          </div>
+        </article>
+      ) : (
       <article className={`home-v2-match ${finished ? 'is-finished' : locked ? 'is-locked' : 'is-open'}`}>
         <div className="home-v2-match-meta">
           <time dateTime={match.kickoff_at}>{formatKickoff(match.kickoff_at)}</time>
@@ -87,6 +131,7 @@ export default function HomeMatchRow({ match, ownPrediction, presence = [], pres
           </div>
         </div>
       </article>
+      )}
 
       {betModalOpen && !locked && !finished && (
         <HomeBetModal
