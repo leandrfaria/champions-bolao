@@ -380,11 +380,13 @@
   .home-v2-competition-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 22px; }
   .home-v2-panel { padding: 14px 15px; }
   .home-v2-panel-head { margin-bottom: 11px; }
-  .home-v2-rank-row { min-height: 49px; grid-template-columns: 29px 28px minmax(0, 1fr) auto; gap: 8px; padding: 5px 7px; }
+  .home-v2-rank-row { min-height: 61px; grid-template-columns: 27px 44px minmax(0, 1fr) auto; gap: 8px; padding: 6px 7px; }
   .home-v2-rank-position { font-size: 11px; }
-  .home-v2-rank-avatar { width: 27px !important; height: 27px !important; flex-basis: 27px !important; }
+  .home-v2-rank-avatar { width: 42px !important; height: 42px !important; min-width: 42px; flex: 0 0 42px !important; overflow: hidden; border: 1px solid rgba(213, 222, 246, .2); border-radius: 50%; }
+  .home-v2-rank-avatar .avatar-media { width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
+  .home-v2-rank-avatar .avatar-media img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
   .home-v2-rank-name { font-size: 13px; }
-  .home-v2-rank-points { font-size: 15px; }
+  .home-v2-rank-points { justify-self: end; font-size: 15px; text-align: right; }
   .home-v2-rank-summary { margin-top: 10px; font-size: 12px; }
   .home-v2-activity-item { grid-template-columns: 10px minmax(0, 1fr); gap: 8px; padding: 10px 0; }
   .home-v2-activity-title { font-size: 13px; }
@@ -410,6 +412,8 @@
   .home-v2-match-score strong { gap: 3px; font-size: 15px; }
   .home-v2-match-actions small { display: none; }
   .home-v2-points span { display: none; }
+  .home-v2-rank-row { grid-template-columns: 25px 42px minmax(0, 1fr) auto; gap: 7px; padding-inline: 6px; }
+  .home-v2-rank-avatar { width: 40px !important; height: 40px !important; min-width: 40px; flex-basis: 40px !important; }
 }
 
 @media (max-width: 340px) {
