@@ -96,6 +96,7 @@ function pluralCount(value, singular, plural = `${singular}s`) {
 }
 
 function PerformanceChart({ rounds, predictionByMatch }) {
+  const [activePoint, setActivePoint] = useState(null)
   const data = rounds.map((round) => ({ round, ...scoreForRound(round, predictionByMatch) })).filter((item) => item.settled > 0)
   if (!data.length) return <div className="mc-chart-empty">A evolução aparece após os primeiros resultados oficiais.</div>
   const max = Math.max(1, ...data.map((item) => item.points))
@@ -105,17 +106,46 @@ function PerformanceChart({ rounds, predictionByMatch }) {
     y: 43 - (item.points / max) * 29,
   }))
   const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const selectedPoint = activePoint == null ? null : points[activePoint]
+  const tooltipX = selectedPoint ? Math.max(2, Math.min(174, selectedPoint.x - 32)) : 0
+  const tooltipY = selectedPoint ? (selectedPoint.y < 27 ? selectedPoint.y + 8 : selectedPoint.y - 27) : 0
   return (
-    <svg className="mc-line-chart" viewBox="0 0 240 78" role="img" aria-label="Pontos conquistados por rodada">
+    <div className="mc-line-chart-wrap" role="group" aria-label="Evolução de pontos por rodada. Use Tab para consultar cada ponto.">
+      <svg className="mc-line-chart" viewBox="0 0 240 78" role="group" aria-label="Pontos por rodada">
       <defs><linearGradient id="mc-campaign-line" x1="0" x2="1"><stop offset="0%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#67d5ef" /></linearGradient></defs>
       {points.length > 1 && <path className="mc-line-chart-path" d={path} />}
-      {points.map((point) => (
-        <g className={point.settled < point.total ? 'is-partial' : ''} key={point.round.id}>
-          <circle className="mc-line-chart-point" cx={point.x} cy={point.y} r="3.5"><title>{`Rodada ${point.round.sort_order}: ${point.points} ${point.points === 1 ? 'ponto' : 'pontos'}${point.settled < point.total ? ` · parcial, ${point.settled} de ${point.total} jogos apurados` : ''}`}</title></circle>
+      {points.map((point, index) => {
+        const isPartial = point.settled < point.total
+        const description = `Rodada ${point.round.sort_order}: ${point.points} ${point.points === 1 ? 'ponto' : 'pontos'}${isPartial ? `, parcial: ${point.settled} de ${point.total} jogos apurados` : ''}`
+        return (
+        <g
+          className={`mc-line-chart-point-group${isPartial ? ' is-partial' : ''}${activePoint === index ? ' is-active' : ''}`}
+          key={point.round.id}
+          tabIndex="0"
+          role="img"
+          aria-label={description}
+          onMouseEnter={() => setActivePoint(index)}
+          onMouseLeave={(event) => { if (!event.currentTarget.contains(document.activeElement)) setActivePoint(null) }}
+          onFocus={() => setActivePoint(index)}
+          onBlur={() => setActivePoint(null)}
+          onClick={() => setActivePoint((current) => current === index ? null : index)}
+          onKeyDown={(event) => { if (event.key === 'Escape') setActivePoint(null) }}
+        >
+          <circle className="mc-line-chart-hit-target" cx={point.x} cy={point.y} r="10" />
+          <circle className="mc-line-chart-point" cx={point.x} cy={point.y} r={activePoint === index ? '5' : '3.5'} />
           <text className="mc-line-chart-label" x={point.x} y="68" textAnchor="middle">R{point.round.sort_order}</text>
         </g>
-      ))}
-    </svg>
+        )
+      })}
+      {selectedPoint && (
+        <g className="mc-line-chart-tooltip" aria-hidden="true" transform={`translate(${tooltipX} ${tooltipY})`}>
+          <rect width="64" height="22" rx="5" />
+          <text x="32" y="14.5" textAnchor="middle">R{selectedPoint.round.sort_order} · {selectedPoint.points} pt{selectedPoint.points === 1 ? '' : 's'}{selectedPoint.settled < selectedPoint.total ? ' *' : ''}</text>
+        </g>
+      )}
+      </svg>
+      {selectedPoint && selectedPoint.settled < selectedPoint.total && <span className="mc-line-chart-partial-note">* Rodada parcial</span>}
+    </div>
   )
 }
 
@@ -409,7 +439,6 @@ export default function MyPredictionsPage() {
               {refreshing && <div className="mc-refreshing" role="status">Atualizando sua campanha…</div>}
               {!rounds.length ? <div className="mc-empty"><strong>Sem partidas nesta temporada</strong><span>Os jogos aparecerão aqui quando forem cadastrados.</span></div> : !visibleMatches.length ? <div className="mc-empty"><strong>{STATUS_EMPTY[status]}</strong><span>{status === 'pending' && 'Quando houver partidas futuras sem palpite, elas aparecerão aqui.'}</span></div> : status === 'results' ? (
                 <div className="mc-history-list">
-                  <div className="mc-history-columns" aria-hidden="true"><span>Data / horário</span><span>Confronto · resultado</span><span>Meu palpite</span><span>Desempenho</span></div>
                   {rounds.filter((round) => (round.matches || []).some(hasResult)).sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0)).map((round) => <ResultRound key={round.id} round={round} predictionByMatch={predictionByMatch} />)}
                 </div>
               ) : (
