@@ -61,11 +61,13 @@
 .standings-v4-round-select .accessible-select-trigger { min-height: 26px; font-size: 13px; }
 
 .standings-v4-controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 17px 0 16px; }
-.standings-v4-tabs { display: inline-grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 3px; padding: 3px; border: 1px solid rgba(130, 148, 203, .2); border-radius: 12px; background: rgba(7, 12, 29, .72); }
-.standings-v4-tabs button { min-height: 38px; padding: 0 18px; border: 0; border-radius: 9px; color: #aeb8d1; background: transparent; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; transition: color .15s ease, background .15s ease; }
+.standings-v4-tabs { display: inline-flex; align-items: stretch; gap: 22px; border-bottom: 1px solid rgba(130, 148, 203, .2); }
+.standings-v4-tabs button { position: relative; min-height: 44px; padding: 0 4px; border: 0; color: #aeb8d1; background: transparent; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; transition: color .15s ease; }
 .standings-v4-tabs button:hover { color: #fff; }
 .standings-v4-tabs button:focus-visible { outline: 2px solid #bbaaff; outline-offset: 2px; }
-.standings-v4-tabs button.active { color: #fff; background: linear-gradient(135deg, #6554ee, #7354dc); }
+.standings-v4-tabs button.active { color: #fff; }
+.standings-v4-tabs button::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; content: ''; background: linear-gradient(90deg, #9876ff, #59c7ed); transform: scaleX(0); transform-origin: center; transition: transform .18s ease; }
+.standings-v4-tabs button.active::after { transform: scaleX(1); }
 .standings-v4-round-select { width: min(300px, 40%); }
 
 .standings-v4-overview,
@@ -75,49 +77,49 @@
 .standings-v4-overview-heading > strong { color: #9aa7c2; font-size: 11px; font-weight: 650; }
 .standings-v4-podium {
   display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 3fr) minmax(0, 3fr);
-  min-height: 104px;
-  overflow: hidden;
-  border: 1px solid rgba(110, 127, 188, .19);
-  border-radius: 15px;
-  background: linear-gradient(105deg, rgba(12, 18, 42, .86), rgba(7, 12, 29, .8));
+  grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 188px;
 }
-.standings-v4-podium[data-count="1"] { grid-template-columns: minmax(0, 4fr); }
-.standings-v4-podium[data-count="2"] { grid-template-columns: minmax(0, 4fr) minmax(0, 3fr); }
+.standings-v4-podium[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
+.standings-v4-podium[data-count="2"] { grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
+.standings-v4-podium-chasers { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
 .standings-v4-podium-entry {
   position: relative;
   display: grid;
-  grid-template-columns: 30px 44px minmax(0, 1fr) auto;
+  grid-template-columns: 36px 48px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 13px 15px;
-  border-left: 1px solid rgba(112, 128, 190, .15);
+  padding: 14px 16px;
+  border: 1px solid rgba(110, 127, 188, .19);
+  border-radius: 14px;
+  background: rgba(7, 12, 29, .63);
 }
-.standings-v4-podium-entry:first-child { border-left: 0; }
-.standings-v4-podium-entry.is-leader { background: linear-gradient(105deg, rgba(184, 140, 39, .10), rgba(184, 140, 39, .025) 68%, transparent); }
-.standings-v4-podium-entry.tone-silver { background: linear-gradient(105deg, rgba(172, 190, 225, .045), transparent 70%); }
-.standings-v4-podium-entry.tone-bronze { background: linear-gradient(105deg, rgba(185, 119, 78, .045), transparent 70%); }
+.standings-v4-podium-entry.is-leader { grid-template-columns: 42px 88px minmax(0, 1fr) auto; gap: 14px; padding: 20px; border-color: rgba(214, 178, 89, .28); background: radial-gradient(ellipse at 8% 50%, rgba(190, 148, 55, .12), transparent 58%), rgba(7, 12, 29, .72); }
+.standings-v4-podium-entry.tone-silver { background: linear-gradient(110deg, rgba(172, 190, 225, .055), transparent 76%), rgba(7, 12, 29, .63); }
+.standings-v4-podium-entry.tone-bronze { background: linear-gradient(110deg, rgba(185, 119, 78, .055), transparent 76%), rgba(7, 12, 29, .63); }
 .standings-v4-podium-entry.is-user { box-shadow: inset 0 -2px 0 rgba(162, 124, 255, .65); }
-.standings-v4-podium-entry .avatar.podium { width: 42px !important; height: 42px !important; flex: 0 0 42px !important; border-width: 1.5px !important; }
+.standings-v4-podium-entry .avatar.podium { width: 48px !important; height: 48px !important; flex: 0 0 48px !important; border-width: 1.5px !important; }
+.standings-v4-podium-entry.is-leader .avatar.podium { width: 88px !important; height: 88px !important; flex-basis: 88px !important; }
 .standings-v4-podium-entry.is-leader .avatar.podium { border-color: rgba(222, 185, 91, .62) !important; }
 .standings-v4-race-rank { display: flex; align-items: center; justify-content: center; gap: 3px; color: #b5bfd5; font-size: 12px; font-weight: 850; white-space: nowrap; }
 .standings-v4-podium-entry.tone-gold .standings-v4-race-rank { color: #e7c15c; }
 .standings-v4-podium-entry.tone-silver .standings-v4-race-rank { color: #d4deef; }
 .standings-v4-podium-entry.tone-bronze .standings-v4-race-rank { color: #d2a07f; }
 .standings-v4-race-player { min-width: 0; }
-.standings-v4-race-player > span { display: block; color: #8996b2; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.standings-v4-race-player > span { display: block; color: #a2aec9; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .standings-v4-race-player > div { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 3px; }
 .standings-v4-race-player > div strong { min-width: 0; overflow: hidden; color: #f0f3fb; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { color: #f1d587; font-size: 15px; }
+.standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { color: #f1d587; font-size: 21px; }
 .standings-v4-race-player em,
 .standings-v4-player-copy em { flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; color: #d7c5ff; background: rgba(138, 102, 228, .16); font-size: 8px; font-style: normal; font-weight: 850; text-transform: uppercase; }
 .standings-v4-race-stats { display: flex !important; flex-wrap: wrap; gap: 3px 9px !important; margin-top: 5px !important; }
-.standings-v4-race-stats span { color: #929db4; font-size: 9px; white-space: nowrap; }
+.standings-v4-race-stats span { color: #a6b0c7; font-size: 10px; white-space: nowrap; }
 .standings-v4-race-stats span strong { color: #cbd3e6; font-variant-numeric: tabular-nums; }
 .standings-v4-race-points { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; min-width: 48px; white-space: nowrap; }
-.standings-v4-race-points strong { color: #eef1fa; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
-.standings-v4-podium-entry.is-leader .standings-v4-race-points strong { color: #f1d177; }
+.standings-v4-race-points strong { color: #eef1fa; font-size: 23px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.standings-v4-podium-entry.is-leader .standings-v4-race-points strong { color: #f1d177; font-size: 36px; }
 .standings-v4-race-points span { color: #919db8; font-size: 9px; }
 
 .standings-v4-summary-strip {
@@ -180,8 +182,6 @@
 
 @media (max-width: 1050px) {
   .standings-v4-page { padding-inline: 24px !important; }
-  .standings-v4-podium-entry { grid-template-columns: 26px 38px minmax(0, 1fr) auto; gap: 8px; padding-inline: 10px; }
-  .standings-v4-podium-entry .avatar.podium { width: 36px !important; height: 36px !important; flex-basis: 36px !important; }
   .standings-v4-table-head, .standings-v4-row { grid-template-columns: 64px minmax(170px, 1fr) 100px 125px 115px; gap: 8px; }
   .standings-v4-summary-metric { padding-inline: 8px; }
 }
@@ -204,23 +204,24 @@
   .standings-v4-overview-heading > strong { font-size: 9px; }
   .standings-v4-podium,
   .standings-v4-podium[data-count="1"],
-  .standings-v4-podium[data-count="2"] { grid-template-columns: minmax(0, 1fr); }
-  .standings-v4-podium-entry { min-height: 72px; grid-template-columns: 22px 34px minmax(0, 1fr) auto; grid-template-rows: 1fr; gap: 5px 7px; padding: 8px 11px; border-top: 1px solid rgba(112, 128, 190, .14); }
-  .standings-v4-podium-entry:first-child { border-left: 0; }
-  .standings-v4-podium-entry.is-leader { grid-column: 1 / -1; min-height: 92px; grid-template-columns: 26px 52px minmax(0, 1fr) auto; grid-template-rows: 1fr; padding: 10px 12px; }
-  .standings-v4-podium-entry .avatar.podium { width: 32px !important; height: 32px !important; flex-basis: 32px !important; }
-  .standings-v4-podium-entry.is-leader .avatar.podium { width: 48px !important; height: 48px !important; flex-basis: 48px !important; }
-  .standings-v4-race-rank { font-size: 10px; }
-  .standings-v4-race-player > span { font-size: 6px; }
-  .standings-v4-race-player > div { gap: 4px; margin-top: 2px; }
-  .standings-v4-race-player > div strong { font-size: 10px; }
-  .standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { font-size: 13px; }
-  .standings-v4-race-player em { padding: 2px 4px; font-size: 6px; }
-  .standings-v4-race-stats { gap: 2px 6px !important; margin-top: 4px !important; }
-  .standings-v4-race-stats span { font-size: 7px; }
-  .standings-v4-race-points { grid-column: 4; grid-row: 1; min-width: 34px; }
-  .standings-v4-race-points strong { font-size: 16px; }
-  .standings-v4-podium-entry.is-leader .standings-v4-race-points strong { font-size: 24px; }
+  .standings-v4-podium[data-count="2"] { grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+  .standings-v4-podium-chasers { grid-template-rows: none; gap: 7px; }
+  .standings-v4-podium-entry,
+  .standings-v4-podium-entry.is-leader { min-height: 78px; grid-template-columns: 34px 54px minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; border-radius: 12px; }
+  .standings-v4-podium-entry.is-leader { min-height: 110px; grid-template-columns: 38px 76px minmax(0, 1fr) auto; padding: 14px; }
+  .standings-v4-podium-entry .avatar.podium { width: 52px !important; height: 52px !important; flex-basis: 52px !important; }
+  .standings-v4-podium-entry.is-leader .avatar.podium { width: 72px !important; height: 72px !important; flex-basis: 72px !important; }
+  .standings-v4-race-rank { font-size: 12px; }
+  .standings-v4-race-player > span { font-size: 8px; }
+  .standings-v4-race-player > div { gap: 5px; margin-top: 3px; }
+  .standings-v4-race-player > div strong { font-size: 12px; }
+  .standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { font-size: 17px; }
+  .standings-v4-race-player em { padding: 2px 5px; font-size: 7px; }
+  .standings-v4-race-stats { gap: 3px 8px !important; margin-top: 5px !important; }
+  .standings-v4-race-stats span { font-size: 8px; }
+  .standings-v4-race-points { grid-column: 4; grid-row: 1; min-width: 40px; }
+  .standings-v4-race-points strong { font-size: 19px; }
+  .standings-v4-podium-entry.is-leader .standings-v4-race-points strong { font-size: 28px; }
   .standings-v4-race-points span { font-size: 8px; }
   .standings-v4-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
   .standings-v4-summary-metric { min-height: 60px; padding: 8px 10px; border-top: 1px solid rgba(112, 128, 190, .13); }
@@ -274,16 +275,25 @@
   .standings-v4-header { gap: 8px; }
   .standings-v4-season-select { width: min(56vw, 220px); padding-inline: 7px; }
   .standings-v4-season-select .accessible-select-trigger { font-size: 10px; }
-  .standings-v4-podium-entry:not(.is-leader) { grid-template-columns: 22px 34px minmax(0, 1fr) auto; gap: 5px 7px; padding-inline: 9px; }
-  .standings-v4-podium-entry.is-leader { grid-template-columns: 21px 43px minmax(0, 1fr) auto; gap: 6px; padding-inline: 8px; }
-  .standings-v4-podium-entry.is-leader .avatar.podium { width: 40px !important; height: 40px !important; flex-basis: 40px !important; }
-  .standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { font-size: 11px; }
-  .standings-v4-podium-entry.is-leader .standings-v4-race-points strong { font-size: 20px; }
-  .standings-v4-race-stats { gap: 2px 4px !important; }
-  .standings-v4-race-stats span { font-size: 6px; }
+  .standings-v4-podium-entry,
+  .standings-v4-podium-entry.is-leader { grid-template-columns: 28px 46px minmax(0, 1fr) auto; gap: 6px; padding: 9px; }
+  .standings-v4-podium-entry.is-leader { grid-template-columns: 30px 62px minmax(0, 1fr) auto; min-height: 100px; padding: 11px; }
+  .standings-v4-podium-entry .avatar.podium { width: 44px !important; height: 44px !important; flex-basis: 44px !important; }
+  .standings-v4-podium-entry.is-leader .avatar.podium { width: 60px !important; height: 60px !important; flex-basis: 60px !important; }
+  .standings-v4-podium-entry.is-leader .standings-v4-race-player > div strong { font-size: 15px; }
+  .standings-v4-podium-entry.is-leader .standings-v4-race-points strong { font-size: 24px; }
+  .standings-v4-race-stats { gap: 2px 5px !important; }
+  .standings-v4-race-stats span { font-size: 7px; }
   .standings-v4-summary-metric { padding-inline: 7px; }
   .standings-v4-summary-metric > span { font-size: 7px; }
   .standings-v4-player-copy > strong { max-width: 150px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .standings-v4-tabs button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .standings-v4-tabs button, .standings-v4-tabs button::after { transition: none; } }
+
+.standings-v4-page .avatar-media > img {
+  image-rendering: auto;
+  object-fit: cover;
+  transform: none;
+  backface-visibility: visible;
+}

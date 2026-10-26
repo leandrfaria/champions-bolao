@@ -62,25 +62,36 @@ function rankTone(rank) {
   return rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'neutral'
 }
 
-function RaceCard({ row, leaderTieCount, userId, mode }) {
+function RaceCard({ row, leaderTieCount, userId, mode, leader = false }) {
   const tone = rankTone(row.rank)
   const isLeader = row.rank === 1
-  const isSecond = row.rank === 2
-  const isThird = row.rank === 3
   return (
-    <article className={`standings-v4-podium-entry tone-${tone}${isLeader ? ' is-leader' : ''}${row.id === userId ? ' is-user' : ''}`}>
+    <article className={`standings-v4-podium-entry tone-${tone}${leader ? ' is-leader' : ''}${row.id === userId ? ' is-user' : ''}`}>
       <div className="standings-v4-race-rank">
-        {isLeader && <TrophyIcon size={14} />}
+        {leader && <TrophyIcon size={16} />}
         <strong>{row.rank}º</strong>
       </div>
       <UserAvatar profile={row} size="podium" />
       <div className="standings-v4-race-player">
-        <span>{isLeader ? (leaderTieCount > 1 ? 'Liderança compartilhada' : mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : isSecond ? 'Vice-líder' : isThird ? '3º lugar' : `${row.rank}º lugar`}</span>
+        <span>{isLeader && leaderTieCount > 1 ? 'Liderança compartilhada' : leader ? (mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : `${row.rank}º lugar`}</span>
         <div><strong>{row.display_name}</strong>{row.id === userId && <em>Você</em>}</div>
         <div className="standings-v4-race-stats"><span><strong>{row.exact}</strong> exatos</span><span><strong>{row.winners}</strong> vencedores</span></div>
       </div>
       <div className="standings-v4-race-points"><strong>{row.points}</strong><span>pts</span></div>
     </article>
+  )
+}
+
+function Podium({ rows, leaderTieCount, userId, mode }) {
+  const [leader, ...chasers] = rows
+  if (!leader) return null
+  return (
+    <div className="standings-v4-podium" data-count={rows.length}>
+      <RaceCard row={leader} leader leaderTieCount={leaderTieCount} userId={userId} mode={mode} />
+      {chasers.length > 0 && <div className="standings-v4-podium-chasers">
+        {chasers.map((row) => <RaceCard key={row.id} row={row} leaderTieCount={leaderTieCount} userId={userId} mode={mode} />)}
+      </div>}
+    </div>
   )
 }
 
@@ -257,9 +268,7 @@ export default function LeaderboardPage() {
           {mode === 'general' ? (
             <section className="standings-v4-overview" aria-label="Resumo da classificação geral">
               <div className="standings-v4-overview-heading"><span>Corrida pelo título</span><strong>Geral da temporada</strong></div>
-              <div className="standings-v4-podium" data-count={topThree.length}>
-                {topThree.map((row) => <RaceCard key={row.id} row={row} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
-              </div>
+              <Podium rows={topThree} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />
               <div className="standings-v4-summary-strip" aria-label="Estatísticas da temporada">
                 <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} />
                 <SummaryMetric label="Distância para o líder" value={currentRow && leader ? `${Math.max(0, leader.points - currentRow.points)} pts` : '—'} />
@@ -273,9 +282,7 @@ export default function LeaderboardPage() {
             <section className="standings-v4-round-overview" aria-label="Resumo da rodada selecionada">
               <div className="standings-v4-overview-heading"><span>Corrida pelo título</span><strong>Por rodada</strong></div>
               <div className="standings-v4-round-title"><div><span>Rodada selecionada</span><h2>{selectedRound.name}</h2><p>{selectedRound.stage || 'Fase da competição'} · {roundDates(selectedRound)}</p></div><span className="standings-v4-round-progress">{selectedRoundFinishedCount}<small>de {selectedRound.matches.length} jogos finalizados</small></span></div>
-              <div className="standings-v4-podium" data-count={topThree.length}>
-                {topThree.map((row) => <RaceCard key={row.id} row={row} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
-              </div>
+              <Podium rows={topThree} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />
               <div className="standings-v4-summary-strip standings-v4-round-summary">
                 <SummaryMetric label="Líder da rodada" value={leader?.display_name || '—'} detail={leader ? `${leader.points} pts` : 'Sem pontuação'} />
                 <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} detail={currentRow ? `${currentRow.points} pts na rodada` : 'Sem pontuação'} />
