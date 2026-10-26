@@ -103,12 +103,14 @@
 .roulette-result-count.tone-partial { color: #cfbaff; border-color: rgba(173, 135, 255, .29); }
 .roulette-result-count.tone-complete { color: #71ddb6; border-color: rgba(84, 200, 157, .28); }
 .roulette-winner-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; }
-.roulette-page .roulette-winner-card { position: relative; min-width: 0; min-height: 112px; display: grid; grid-template-rows: auto 1fr; align-content: stretch; gap: 12px; padding: 13px 14px; overflow: hidden; border: 1px solid rgba(119, 136, 190, .16); border-radius: 12px; background: linear-gradient(145deg, rgba(8, 14, 32, .76), rgba(5, 10, 25, .48)); text-align: left; }
+.roulette-page .roulette-winner-card { position: relative; min-width: 0; min-height: 112px; display: grid; grid-template-rows: 1fr; align-content: stretch; padding: 13px 14px; overflow: hidden; border: 1px solid rgba(119, 136, 190, .16); border-radius: 12px; background: linear-gradient(145deg, rgba(8, 14, 32, .76), rgba(5, 10, 25, .48)); text-align: left; }
 .roulette-page .roulette-winner-card.has-profile { border-color: rgba(158, 129, 232, .3); background: linear-gradient(115deg, rgba(103, 78, 164, .15), rgba(6, 11, 27, .54) 72%); }
 .roulette-page .roulette-slot-heading { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .roulette-page .roulette-slot-number { position: static; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; min-height: 24px; padding: 0 9px; border: 1px solid rgba(133, 149, 201, .2); border-radius: 7px; color: #a6b2cd; background: rgba(13, 20, 42, .72); font-size: 10px; font-weight: 800; letter-spacing: .02em; line-height: 1; white-space: nowrap; }
 .roulette-page .roulette-winner-card.has-profile .roulette-slot-number { color: #d5c4fb; border-color: rgba(163, 132, 234, .25); background: rgba(120, 87, 191, .13); }
-.roulette-page .roulette-slot-body { min-width: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 11px; }
+.roulette-page .roulette-slot-body { min-width: 0; display: grid; grid-template-columns: 30px 44px minmax(0, 1fr); align-items: center; gap: 11px; }
+.roulette-page .roulette-slot-index { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid rgba(129, 146, 194, .22); border-radius: 9px; color: #aeb9d2; background: rgba(13, 20, 42, .55); font-size: 11px; font-weight: 850; font-variant-numeric: tabular-nums; }
+.roulette-page .roulette-winner-card.has-profile .roulette-slot-index { color: #d7c8fb; border-color: rgba(163, 132, 234, .28); background: rgba(120, 87, 191, .12); }
 .roulette-page .roulette-winner-card .avatar.large { width: 44px; height: 44px; }
 .roulette-page .roulette-slot-copy { min-width: 0; display: grid; gap: 4px; }
 .roulette-page .roulette-slot-copy strong { display: -webkit-box; overflow: hidden; color: #edf0f8; font-size: 13px; line-height: 1.25; text-overflow: ellipsis; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -172,8 +174,8 @@
   .roulette-round-result > header { margin-bottom: 11px; }
   .roulette-round-result > header h2 { font-size: 18px; }
   .roulette-winner-slots { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .roulette-page .roulette-winner-card { min-height: 88px; gap: 9px; padding: 10px 11px; }
-  .roulette-page .roulette-slot-body { grid-template-columns: 40px minmax(0, 1fr); gap: 10px; }
+  .roulette-page .roulette-winner-card { min-height: 88px; padding: 10px 11px; }
+  .roulette-page .roulette-slot-body { grid-template-columns: 28px 40px minmax(0, 1fr); gap: 9px; }
   .roulette-page .roulette-winner-card .avatar.large,
   .roulette-page .roulette-winner-placeholder { width: 40px; height: 40px; }
   .roulette-page .roulette-slot-copy strong { font-size: 12px; }

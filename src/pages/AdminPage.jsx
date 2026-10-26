@@ -761,14 +761,11 @@ export default function AdminPage() {
             <>
           <section className="admin-workspace-toolbar">
                 <label><span>Temporada</span><select value={selectedSeasonId} onChange={(event) => setSelectedSeasonId(event.target.value)}>{seasons.map((season) => <option value={season.id} key={season.id}>{season.name}{season.is_active ? ' · ativa' : ''}</option>)}</select></label>
+                <label><span>Rodada</span><select value={selectedRoundId} onChange={(event) => selectRound(event.target.value)} disabled={!seasonRounds.length}>{seasonRounds.length ? seasonRounds.map((round) => <option value={round.id} key={round.id}>{round.name}{round.id === currentRound?.id ? ' · atual' : ''}</option>) : <option value="">Nenhuma rodada cadastrada</option>}</select></label>
                 {selectedSeason?.is_active && <AdminStatus tone="finished">ATIVA</AdminStatus>}
               </section>
 
               <div className="admin-rounds-content">
-                <aside className="admin-round-list-panel" aria-label="Rodadas da temporada">
-                  <div className="admin-round-list-heading"><div><span className="eyebrow">Temporada</span><h2>Rodadas</h2></div><button type="button" onClick={openRoundCreate} disabled={!selectedSeasonId} aria-label="Criar rodada">+</button></div>
-                  {seasonRounds.length ? seasonRounds.map((round) => { const list = matchesByRound.get(round.id) || []; const state = ROUND_STATE[roundState(round, list)]; return <button type="button" className={`admin-round-list-item${round.id === selectedRoundId ? ' is-selected' : ''}`} key={round.id} onClick={() => selectRound(round.id)} aria-current={round.id === selectedRoundId ? 'true' : undefined}><span className="admin-round-list-number">{String(round.sort_order).padStart(2, '0')}</span><span><strong>{round.name}</strong><small>{list.length} {list.length === 1 ? 'partida' : 'partidas'}</small></span><AdminStatus tone={state.tone}>{state.label}</AdminStatus></button>}) : <p className="admin-round-list-empty">Nenhuma rodada nesta temporada.</p>}
-                </aside>
                 <div className="admin-round-detail-pane">
               {!selectedRound ? (
                 <div className="admin-empty admin-empty-main"><h2>Nenhuma rodada cadastrada</h2><p>Crie a primeira rodada desta temporada para adicionar os jogos.</p><button className="primary-button" type="button" onClick={openRoundCreate}>Criar rodada</button></div>
@@ -804,9 +801,13 @@ export default function AdminPage() {
                                 return (
                                   <article className="admin-game-row" key={match.id}>
                                     <time>{formatTime(match.kickoff_at)}</time>
-                                    <div className="admin-game-team home"><TeamCrest team={match.home_team} size="small" /><strong>{match.home_team}</strong></div>
-                                    <span className="admin-game-versus">×</span>
-                                    <div className="admin-game-team"><TeamCrest team={match.away_team} size="small" /><strong>{match.away_team}</strong></div>
+                                    <div className="admin-game-confrontation">
+                                      <strong className="admin-game-home-name" title={match.home_team}>{match.home_team}</strong>
+                                      <TeamCrest team={match.home_team} size="small" />
+                                      <span className={`admin-game-score${hasResult(match) ? ' is-official' : ''}`}>{hasResult(match) ? `${match.home_score} × ${match.away_score}` : '×'}</span>
+                                      <TeamCrest team={match.away_team} size="small" />
+                                      <strong className="admin-game-away-name" title={match.away_team}>{match.away_team}</strong>
+                                    </div>
                                     <div className="admin-game-state"><AdminStatus tone={state.tone}>{state.label}</AdminStatus><small>{count} {count === 1 ? 'palpite' : 'palpites'}</small></div>
                                     <button className="mini-action" type="button" onClick={() => openMatchEdit(match)} disabled={isLocked(match) || Boolean(selectedRound.closed_at)}>Editar</button>
                                   </article>

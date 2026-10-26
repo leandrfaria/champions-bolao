@@ -1,4 +1,8 @@
 .admin-workspace.admin-console { max-width: 1540px; }
+/* `overflow-x: hidden` on html/body/#root computes a vertical auto overflow,
+   creating several nested scrollports. Keep Admin on the document scroller. */
+html:has(.admin-console), body:has(.admin-console), #root:has(.admin-console) { overflow-x: clip; overflow-y: visible; }
+body:has(.admin-console), .app-shell.topbar-shell:has(.admin-console) { background: linear-gradient(180deg, #080e20 0%, #070b18 470px, #070b18 100%); }
 .admin-workspace.admin-console > .page-header { display: flex !important; align-items: end; margin: 0 0 18px; padding: 8px 0 18px; border-bottom: 1px solid rgba(151, 167, 207, .14); }
 .admin-console .page-header h1 { font-size: clamp(29px, 2.5vw, 38px); }
 .admin-console .page-header p { margin-top: 5px; color: #aab5cc; }
@@ -54,7 +58,7 @@
 .admin-ops-round-name strong { color: #e8edfa; font-size: 12px; }
 .admin-ops-round-name small { overflow: hidden; color: #8997b2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .admin-ops-round-list > button > i { color: #7d8ca8; font-style: normal; }
-.admin-rounds-content { display: grid; grid-template-columns: 238px minmax(0,1fr); gap: 14px; align-items: start; margin-top: 12px; }
+.admin-rounds-content { display: block; min-width: 0; margin-top: 12px; }
 .admin-round-list-panel { min-width: 0; padding: 13px; border: 1px solid rgba(147,161,202,.16); border-radius: 14px; background: rgba(9,13,32,.72); }
 .admin-round-list-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 0 9px; padding: 0 2px 10px; border-bottom: 1px solid rgba(147,161,202,.13); }
 .admin-round-list-heading h2 { margin: 3px 0 0; color: #eef1fb; font-size: 15px; }
@@ -108,7 +112,21 @@
 .admin-console .admin-round-detail-actions { grid-column: 1 / -1; display: flex; align-items: center; justify-content: end; gap: 8px; padding-top: 11px; border-top: 1px solid rgba(147,161,202,.12); }
 .admin-console .admin-games-by-date { padding: 12px; border: 1px solid rgba(147,161,202,.15); border-radius: 14px; background: rgba(9,13,32,.66); }
 .admin-console .admin-game-day + .admin-game-day { margin-top: 14px; }
-.admin-console .admin-game-row { min-width: 0; grid-template-columns: 55px minmax(120px,1fr) 20px minmax(120px,1fr) minmax(112px,.7fr) 58px; }
+.admin-console .admin-game-row { min-width: 0; grid-template-columns: 58px minmax(0,1fr) minmax(132px,auto) 62px; gap: 12px; }
+.admin-console .admin-game-confrontation { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) 30px 84px 30px minmax(0,1fr); align-items: center; gap: 8px; }
+.admin-console .admin-game-confrontation > strong { min-width: 0; overflow: hidden; color: #e7ebf7; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-console .admin-game-home-name { text-align: right; }
+.admin-console .admin-game-away-name { text-align: left; }
+.admin-console .admin-game-confrontation .team-crest-small { justify-self: center; width: 30px; height: 30px; flex-basis: 30px; }
+.admin-console .admin-game-score { color: #7f8aa4; text-align: center; font-size: 15px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.admin-console .admin-game-score.is-official { color: #f1f3fc; font-size: 18px; font-weight: 900; }
+.admin-console .admin-game-state { min-width: 0; display: grid; justify-items: end; gap: 5px; }
+.admin-console .admin-game-state small { color: #8c98b1; font-size: 10px; white-space: nowrap; }
+.admin-console .admin-game-row > .mini-action { justify-self: end; white-space: nowrap; }
+.admin-console .admin-workspace-toolbar:not(.results-toolbar) { min-height: 58px; }
+.admin-console .admin-workspace-toolbar:not(.results-toolbar) > label { min-width: 0; width: min(310px, 34%); }
+.admin-console .admin-workspace-toolbar:not(.results-toolbar) select { width: 100%; }
+.admin-console .admin-workspace-toolbar:not(.results-toolbar) > .admin-status { margin-left: auto; }
 .admin-console .admin-workspace-toolbar select, .admin-console .admin-modal select, .admin-console .admin-modal input:not([type="file"]) { background-color: #0c132a; border-color: rgba(147,161,202,.21); color: #edf1fc; }
 .admin-modal-v2 { width: min(600px, calc(100vw - 32px)); max-height: min(820px, calc(100dvh - 36px)); border-color: rgba(147,161,202,.2); background: linear-gradient(155deg, #111a35, #0b1126); }
 .admin-modal-v2.admin-modal-wide { width: min(760px, calc(100vw - 32px)); }
@@ -139,7 +157,6 @@
   .admin-console .admin-round-detail-head { grid-template-columns: 42px minmax(0,1fr); }
   .admin-console .admin-round-detail-metrics { grid-column: 1 / -1; grid-row: auto; }
   .admin-console .admin-round-detail-actions { grid-column: 1 / -1; flex-wrap: wrap; }
-  .admin-console .admin-game-row { grid-template-columns: 48px minmax(100px,1fr) 18px minmax(100px,1fr) minmax(95px,.7fr) 54px; }
   .admin-console .admin-participant-table-head, .admin-console .admin-participant-row { grid-template-columns: minmax(180px,1.4fr) minmax(120px,.8fr) minmax(65px,.4fr) 50px; }
 }
 @media (max-width: 680px) {
@@ -151,7 +168,6 @@
   .admin-console .admin-participant-actions { grid-column: 2; grid-row: 1 / 4; }
   .admin-console .admin-participant-row > span:nth-child(3):empty { display: none; }
   .admin-console .admin-workspace-toolbar { align-items: stretch; flex-wrap: wrap; }
-  .admin-console .admin-workspace-toolbar > label { width: 100%; min-width: 0; }
   .admin-console .admin-result-row { grid-template-columns: minmax(0,1fr) auto; }
   .admin-console .admin-result-row > .admin-result-meta { grid-column: 1 / -1; }
   .admin-console .admin-result-row > .admin-status { grid-column: 1; justify-self: start; }
@@ -166,11 +182,6 @@
   .admin-console-mobile-nav { display: grid; gap: 5px; margin: 0 0 12px; }
   .admin-console-mobile-nav label { color: #8b98b2; font-size: 10px; font-weight: 750; }
   .admin-console-mobile-nav select { width: 100%; min-height: 44px; padding: 0 13px; border: 1px solid rgba(147,161,202,.21); border-radius: 10px; background: #0b1127; color: #edf1fc; font: inherit; }
-  .admin-rounds-content { grid-template-columns: 1fr; }
-  .admin-round-list-panel { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 3px 7px; }
-  .admin-round-list-heading { grid-column: 1 / -1; }
-  .admin-round-list-item { grid-template-columns: 32px minmax(0,1fr); }
-  .admin-round-list-item > .admin-status { grid-column: 2; }
 }
 @media (max-width: 680px) {
   .admin-workspace.admin-console { padding-inline: 14px !important; }
@@ -189,11 +200,32 @@
   .admin-ops-pending > button { grid-column: 2; justify-self: start; padding: 4px 0; }
   .admin-ops-round-list > button { grid-template-columns: 32px minmax(0,1fr) 12px; }
   .admin-ops-round-list > button > .admin-status { display: none; }
-  .admin-round-list-panel { grid-template-columns: 1fr; }
-  .admin-round-list-item { min-height: 58px; grid-template-columns: 38px minmax(0,1fr) auto; }
-  .admin-round-list-item > .admin-status { grid-column: 3; grid-row: 1; justify-self: end; margin: 0; }
   .admin-season-item { grid-template-columns: 38px minmax(0,1fr); gap: 10px; }
   .admin-season-item-actions { grid-column: 1 / -1; justify-content: flex-end; flex-wrap: wrap; }
   .admin-maintenance-list article { align-items: flex-start; flex-direction: column; }
   .admin-maintenance-list article > button { align-self: flex-end; }
+}
+
+/* Admin rounds use one balanced match row. Keep these route-local overrides
+   after the legacy admin responsive rules in styles.css. */
+.admin-console .admin-game-row { grid-template-columns: 58px minmax(0,1fr) minmax(132px,auto) 62px; }
+.admin-console .admin-rounds-content { display: block; }
+@media (max-width: 1000px) {
+  .admin-console .admin-workspace-toolbar:not(.results-toolbar) > label { width: min(310px, 42%); }
+  .admin-console .admin-game-row { grid-template-columns: 50px minmax(0,1fr) minmax(118px,auto) 56px; }
+  .admin-console .admin-game-confrontation { grid-template-columns: minmax(0,1fr) 26px 76px 26px minmax(0,1fr); gap: 5px; }
+  .admin-console .admin-game-confrontation .team-crest-small { width: 26px; height: 26px; flex-basis: 26px; }
+}
+@media (max-width: 680px) {
+  .admin-console .admin-workspace-toolbar:not(.results-toolbar) > label { width: calc(50% - 6px); min-width: 0; flex: 1 1 145px; }
+  .admin-console .admin-workspace-toolbar:not(.results-toolbar) > .admin-status { display: none; }
+  .admin-console .admin-game-row { grid-template-columns: minmax(0,1fr) auto !important; grid-template-rows: auto auto auto !important; }
+  .admin-console .admin-game-row time { grid-column: 1 / -1; grid-row: 1; }
+  .admin-console .admin-game-confrontation { grid-column: 1 / -1; grid-row: 2; grid-template-columns: minmax(0,1fr) 28px 70px 28px minmax(0,1fr); gap: 5px; }
+  .admin-console .admin-game-confrontation > strong { font-size: 10px; }
+  .admin-console .admin-game-confrontation .team-crest-small { width: 26px; height: 26px; flex-basis: 26px; }
+  .admin-console .admin-game-score.is-official { font-size: 16px; }
+  .admin-console .admin-game-state { grid-column: 1; grid-row: 3; display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 7px; }
+  .admin-console .admin-game-row > .mini-action { grid-column: 2; grid-row: 3; width: auto !important; min-width: 58px; height: 32px; padding: 0 9px !important; color: #c9bbf7 !important; font-size: 10px !important; }
+  .admin-console .admin-game-row > .mini-action::after { display: none; }
 }

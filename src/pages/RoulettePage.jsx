@@ -311,13 +311,10 @@ export default function RoulettePage({ embedded = false }) {
                   const isRevealing = spinning && isCurrent && ((spinStep === 'first-revealed' && (slot === assignedCount)) || spinStep === 'done' || spinStep === 'second')
                   return (
                     <div className={`roulette-winner-card ${profile ? 'has-profile' : ''}${isRevealing ? ' is-arriving' : ''}`} key={slot}>
-                      <div className="roulette-slot-heading">
-                        <span className="roulette-slot-number">{slot + 1}ª vaga</span>
-                        <span className={`roulette-slot-state ${profile ? 'is-filled' : ''}`}>{profile ? 'Definido' : 'Em aberto'}</span>
-                      </div>
                       <div className="roulette-slot-body">
-                        {profile ? <UserAvatar profile={profile} size="large" interactive={!spinning} /> : <div className="roulette-winner-placeholder" aria-hidden="true">{slot + 1}</div>}
-                        <div className="roulette-slot-copy"><strong>{profile?.display_name || 'Aguardando sorteio'}</strong><small>{profile ? (selectedRoundDraws.length > 1 ? `Sorteio ${selectedRoundDraws.findIndex((draw) => draw.first_user_id === profile.id || draw.second_user_id === profile.id) + 1} · ${slot + 1}º escolhido` : `${slot + 1}º escolhido`) : 'Vaga disponível nesta rodada'}</small></div>
+                          <span className="roulette-slot-index" aria-label={`Posição ${slot + 1}`}>{slot + 1}</span>
+                          {profile ? <UserAvatar profile={profile} size="large" interactive={!spinning} /> : <div className="roulette-winner-placeholder" aria-hidden="true">+</div>}
+                          <div className="roulette-slot-copy"><strong>{profile?.display_name || 'Aguardando sorteio'}</strong><small>{profile ? (selectedRoundDraws.length > 1 ? `Sorteio ${selectedRoundDraws.findIndex((draw) => draw.first_user_id === profile.id || draw.second_user_id === profile.id) + 1} · ${slot + 1}º escolhido` : `${slot + 1}º escolhido`) : 'Vaga disponível nesta rodada'}</small></div>
                       </div>
                     </div>
                   )
