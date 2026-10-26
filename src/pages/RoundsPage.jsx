@@ -53,9 +53,29 @@ function roundDisplayName(round) {
   const raw = String(round?.name || `Rodada ${round?.sort_order || ''}`).trim()
   let detail = raw
   if (stage && raw.toLowerCase().startsWith(stage.toLowerCase())) detail = raw.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
+  const duplicateStage = stageKey(stage) === 'league'
+    ? /^(?:fase\s+de\s+)?(?:liga|grupos)(?:\s+de\s+liga)?\s*[·\-–—:]?\s*/i
+    : stageKey(stage) === 'r16'
+      ? /^(?:oitavas(?:\s+de\s+final)?|round\s+of\s+16)\s*[·\-–—:]?\s*/i
+      : stageKey(stage) === 'quarters'
+        ? /^(?:quartas(?:\s+de\s+final)?)\s*[·\-–—:]?\s*/i
+        : stageKey(stage) === 'semis'
+          ? /^(?:semifinal|semifinais)\s*[·\-–—:]?\s*/i
+          : stageKey(stage) === 'final'
+            ? /^final\s*[·\-–—:]?\s*/i
+            : null
+  if (duplicateStage) detail = detail.replace(duplicateStage, '').trim()
   if (!detail) detail = `Rodada ${round?.sort_order || ''}`.trim()
   if (/^\d+\s+de\s+\d+$/i.test(detail)) detail = `Rodada ${detail}`
   return stage ? `${stage} · ${detail}` : detail
+}
+
+function RoundChevron({ expanded }) {
+  return (
+    <svg className={`round-explorer-chevron${expanded ? ' is-expanded' : ''}`} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
 }
 
 function sortStats(a, b) {
@@ -135,7 +155,7 @@ export default function RoundsPage() {
   const [filter, setFilter] = useState('all')
   const [roundOrder, setRoundOrder] = useState('desc')
   const [expandedRoundId, setExpandedRoundId] = useState('')
-  const [expandedMatchId, setExpandedMatchId] = useState('')
+  const [expandedMatchIds, setExpandedMatchIds] = useState(() => new Set())
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -297,7 +317,7 @@ export default function RoundsPage() {
   useEffect(() => {
     if (expandedRoundId && !filteredRounds.some((round) => round.id === expandedRoundId)) {
       setExpandedRoundId('')
-      setExpandedMatchId('')
+      setExpandedMatchIds(new Set())
     }
   }, [expandedRoundId, filteredRounds])
 
@@ -334,7 +354,7 @@ export default function RoundsPage() {
     setPredictions([])
     setPresence([])
     setExpandedRoundId('')
-    setExpandedMatchId('')
+    setExpandedMatchIds(new Set())
     setSeasonId(nextSeasonId)
   }
 
@@ -450,7 +470,7 @@ export default function RoundsPage() {
                   const stats = roundStats(round)
                   const general = generalRoundStats(round)
                   const status = getRoundStatus(round, currentRound)
-                  const expanded = expandedRoundId === round.id
+                      const expanded = expandedRoundId === round.id
                   const roundPanelId = `round-explorer-panel-${round.id}`
                   const groupedMatches = groupMatchesByDay(round.matches)
                   const pointsVisible = Boolean(round.closed_at || round.id === currentRound?.id)
@@ -464,7 +484,7 @@ export default function RoundsPage() {
                         onClick={() => {
                           const nextRoundId = expanded ? '' : round.id
                           setExpandedRoundId(nextRoundId)
-                          setExpandedMatchId('')
+                          setExpandedMatchIds(new Set())
                         }}
                       >
                         <span className="round-explorer-round-number">{String(round.sort_order).padStart(2, '0')}</span>
@@ -488,7 +508,7 @@ export default function RoundsPage() {
                           )}
                         </span>
                         <span className={`round-explorer-round-status ${status.className}`}>{status.label}</span>
-                        <span className={`round-explorer-round-chevron${expanded ? ' open' : ''}`} aria-hidden="true">⌄</span>
+                        <RoundChevron expanded={expanded} />
                       </button>
 
                       <div id={roundPanelId} className={`round-explorer-round-panel${expanded ? ' is-open' : ''}`} aria-hidden={!expanded} inert={!expanded}>
@@ -507,8 +527,13 @@ export default function RoundsPage() {
                                     presence={presenceByMatch.get(match.id) || []}
                                     profiles={profiles}
                                     currentUserId={user.id}
-                                    expanded={expandedMatchId === match.id}
-                                    onToggle={() => setExpandedMatchId((current) => current === match.id ? '' : match.id)}
+                                    expanded={expandedMatchIds.has(match.id)}
+                                    onToggle={() => setExpandedMatchIds((current) => {
+                                      const next = new Set(current)
+                                      if (next.has(match.id)) next.delete(match.id)
+                                      else next.add(match.id)
+                                      return next
+                                    })}
                                     onSave={savePrediction}
                                   />
                                 ))}
