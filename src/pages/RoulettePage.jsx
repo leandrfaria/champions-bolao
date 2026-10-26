@@ -44,7 +44,7 @@ function getRoundPlayers(roundDraws, profileMap) {
   }).slice(0, 2)
 }
 
-export default function RoulettePage() {
+export default function RoulettePage({ embedded = false }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [season, setSeason] = useState(null)
@@ -233,10 +233,11 @@ export default function RoulettePage() {
   if (loading) return <Loading label="Preparando a roleta..." />
 
   const wheelStepLabel = spinStep === 'second' ? `${Math.min(2, assignedCount + 2)}º nome` : `${Math.min(2, assignedCount + 1)}º nome`
+  const PageContainer = embedded ? 'section' : 'main'
 
   return (
-    <main className="page-wrap roulette-page sports-surface">
-      <PageHeader eyebrow={season?.name || 'Área administrativa'} title="Sorteio" description="Defina quem escolhe os jogos de cada rodada." />
+    <PageContainer className={`page-wrap roulette-page sports-surface${embedded ? ' roulette-page-embedded' : ''}`} aria-label={embedded ? 'Sorteio da rodada' : undefined}>
+      {!embedded && <PageHeader eyebrow={season?.name || 'Área administrativa'} title="Sorteio" description="Defina quem escolhe os jogos de cada rodada." />}
 
       {error && <div className="form-error roulette-flash" role="alert"><span>{error}</span><button className="secondary-button compact roulette-retry-button" type="button" onClick={() => load()} disabled={loading}>Tentar novamente</button></div>}
       {message && <div className="form-success roulette-flash" role="status">{message}</div>}
@@ -355,6 +356,6 @@ export default function RoulettePage() {
           </section>
         </>
       )}
-    </main>
+    </PageContainer>
   )
 }

@@ -5,6 +5,7 @@ import Loading from '../components/Loading'
 import MatchDateTimePicker from '../components/MatchDateTimePicker'
 import NavIcon from '../components/NavIcon'
 import PageHeader from '../components/PageHeader'
+import RoulettePage from './RoulettePage'
 import TeamCrest from '../components/TeamCrest'
 import TeamPicker from '../components/TeamPicker'
 import TrophyIcon from '../components/TrophyIcon'
@@ -18,6 +19,7 @@ const TABS = [
   ['overview', 'Visão geral'],
   ['rounds', 'Rodadas e jogos'],
   ['results', 'Resultados'],
+  ['roulette', 'Sorteio'],
   ['participants', 'Participantes'],
   ['seasons', 'Temporadas'],
   ['maintenance', 'Manutenção'],
@@ -136,6 +138,7 @@ function Icon({ type }) {
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></>,
     match: <><circle cx="12" cy="12" r="8"/><path d="m9 8 3-2 3 2 1 4-4 3-4-3zM12 15v5M8 12 4 15M16 12l4 3"/></>,
     result: <><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
+    roulette: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7m0 4v7m9-9h-7m-4 0H3m15.36-6.36-4.95 4.95m-2.82 2.82-4.95 4.95m12.72 0-4.95-4.95m-2.82-2.82-4.95-4.95"/></>,
     users: <><circle cx="9" cy="8" r="3"/><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6M16 5c2 0 3 1.3 3 3s-1 3-3 3M17 14c2.4.6 3.7 2.5 4 6"/></>,
     alert: <><path d="m12 3 9 17H3z"/><path d="M12 9v4M12 17h.01"/></>,
     plus: <><path d="M12 5v14M5 12h14"/></>,
@@ -879,6 +882,13 @@ export default function AdminPage() {
             ) : <div className="admin-empty"><h3>Nenhum resultado finalizado</h3><p>Os resultados registrados aparecerão aqui.</p></div>
           )}
         </div>
+      )}
+
+      {tab === 'roulette' && (
+        <section className="admin-roulette-section">
+          <div className="admin-section-title"><div><span className="eyebrow">Operação da competição</span><h2>Sorteio</h2><p>Defina os participantes responsáveis por escolher os jogos de cada rodada.</p></div></div>
+          <RoulettePage embedded />
+        </section>
       )}
 
       {tab === 'participants' && (

@@ -132,7 +132,7 @@ export default function Layout() {
     closeParticipant: () => setProfileTarget(null),
   }), [])
 
-  const morePaths = ['/atividades', '/podio', '/sobre', ...(isAdmin ? ['/sorteio', '/admin'] : [])]
+  const morePaths = ['/atividades', '/podio', '/sobre', ...(isAdmin ? ['/admin'] : [])]
   const moreIsActive = morePaths.some((path) => location.pathname.startsWith(path))
 
   function openOwnProfile() {
@@ -187,7 +187,6 @@ export default function Layout() {
             <div className="site-header-actions-v2">
               {isAdmin && (
                 <div className="site-admin-links-v2" aria-label="Acessos administrativos">
-                  <NavLink to="/sorteio" className={({ isActive }) => isActive ? 'site-admin-link-v2 active' : 'site-admin-link-v2'}>Sorteio</NavLink>
                   <NavLink to="/admin" className={({ isActive }) => isActive ? 'site-admin-link-v2 active' : 'site-admin-link-v2'}>Admin</NavLink>
                 </div>
               )}
@@ -239,7 +238,6 @@ export default function Layout() {
               ))}
               {isAdmin && (
                 <>
-                  <NavLink to="/sorteio" className={({ isActive }) => isActive ? 'mobile-more-link-v2 active' : 'mobile-more-link-v2'}><NavIcon name="roulette" size={19} /><span><strong>Sorteio</strong><small>Definir os jogos da rodada</small></span></NavLink>
                   <NavLink to="/admin" className={({ isActive }) => isActive ? 'mobile-more-link-v2 active' : 'mobile-more-link-v2'}><NavIcon name="admin" size={19} /><span><strong>Administração</strong><small>Gerenciar a competição</small></span></NavLink>
                 </>
               )}
