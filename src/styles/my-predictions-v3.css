@@ -19,33 +19,22 @@
 .mc-error { margin: 0 0 18px; }
 
 /* Compact, single-surface campaign summary; the six metrics share one rhythm. */
-.mc-campaign.round-explorer-summary { display: block; margin-bottom: 9px; padding: 12px 8px; border-color: rgba(127, 148, 205, .16); border-radius: 15px; background: linear-gradient(110deg, rgba(13, 20, 47, .9), rgba(7, 12, 29, .84)); }
-.mc-campaign .round-explorer-summary-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: center; }
-.mc-campaign .round-explorer-summary-metrics > div { display: grid; justify-items: center; gap: 3px; padding: 0 10px; border-left: 1px solid rgba(174, 190, 232, .13); text-align: center; }
-.mc-campaign .round-explorer-summary-metrics > div:first-child { border-left: 0; }
-.mc-campaign .round-explorer-summary-metrics strong { color: #f5f6ff; font-size: 20px; line-height: 1.05; font-variant-numeric: tabular-nums; }
-.mc-campaign .round-explorer-summary-metrics span { margin-top: 1px; color: #9ca9c7; font-size: 10px; line-height: 1.25; }
-.mc-campaign .round-explorer-summary-metrics .mc-summary-primary strong { color: #d9cbff; font-size: 22px; }
-.mc-campaign .round-explorer-summary-metrics .mc-summary-primary:nth-child(2) strong { color: #fff; }
-
-.mc-performance { margin: 0 0 25px; border-bottom: 1px solid rgba(151, 169, 217, .12); }
-.mc-performance-toggle { display: flex; width: 100%; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 3px 5px 8px; border: 0; color: #c6d0e6; background: transparent; text-align: left; cursor: pointer; }
-.mc-performance-toggle > span { display: flex; align-items: baseline; gap: 10px; }
-.mc-performance-toggle strong { color: #d4c6ff; font-size: 12px; font-weight: 750; }
-.mc-performance-toggle small { color: #8795b4; font-size: 10px; }
-.mc-performance-toggle svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.7; transition: transform .18s ease; }
-.mc-performance-toggle svg.is-open { transform: rotate(180deg); }
-.mc-performance-content { padding: 2px 8px 13px; }
-.mc-chart { display: flex; min-height: 104px; align-items: flex-end; gap: clamp(12px, 2vw, 24px); padding: 8px 8px 0 0; overflow-x: auto; }
-.mc-chart-item { display: grid; min-width: 30px; height: 96px; grid-template-rows: 16px 1fr 14px 12px; align-items: end; justify-items: center; gap: 2px; color: #aab6d3; font-size: 9px; }
-.mc-chart-value { color: #e8eaff; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.mc-chart-value small { color: #aab6d3; font-size: 8px; }
-.mc-chart-track { display: flex; width: 12px; height: 100%; align-items: flex-end; overflow: hidden; border-radius: 8px; background: rgba(115, 133, 184, .12); }
-.mc-chart-track i { display: block; width: 100%; min-height: 4px; border-radius: 8px; background: linear-gradient(180deg, #75c8ff, #9273ed); }
-.mc-chart-item.is-partial .mc-chart-track i { background: repeating-linear-gradient(135deg, #8b73e5 0 4px, #8b73e555 4px 8px); }
-.mc-chart-item > strong { font-size: 9px; font-weight: 700; }
-.mc-chart-partial { color: #efc977; font-size: 8px; }
-.mc-chart-empty { padding: 12px 0 2px; color: var(--mc-muted); font-size: 11px; }
+.mc-campaign.round-explorer-summary { display: grid; grid-template-columns: minmax(0, 3.2fr) minmax(190px, 1fr); align-items: stretch; gap: 0; margin-bottom: 24px; padding: 8px 10px; border-color: rgba(127, 148, 205, .16); border-radius: 15px; background: linear-gradient(110deg, rgba(13, 20, 47, .9), rgba(7, 12, 29, .84)); }
+.mc-campaign-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: center; }
+.mc-campaign-metrics > div { display: grid; justify-items: center; gap: 4px; min-width: 0; padding: 0 8px; border-left: 1px solid rgba(174, 190, 232, .13); text-align: center; }
+.mc-campaign-metrics > div:first-child { border-left: 0; }
+.mc-campaign-metrics strong { color: #f5f6ff; font-size: 19px; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mc-campaign-metrics span { color: #aab6d3; font-size: 9px; line-height: 1.25; white-space: nowrap; }
+.mc-campaign-metrics .mc-summary-primary strong { color: #d9cbff; font-size: 21px; }
+.mc-campaign-metrics .mc-summary-primary:nth-child(2) strong { color: #fff; }
+.mc-campaign-evolution { display: grid; min-width: 0; align-content: center; gap: 4px; padding-left: 14px; border-left: 1px solid rgba(174, 190, 232, .13); }
+.mc-campaign-evolution > strong { color: #b9a7ff; font-size: 10px; font-weight: 750; }
+.mc-line-chart { display: block; width: 100%; height: 67px; overflow: visible; }
+.mc-line-chart-path { fill: none; stroke: url(#mc-campaign-line); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mc-line-chart-point { fill: #b5a0ff; stroke: #131b36; stroke-width: 1.4; }
+.mc-line-chart g.is-partial .mc-line-chart-point { fill: #10182e; stroke: #efc977; stroke-dasharray: 2 1.5; }
+.mc-line-chart-label { fill: #92a1c0; font-family: inherit; font-size: 8px; }
+.mc-chart-empty { align-self: center; color: var(--mc-muted); font-size: 10px; line-height: 1.35; }
 
 .mc-center { margin-top: 4px; }
 .mc-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 8px; }
@@ -61,9 +50,9 @@
 .mc-match-panel { min-height: 0; }
 .mc-date-group { margin: 20px 0 0; }
 .mc-date-group > h3 { display: flex; align-items: center; gap: 10px; margin: 0; padding: 0 2px 9px; color: #aebbd8; font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-.mc-date-group > h3::after { height: 1px; flex: 1; background: var(--mc-line); content: ''; }
+.mc-date-group > h3::after { content: none; }
 .mc-date-group > h3 small { color: #7e8cab; font-size: 10px; font-weight: 600; letter-spacing: 0; text-transform: none; }
-.mc-match-list { border-top: 1px solid var(--mc-line); }
+.mc-match-list { border-top: 0; }
 
 /* One match grid is shared by upcoming, live and official-result states. */
 .mc-match { display: grid; grid-template-areas: 'meta contest personal footer'; grid-template-columns: 104px minmax(0, 1fr) minmax(104px, .3fr) minmax(116px, auto); align-items: center; gap: 12px; min-height: 78px; padding: 10px 12px; border-bottom: 1px solid var(--mc-line); border-radius: 10px; transition: background .16s ease; }
@@ -114,7 +103,11 @@
 .mc-history-columns,.mc-history-match { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(112px, .3fr) minmax(124px, .34fr); align-items: center; gap: 14px; }
 .mc-history-columns { padding: 10px 2px 7px; color: #8e9cba; font-size: 9px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .mc-history-columns span:nth-child(n+3) { text-align: center; }
-.mc-history-match { min-height: 68px; padding: 8px 2px; border-bottom: 1px solid rgba(151, 169, 217, .1); }
+.mc-history-match { grid-template-areas: 'date contest pick points'; min-height: 68px; padding: 8px 2px; border-bottom: 1px solid rgba(151, 169, 217, .1); }
+.mc-history-date { grid-area: date; }
+.mc-history-match > .mc-match-contest { grid-area: contest; }
+.mc-history-match > .mc-history-pick { grid-area: pick; }
+.mc-history-match > .mc-points { grid-area: points; }
 .mc-history-date { color: #aab6d3; font-size: 10px; font-variant-numeric: tabular-nums; line-height: 1.4; }
 .mc-history-match .mc-match-contest { grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr); gap: 7px; }
 .mc-history-match .mc-match-team { gap: 6px; }
@@ -150,9 +143,12 @@ body:has(.my-campaign-page),.app-shell.topbar-shell.my-predictions-shell { backg
 
 @media (max-width: 1100px) and (min-width: 761px) {
   .page-wrap.my-campaign-page { padding-inline: 22px; }
-  .mc-campaign .round-explorer-summary-metrics > div { padding-inline: 7px; }
-  .mc-campaign .round-explorer-summary-metrics strong { font-size: 18px; }
-  .mc-campaign .round-explorer-summary-metrics span { font-size: 9px; }
+  .mc-campaign.round-explorer-summary { grid-template-columns: minmax(0, 3fr) minmax(170px, 1fr); }
+  .mc-campaign-metrics > div { padding-inline: 4px; }
+  .mc-campaign-metrics strong { font-size: 17px; }
+  .mc-campaign-metrics span { font-size: 8px; }
+  .mc-campaign-metrics .mc-summary-primary strong { font-size: 19px; }
+  .mc-campaign-evolution { padding-left: 9px; }
   .mc-match { grid-template-columns: 88px minmax(0, 1fr) 94px 94px; gap: 8px; padding-inline: 8px; }
   .mc-match-contest { grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr); gap: 6px; }
   .mc-match-team { gap: 5px; }
@@ -180,19 +176,16 @@ body:has(.my-campaign-page),.app-shell.topbar-shell.my-predictions-shell { backg
   .mc-season-picker { min-width: 0; width: min(57vw, 240px); padding: 7px 9px; }
   .mc-season-picker > span { font-size: 9px; }
   .mc-select .accessible-select-trigger { min-height: 26px; padding-inline: 0; font-size: 11px; }
-  .mc-campaign.round-explorer-summary { margin-bottom: 7px; padding: 10px 5px; border-radius: 13px; }
-  .mc-campaign .round-explorer-summary-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
-  .mc-campaign .round-explorer-summary-metrics > div { min-height: 48px; padding-inline: 5px; }
-  .mc-campaign .round-explorer-summary-metrics > div:nth-child(4) { border-left: 0; }
-  .mc-campaign .round-explorer-summary-metrics strong,.mc-campaign .round-explorer-summary-metrics .mc-summary-primary strong { font-size: 19px; }
-  .mc-campaign .round-explorer-summary-metrics span { font-size: 9px; }
-  .mc-performance { margin-bottom: 20px; }
-  .mc-performance-toggle { min-height: 38px; }
-  .mc-performance-toggle > span { display: grid; gap: 3px; }
-  .mc-performance-toggle strong { font-size: 11px; }
-  .mc-performance-toggle small { font-size: 9px; }
-  .mc-performance-content { padding-inline: 2px; }
-  .mc-chart { height: 104px; gap: 18px; }
+  .mc-campaign.round-explorer-summary { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-bottom: 24px; padding: 12px 7px 9px; border-radius: 13px; }
+  .mc-campaign-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+  .mc-campaign-metrics > div { min-height: 43px; padding-inline: 5px; }
+  .mc-campaign-metrics > div:nth-child(4) { border-left: 0; }
+  .mc-campaign-metrics strong,.mc-campaign-metrics .mc-summary-primary strong { font-size: 19px; }
+  .mc-campaign-metrics span { font-size: 9px; }
+  .mc-campaign-evolution { gap: 3px; padding: 7px 3px 0; border-top: 1px solid rgba(174, 190, 232, .13); border-left: 0; }
+  .mc-campaign-evolution > strong { font-size: 10px; }
+  .mc-line-chart { height: 73px; }
+  .mc-chart-empty { min-height: 28px; font-size: 9px; }
   .mc-section-heading { align-items: center; gap: 10px; margin-bottom: 8px; }
   .mc-section-heading h2 { font-size: 17px; }
   .mc-status-tabs { gap: 2px; margin: 0 -16px 8px; padding: 0 16px; }
@@ -251,8 +244,8 @@ body:has(.my-campaign-page),.app-shell.topbar-shell.my-predictions-shell { backg
   .mc-season-picker { width: 44vw; }
   .mc-season-picker > span { display: none; }
   .mc-campaign.round-explorer-summary { padding-inline: 3px; }
-  .mc-campaign .round-explorer-summary-metrics > div { padding-inline: 3px; }
-  .mc-campaign .round-explorer-summary-metrics span { font-size: 8px; }
+  .mc-campaign-metrics > div { padding-inline: 3px; }
+  .mc-campaign-metrics span { font-size: 8px; }
   .mc-match-contest { grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr); gap: 2px; }
   .mc-match-team strong { font-size: 9px; }
   .mc-match-score strong { font-size: 17px; }

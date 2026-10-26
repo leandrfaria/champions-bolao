@@ -15,6 +15,28 @@ body:has(.rounds-explorer-shell),
   overflow-y: visible;
 }
 
+body:has(.rounds-explorer-shell),
+.app-shell.topbar-shell.rounds-explorer-shell {
+  background: linear-gradient(180deg, #080e20 0%, #070b18 470px, #070b18 100%);
+}
+
+/* These are decorative viewport atmospheres, not document content. Keeping
+   them fixed prevents the 1020px light layer from extending short pages. */
+.app-shell.topbar-shell.rounds-explorer-shell::before,
+.app-shell.topbar-shell.rounds-explorer-shell::after {
+  position: fixed;
+  inset-block-start: 0;
+}
+
+.app-shell.topbar-shell.rounds-explorer-shell::before {
+  height: min(1020px, 100vh);
+}
+
+.app-shell.topbar-shell.rounds-explorer-shell::after {
+  width: min(780px, 72vw, 100vh);
+  height: min(780px, 72vw, 100vh);
+}
+
 .round-explorer-header {
   position: relative;
   z-index: 6;
@@ -251,14 +273,25 @@ body:has(.rounds-explorer-shell),
 .round-explorer-player-row .avatar.small { width: 34px; height: 34px; flex: 0 0 34px; }
 .round-explorer-player-name { min-width: 0; display: flex; align-items: center; gap: 7px; overflow: hidden; color: #e1e7f5; font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .round-explorer-player-name em { flex: 0 0 auto; padding: 3px 5px; border-radius: 5px; color: #c3afff; background: rgba(143, 113, 229, .13); font-size: 8px; font-style: normal; font-weight: 800; text-transform: uppercase; }
-.round-explorer-player-pick { overflow: hidden; color: #b6c2d9; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.round-explorer-player-pick { justify-self: stretch; min-width: 0; overflow: hidden; color: #b6c2d9; font-size: 12px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .round-explorer-player-points { justify-self: end; min-width: 44px; color: #a9b5cc; font-size: 12px; font-weight: 850; font-variant-numeric: tabular-nums; text-align: right; }
 .round-explorer-player-points.is-pending { color: #7785a3; }
 .round-explorer-player-points.exact { color: #56dba8; }
 .round-explorer-player-points.winner { color: #efc45f; }
 .round-explorer-player-points.miss { color: #ef8fa3; }
 .round-explorer-player-row.is-mine { margin-block: 3px; border: 1px solid rgba(151, 126, 236, .2); background: linear-gradient(100deg, rgba(109, 83, 187, .16), rgba(16, 22, 43, .3)); box-shadow: inset 2px 0 rgba(174, 148, 255, .42); }
-.round-explorer-match:not(.is-live):not(.is-finished) .round-explorer-player-row { grid-template-columns: minmax(0, 1fr) minmax(145px, .7fr); }
+
+@media (min-width: 761px) {
+  .round-explorer-season-select {
+    width: 230px;
+    min-width: 215px;
+    max-width: 235px;
+    gap: 3px;
+    padding: 7px 11px;
+  }
+
+  .round-explorer-season-select .accessible-select-trigger { min-height: 26px; }
+}
 
 @media (max-width: 1100px) and (min-width: 761px) {
   .page-wrap.season-rounds-page.round-explorer-page { padding-inline: 22px; }
@@ -270,7 +303,8 @@ body:has(.rounds-explorer-shell),
 }
 
 @media (max-width: 760px) {
-  .page-wrap.season-rounds-page.round-explorer-page { max-width: 100%; padding: 16px 14px calc(104px + env(safe-area-inset-bottom)); }
+  /* The app shell already reserves the fixed mobile navigation area. */
+  .page-wrap.season-rounds-page.round-explorer-page { max-width: 100%; padding: 16px 14px 24px; }
   .round-explorer-header { align-items: center; gap: 12px; padding: 0 0 14px; }
   .round-explorer-heading > span { font-size: 9px; }
   .round-explorer-heading h1 { margin-top: 2px; font-size: 29px; }
@@ -346,9 +380,8 @@ body:has(.rounds-explorer-shell),
   .round-explorer-player-row .avatar.small { width: 30px; height: 30px; flex-basis: 30px; }
   .round-explorer-player-name { display: flex; flex-wrap: wrap; gap: 4px; overflow: visible; font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
   .round-explorer-player-name em { font-size: 7px; }
-  .round-explorer-player-pick { font-size: 9px; text-align: right; }
+  .round-explorer-player-pick { justify-self: stretch; font-size: 9px; text-align: center; }
   .round-explorer-player-points { min-width: 30px; font-size: 10px; }
-  .round-explorer-match:not(.is-live):not(.is-finished) .round-explorer-player-row { grid-template-columns: minmax(0, 1fr) minmax(90px, auto); }
 }
 
 @media (max-width: 380px) {
@@ -359,7 +392,6 @@ body:has(.rounds-explorer-shell),
   .round-explorer-match-toggle { grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr) 20px; }
   .round-explorer-team strong { font-size: 9px; }
   .round-explorer-player-row { grid-template-columns: minmax(0, 1fr) minmax(70px, auto) 30px; gap: 5px; }
-  .round-explorer-match:not(.is-live):not(.is-finished) .round-explorer-player-row { grid-template-columns: minmax(0, 1fr) minmax(82px, auto); }
   .round-explorer-player-row .avatar.small { width: 28px; height: 28px; flex-basis: 28px; }
 }
 

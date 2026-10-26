@@ -97,19 +97,25 @@ function pluralCount(value, singular, plural = `${singular}s`) {
 
 function PerformanceChart({ rounds, predictionByMatch }) {
   const data = rounds.map((round) => ({ round, ...scoreForRound(round, predictionByMatch) })).filter((item) => item.settled > 0)
-  const max = Math.max(1, ...data.map((item) => item.points))
   if (!data.length) return <div className="mc-chart-empty">A evolução aparece após os primeiros resultados oficiais.</div>
+  const max = Math.max(1, ...data.map((item) => item.points))
+  const points = data.map((item, index) => ({
+    ...item,
+    x: data.length === 1 ? 120 : 14 + index * (212 / (data.length - 1)),
+    y: 43 - (item.points / max) * 29,
+  }))
+  const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
   return (
-    <div className="mc-chart" role="list" aria-label="Pontos conquistados por rodada">
-      {data.map((item) => (
-        <div className={`mc-chart-item${item.settled < item.total ? ' is-partial' : ''}`} role="listitem" key={item.round.id}>
-          <div className="mc-chart-value">{item.points}<small> pt</small></div>
-          <div className="mc-chart-track" aria-label={`${item.points} pontos`}><i style={{ height: `${Math.max(8, item.points / max * 100)}%` }} /></div>
-          <strong>R{item.round.sort_order}</strong>
-          {item.settled < item.total && <span className="mc-chart-partial">{item.settled}/{item.total}</span>}
-        </div>
+    <svg className="mc-line-chart" viewBox="0 0 240 78" role="img" aria-label="Pontos conquistados por rodada">
+      <defs><linearGradient id="mc-campaign-line" x1="0" x2="1"><stop offset="0%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#67d5ef" /></linearGradient></defs>
+      {points.length > 1 && <path className="mc-line-chart-path" d={path} />}
+      {points.map((point) => (
+        <g className={point.settled < point.total ? 'is-partial' : ''} key={point.round.id}>
+          <circle className="mc-line-chart-point" cx={point.x} cy={point.y} r="3.5"><title>{`Rodada ${point.round.sort_order}: ${point.points} ${point.points === 1 ? 'ponto' : 'pontos'}${point.settled < point.total ? ` · parcial, ${point.settled} de ${point.total} jogos apurados` : ''}`}</title></circle>
+          <text className="mc-line-chart-label" x={point.x} y="68" textAnchor="middle">R{point.round.sort_order}</text>
+        </g>
       ))}
-    </div>
+    </svg>
   )
 }
 
@@ -188,7 +194,6 @@ export default function MyPredictionsPage() {
   const [ownPredictions, setOwnPredictions] = useState([])
   const [rankingPredictions, setRankingPredictions] = useState([])
   const [status, setStatus] = useState('pending')
-  const [performanceOpen, setPerformanceOpen] = useState(false)
   const [error, setError] = useState('')
   const loadSequence = useRef(0)
 
@@ -347,7 +352,7 @@ export default function MyPredictionsPage() {
       if (scroller.scrollTop > maxScrollTop) scroller.scrollTop = maxScrollTop
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [status, seasonId, performanceOpen, rounds, ownPredictions])
+  }, [status, seasonId, rounds, ownPredictions])
 
   async function savePrediction(matchId, homeScore, awayScore) {
     const match = allMatches.find((item) => item.id === matchId)
@@ -376,23 +381,19 @@ export default function MyPredictionsPage() {
 
       {seasons.length === 0 ? <EmptyState title="Nenhuma temporada" text="Ainda não há uma temporada disponível para acompanhar." /> : (
         <>
-          <section className="round-explorer-summary mc-campaign" aria-label="Resumo da campanha">
-            <div className="round-explorer-summary-metrics mc-campaign-metrics">
+          <section className="round-explorer-summary mc-campaign" aria-label="Resumo da campanha e evolução">
+            <div className="mc-campaign-metrics">
               <div className="mc-summary-primary"><strong>{stats.sent}</strong><span>Palpites enviados</span></div>
-              <div className="mc-summary-primary"><strong>{stats.points}</strong><span>Pontos · {stats.settled} apurados</span></div>
+              <div className="mc-summary-primary"><strong>{stats.points}</strong><span>Pontos</span></div>
               <div><strong>{stats.exact}</strong><span>Placares exatos</span></div>
               <div><strong>{stats.outcomes}</strong><span>Vencedores</span></div>
               <div><strong>{stats.rate}%</strong><span>Taxa de acerto</span></div>
-              <div><strong>{stats.rank ? `${stats.rank}º` : '—'}{stats.participants ? `/${stats.participants}` : ''}</strong><span>Posição</span></div>
+              <div className="mc-summary-primary"><strong>{stats.rank ? `${stats.rank}º` : '—'}{stats.participants ? `/${stats.participants}` : ''}</strong><span>Posição</span></div>
             </div>
-          </section>
-
-          <section className="mc-performance" aria-label="Evolução por rodada">
-            <button className="mc-performance-toggle" type="button" aria-expanded={performanceOpen} aria-controls="mc-performance-chart" onClick={() => setPerformanceOpen((value) => !value)}>
-              <span><strong>Evolução por rodada</strong><small>{stats.settled} partidas apuradas</small></span>
-              <svg className={performanceOpen ? 'is-open' : ''} viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
-            </button>
-            {performanceOpen && <div id="mc-performance-chart" className="mc-performance-content"><PerformanceChart rounds={rounds} predictionByMatch={predictionByMatch} /></div>}
+            <div className="mc-campaign-evolution">
+              <strong>Evolução por rodada</strong>
+              <PerformanceChart rounds={rounds} predictionByMatch={predictionByMatch} />
+            </div>
           </section>
 
           <section className="mc-center" aria-labelledby="mc-center-title">
