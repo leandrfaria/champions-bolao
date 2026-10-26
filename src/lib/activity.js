@@ -57,8 +57,9 @@ export function activityText(item) {
     case 'second_changed': return `${actor} assumiu a 2ª posição.`
     case 'roulette_spun': {
       const names = Array.isArray(metadata.selected_names) ? metadata.selected_names.filter(Boolean) : []
-      const chosen = names.length >= 2 ? `${names[0]} e ${names[1]}` : names[0] || 'Dois participantes'
-      return `A roleta de ${metadata.round_name || 'uma rodada'} foi girada: ${chosen} foram escolhidos para definir os jogos.`
+      const chosen = names.length >= 2 ? `${names[0]} e ${names[1]}` : names[0] || 'Participantes'
+      const verb = names.length === 1 ? 'foi escolhido' : 'foram escolhidos'
+      return `A roleta de ${metadata.round_name || 'uma rodada'} foi girada: ${chosen} ${verb} para definir os jogos.`
     }
     default: return 'Uma atividade foi registrada no bolão.'
   }

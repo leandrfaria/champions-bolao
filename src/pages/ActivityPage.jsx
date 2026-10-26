@@ -248,7 +248,7 @@ function eventDescription(item) {
     case 'season_deleted': return 'A temporada e toda a sua estrutura foram removidas pelo administrador.'
     case 'leader_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
     case 'second_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
-    case 'roulette_spun': return 'Os dois escolhidos saem dos próximos sorteios até a roleta ser redefinida na Administração.'
+    case 'roulette_spun': return 'Quem é sorteado sai dos próximos sorteios até a roleta ser redefinida na Administração.'
     default: return ''
   }
 }
