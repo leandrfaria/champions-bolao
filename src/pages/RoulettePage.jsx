@@ -66,24 +66,32 @@ export default function RoulettePage() {
     if (showLoader) setLoading(true)
     setError('')
     try {
-      const [{ data: seasonData, error: seasonError }, { data: profileData, error: profileError }, { data: exclusionData, error: exclusionError }, { data: drawData, error: drawError }] = await Promise.all([
-        supabase.from('seasons').select('*').eq('is_active', true).maybeSingle(),
-        supabase.from('profiles').select('*').order('display_name'),
-        supabase.from('roulette_exclusions').select('user_id'),
-        supabase.from('roulette_draws').select('*, rounds(name, sort_order, season_id)').order('created_at', { ascending: false }),
+      const read = async (label, query) => {
+        try {
+          const { data, error: queryError } = await query.abortSignal(AbortSignal.timeout(15000))
+          if (queryError) throw queryError
+          return data
+        } catch (queryError) {
+          if (queryError.name === 'TimeoutError' || queryError.name === 'AbortError') {
+            throw new Error(`${label}: a consulta excedeu 15 segundos. Verifique a conexão e tente novamente.`)
+          }
+          throw new Error(`${label}: ${queryError.message || 'não foi possível consultar os dados.'}`)
+        }
+      }
+      const [seasonData, profileData, exclusionData, drawData] = await Promise.all([
+        read('Temporada', supabase.from('seasons').select('*').eq('is_active', true).maybeSingle()),
+        read('Participantes', supabase.from('profiles').select('*').order('display_name')),
+        read('Disponibilidade da roleta', supabase.from('roulette_exclusions').select('user_id')),
+        read('Histórico da roleta', supabase.from('roulette_draws').select('*, rounds(name, sort_order, season_id)').order('created_at', { ascending: false })),
       ])
-      const firstError = seasonError || profileError || exclusionError || drawError
-      if (firstError) throw firstError
 
       let roundData = []
       if (seasonData) {
-        const { data, error: roundError } = await supabase
+        roundData = await read('Rodadas da temporada', supabase
           .from('rounds')
           .select('*')
           .eq('season_id', seasonData.id)
-          .order('sort_order', { ascending: true })
-        if (roundError) throw roundError
-        roundData = data || []
+          .order('sort_order', { ascending: true })) || []
       }
 
       if (!mountedRef.current) return
@@ -94,7 +102,9 @@ export default function RoulettePage() {
       setRounds(roundData)
       setSelectedRoundId((current) => current && roundData.some((round) => round.id === current) ? current : '')
     } catch (loadError) {
-      if (mountedRef.current) setError(loadError.message || 'Não foi possível carregar o sorteio.')
+      if (mountedRef.current) {
+        setError(loadError.message || 'Não foi possível carregar o sorteio.')
+      }
     } finally {
       if (showLoader && mountedRef.current) setLoading(false)
     }
@@ -228,7 +238,7 @@ export default function RoulettePage() {
     <main className="page-wrap roulette-page sports-surface">
       <PageHeader eyebrow={season?.name || 'Área administrativa'} title="Sorteio" description="Defina quem escolhe os jogos de cada rodada." />
 
-      {error && <div className="form-error roulette-flash" role="alert">{error}</div>}
+      {error && <div className="form-error roulette-flash" role="alert"><span>{error}</span><button className="secondary-button compact roulette-retry-button" type="button" onClick={() => load()} disabled={loading}>Tentar novamente</button></div>}
       {message && <div className="form-success roulette-flash" role="status">{message}</div>}
 
       {!season ? (

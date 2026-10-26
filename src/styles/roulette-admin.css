@@ -7,6 +7,8 @@
 }
 
 .roulette-page .roulette-flash { margin: 12px 0 0; }
+.roulette-page .form-error.roulette-flash { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.roulette-page .roulette-retry-button { flex: 0 0 auto; min-height: 34px; }
 .roulette-page .page-header { margin-bottom: 18px; }
 
 .roulette-ops-panel,
@@ -149,6 +151,7 @@
 
 @media (max-width: 700px) {
   .roulette-page { padding: 15px 15px calc(108px + env(safe-area-inset-bottom)); }
+  .roulette-page .form-error.roulette-flash { align-items: flex-start; flex-direction: column; gap: 10px; }
   .roulette-page .page-header { margin-bottom: 13px; }
   .roulette-ops-panel { grid-template-columns: minmax(0, 1fr); gap: 11px; padding: 13px; }
   .roulette-round-state { min-height: 50px; }
