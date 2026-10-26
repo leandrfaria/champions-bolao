@@ -1,176 +1,173 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
+import AccessibleSelect from '../components/AccessibleSelect'
+import MyCampaignMatch from '../components/MyCampaignMatch'
 import TeamCrest from '../components/TeamCrest'
-import ScorePicker from '../components/ScorePicker'
-import NavIcon from '../components/NavIcon'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked, timeUntilStart } from '../lib/utils'
+import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked } from '../lib/utils'
+import '../styles/my-predictions-v3.css'
+import '../styles/round-explorer.css'
 
-function shortDate(value) {
-  if (!value) return { day: '—', time: '' }
-  const date = new Date(value)
-  return {
-    day: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', timeZone: 'America/Sao_Paulo' }).format(date).replace('.', '').toUpperCase(),
-    time: new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date),
-  }
+const STATUS_LABELS = { pending: 'Pendentes', upcoming: 'Próximos', live: 'Em andamento', results: 'Resultados' }
+const STATUS_EMPTY = {
+  pending: 'Você não tem palpites pendentes.',
+  upcoming: 'Nenhum próximo jogo disponível.',
+  live: 'Nenhuma partida aguardando resultado.',
+  results: 'Ainda não há resultados nesta temporada.',
 }
 
-function feedbackFor(points) {
-  if (points === 3) return { label: 'PLACAR EXATO', className: 'exact' }
-  if (points === 1) return { label: 'VENCEDOR', className: 'winner' }
-  return { label: 'ERROU', className: 'miss' }
+function compareLeaderboard(a, b) {
+  return b.points - a.points || b.exact - a.exact || b.outcomes - a.outcomes || a.display_name.localeCompare(b.display_name)
 }
 
-function scoreText(home, away) {
-  return `${home}x${away}`
+function sameRank(a, b) {
+  return a && b && a.points === b.points && a.exact === b.exact && a.outcomes === b.outcomes
 }
 
-function roundOrder(prediction) {
-  return prediction.matches?.rounds?.sort_order ?? -1
-}
+function rankParticipants(profiles, predictions, matches) {
+  const matchById = new Map(matches.map((match) => [match.id, match]))
+  const rows = profiles.map((profile) => {
+    const own = predictions.filter((prediction) => prediction.user_id === profile.id)
+      .map((prediction) => ({ prediction, match: matchById.get(prediction.match_id) }))
+      .filter(({ match }) => match && hasResult(match))
+    return {
+      id: profile.id,
+      display_name: profile.display_name || 'Participante',
+      points: own.reduce((sum, item) => sum + calculatePoints(item.prediction, item.match), 0),
+      exact: own.filter((item) => isExactPrediction(item.prediction, item.match)).length,
+      outcomes: own.filter((item) => didPickWinner(item.prediction, item.match)).length,
+    }
+  }).sort(compareLeaderboard)
 
-function roundTitle(round) {
-  const stage = String(round?.stage || '').trim()
-  const raw = String(round?.name || `Rodada ${round?.sort_order || ''}`).trim()
-  let detail = raw
-
-  if (stage && raw.toLowerCase().startsWith(stage.toLowerCase())) {
-    detail = raw.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
-  }
-
-  if (/^rodada\s+/i.test(detail)) detail = detail.replace(/^rodada\s+/i, '').trim()
-  if (!detail) detail = String(round?.sort_order || '').padStart(2, '0')
-
-  return {
-    stage,
-    detail,
-    full: stage ? `${stage} - ${detail}` : detail,
-  }
-}
-
-function sortStats(a, b) {
-  return b.points - a.points || b.exact - a.exact || b.winners - a.winners || a.display_name.localeCompare(b.display_name)
-}
-
-function sameStanding(a, b) {
-  return Boolean(a && b && a.points === b.points && a.exact === b.exact && a.winners === b.winners)
-}
-
-function withRank(rows) {
   let rank = 0
   return rows.map((row, index) => {
-    if (index === 0) rank = 1
-    else if (!sameStanding(row, rows[index - 1])) rank += 1
+    if (!index || !sameRank(row, rows[index - 1])) rank += 1
     return { ...row, rank }
   })
 }
 
-function placement(value) {
-  return value ? `${value}º` : '—'
+function shortRound(round) {
+  const raw = String(round?.name || '').trim()
+  const stage = String(round?.stage || '').trim()
+  let detail = raw
+  if (stage && detail.toLocaleLowerCase().startsWith(stage.toLocaleLowerCase())) {
+    detail = detail.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
+  }
+  if (/^rodada\s+/i.test(detail)) detail = detail.replace(/^rodada\s+/i, '').trim()
+  const total = round?.total_rounds || round?.rounds_count
+  const number = round?.sort_order || ''
+  if (/^\d+(\s+de\s+\d+)?$/i.test(detail)) return `Rodada ${detail}`
+  return number ? `Rodada ${number}${total ? ` de ${total}` : ''}` : raw || 'Rodada'
 }
 
-function OpenPredictionCard({ prediction, onSaved }) {
-  const match = prediction.matches
-  const locked = isLocked(match)
-  const date = shortDate(match?.kickoff_at)
-  const [editing, setEditing] = useState(false)
-  const [homeScore, setHomeScore] = useState(String(prediction.home_score))
-  const [awayScore, setAwayScore] = useState(String(prediction.away_score))
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
+function dateLabel(value) {
+  if (!value) return 'Data a confirmar'
+  return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'short', timeZone: 'America/Sao_Paulo' })
+    .format(new Date(value)).replace('.', '')
+}
 
-  useEffect(() => {
-    setHomeScore(String(prediction.home_score))
-    setAwayScore(String(prediction.away_score))
-    setEditing(false)
-    setMessage('')
-  }, [prediction.id, prediction.home_score, prediction.away_score])
+function kickoffLabel(value) {
+  if (!value) return 'Horário a confirmar'
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })
+    .format(new Date(value)).replace('.', '')
+}
 
-  async function save() {
-    if (locked || saving) return
-    if (homeScore === '' || awayScore === '') {
-      setMessage('Informe os dois placares.')
-      return
-    }
-    const home = Number(homeScore)
-    const away = Number(awayScore)
-    if (!Number.isInteger(home) || !Number.isInteger(away) || home < 0 || away < 0 || home > 99 || away > 99) {
-      setMessage('Use gols entre 0 e 99.')
-      return
-    }
+function matchCategory(match, ownPrediction) {
+  if (hasResult(match)) return 'results'
+  if (isLocked(match)) return 'live'
+  return ownPrediction ? 'upcoming' : 'pending'
+}
 
-    setSaving(true)
-    setMessage('')
-    try {
-      const { error } = await supabase
-        .from('predictions')
-        .update({ home_score: home, away_score: away })
-        .eq('id', prediction.id)
-      if (error) throw error
-      await onSaved()
-      setEditing(false)
-    } catch (error) {
-      setMessage(error.message || 'Não foi possível atualizar o palpite.')
-    } finally {
-      setSaving(false)
-    }
+function scoreForRound(round, predictionByMatch) {
+  const settled = (round.matches || []).filter(hasResult)
+  const picks = settled.map((match) => ({ match, prediction: predictionByMatch.get(match.id) })).filter((item) => item.prediction)
+  return {
+    points: picks.reduce((total, item) => total + calculatePoints(item.prediction, item.match), 0),
+    exact: picks.filter((item) => isExactPrediction(item.prediction, item.match)).length,
+    outcomes: picks.filter((item) => didPickWinner(item.prediction, item.match)).length,
+    settled: settled.length,
+    total: (round.matches || []).length,
   }
+}
 
-  function cancelEditing() {
-    setEditing(false)
-    setHomeScore(String(prediction.home_score))
-    setAwayScore(String(prediction.away_score))
-    setMessage('')
-  }
-
+function PerformanceChart({ rounds, predictionByMatch }) {
+  const data = rounds.map((round) => ({ round, ...scoreForRound(round, predictionByMatch) })).filter((item) => item.settled > 0)
+  const max = Math.max(1, ...data.map((item) => item.points))
+  if (!data.length) return <div className="mc-chart-empty">A evolução aparece após os primeiros resultados oficiais.</div>
   return (
-    <article className={`prediction-v2-card ${locked ? 'locked' : ''}`}>
-      <div className="prediction-v2-card-head">
-        <div className="prediction-v2-date"><strong>{date.day}</strong><span>·</span><strong>{date.time}</strong></div>
-        <span className={`prediction-v2-status ${locked ? 'in-progress' : 'sent'}`}>{locked ? 'EM ANDAMENTO' : 'PALPITE ENVIADO'}</span>
-      </div>
-
-      <div className="prediction-v2-match">
-        <div className="prediction-v2-team home">
-          <TeamCrest team={match.home_team} size="medium" />
-          <span>{match.home_team}</span>
+    <div className="mc-chart" role="list" aria-label="Pontos conquistados por rodada">
+      {data.map((item) => (
+        <div className={`mc-chart-item${item.settled < item.total ? ' is-partial' : ''}`} role="listitem" key={item.round.id}>
+          <div className="mc-chart-value">{item.points}<small> pt</small></div>
+          <div className="mc-chart-track" aria-label={`${item.points} pontos`}><i style={{ height: `${Math.max(8, item.points / max * 100)}%` }} /></div>
+          <strong>R{item.round.sort_order}</strong>
+          {item.settled < item.total && <span className="mc-chart-partial">{item.settled}/{item.total}</span>}
         </div>
+      ))}
+    </div>
+  )
+}
 
-        <div className={`prediction-v2-score ${editing ? 'editing' : ''}`}>
-          <small>Seu palpite</small>
-          {editing ? (
-            <div className="prediction-v2-editor">
-              <ScorePicker value={homeScore} onChange={setHomeScore} disabled={saving} ariaLabel={`Gols de ${match.home_team}`} />
-              <i>×</i>
-              <ScorePicker value={awayScore} onChange={setAwayScore} disabled={saving} ariaLabel={`Gols de ${match.away_team}`} />
-            </div>
-          ) : (
-            <strong>{scoreText(prediction.home_score, prediction.away_score)}</strong>
-          )}
-        </div>
-
-        <div className="prediction-v2-team away">
-          <span>{match.away_team}</span>
-          <TeamCrest team={match.away_team} size="medium" />
-        </div>
+function MatchGroup({ title, matches, predictionByMatch, profiles, userId, onSaved }) {
+  return (
+    <section className="mc-date-group">
+      <h3><span>{title}</span><small>{matches.length} {matches.length === 1 ? 'jogo' : 'jogos'}</small></h3>
+      <div className="mc-match-list">
+        {matches.map((match) => (
+          <MyCampaignMatch
+            key={match.id}
+            match={match}
+            ownPrediction={predictionByMatch.get(match.id) || null}
+            profiles={profiles}
+            userId={userId}
+            onSaved={onSaved}
+          />
+        ))}
       </div>
+    </section>
+  )
+}
 
-      <div className="prediction-v2-card-foot">
-        <span className="prediction-v2-deadline">{locked ? 'Aguardando resultado final' : timeUntilStart(match.kickoff_at)}</span>
-
-        {!locked && !editing && <button className="prediction-v2-edit" onClick={() => setEditing(true)}>Editar <span>→</span></button>}
-
-        {!locked && editing && (
-          <div className="prediction-v2-actions">
-            <button className="save" onClick={save} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>
-            <button onClick={cancelEditing}>Cancelar</button>
-          </div>
-        )}
-      </div>
-
-      {message && <small className="prediction-v2-error">{message}</small>}
+function ResultRound({ round, predictionByMatch }) {
+  const [expanded, setExpanded] = useState(false)
+  const score = scoreForRound(round, predictionByMatch)
+  const settledMatches = (round.matches || []).filter(hasResult).sort((a, b) => new Date(b.kickoff_at || 0) - new Date(a.kickoff_at || 0))
+  return (
+    <article className="mc-history-round">
+      <button type="button" className="mc-history-toggle" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+        <span className="mc-history-round-number">{String(round.sort_order || '—').padStart(2, '0')}</span>
+        <span className="mc-history-round-copy"><strong>{shortRound(round)}</strong><small>{round.stage || 'Competição'} · {score.settled}/{score.total} apurados</small></span>
+        <span className="mc-history-round-stats"><b>{score.points} <small>pts</small></b><small>{score.exact} exatos · {score.outcomes} desfechos</small></span>
+        <svg className={expanded ? 'is-open' : ''} aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5" /></svg>
+      </button>
+      {expanded && (
+        <div className="mc-history-matches">
+          {settledMatches.map((match) => {
+            const prediction = predictionByMatch.get(match.id)
+            const points = prediction ? calculatePoints(prediction, match) : 0
+            const exact = prediction && isExactPrediction(prediction, match)
+            const outcome = prediction && didPickWinner(prediction, match)
+            const tone = !prediction ? 'neutral' : exact ? 'exact' : outcome ? 'outcome' : 'miss'
+            const resultLabel = !prediction
+              ? 'SEM PALPITE'
+              : exact
+                ? 'PLACAR EXATO'
+                : outcome
+                  ? Number(match.home_score) === Number(match.away_score) ? 'EMPATE' : 'VENCEDOR'
+                  : 'ERROU'
+            return (
+              <div className="mc-history-match" key={match.id}>
+                <div className="mc-history-game"><small>{kickoffLabel(match.kickoff_at)}</small><div className="mc-history-teams"><span><TeamCrest team={match.home_team} size="small" /><b>{match.home_team}</b></span><strong>{match.home_score} × {match.away_score}</strong><span><TeamCrest team={match.away_team} size="small" /><b>{match.away_team}</b></span></div></div>
+                <div className="mc-history-pick"><strong>{prediction ? `${prediction.home_score} × ${prediction.away_score}` : 'Sem palpite'}</strong></div>
+                <div className={`mc-points mc-points--${tone}`}><strong>{prediction ? `+${points}` : '0'}</strong><small>{resultLabel}</small></div>
+              </div>
+            )
+          })}
+          {score.settled < score.total && <p className="mc-history-partial">Rodada em apuração: {score.settled} de {score.total} partidas com resultado oficial. Os demais jogos permanecem nas categorias correspondentes.</p>}
+        </div>
+      )}
     </article>
   )
 }
@@ -182,379 +179,234 @@ export default function MyPredictionsPage() {
   const [seasons, setSeasons] = useState([])
   const [profiles, setProfiles] = useState([])
   const [seasonId, setSeasonId] = useState('')
-  const [predictions, setPredictions] = useState([])
-  const [allPredictions, setAllPredictions] = useState([])
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [roundFilter, setRoundFilter] = useState('all')
-  const [expanded, setExpanded] = useState(new Set())
+  const [rounds, setRounds] = useState([])
+  const [ownPredictions, setOwnPredictions] = useState([])
+  const [rankingPredictions, setRankingPredictions] = useState([])
+  const [status, setStatus] = useState('pending')
+  const [performanceOpen, setPerformanceOpen] = useState(false)
   const [error, setError] = useState('')
-
-  async function loadPredictions(silent = false) {
-    if (!silent) setLoading(true)
-    else setRefreshing(true)
-    setError('')
-
-    try {
-      const [seasonRes, ownRes, profileRes, allRes] = await Promise.all([
-        supabase.from('seasons').select('*').order('created_at', { ascending: false }),
-        supabase
-          .from('predictions')
-          .select('*, matches(*, rounds(*, seasons(*)))')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase.from('profiles').select('*').order('display_name'),
-        supabase
-          .from('predictions')
-          .select('user_id, home_score, away_score, matches(*, rounds(*, seasons(*)))'),
-      ])
-
-      if (seasonRes.error) throw seasonRes.error
-      if (ownRes.error) throw ownRes.error
-      if (profileRes.error) throw profileRes.error
-      if (allRes.error) throw allRes.error
-
-      const seasonList = seasonRes.data || []
-      setSeasons(seasonList)
-      setPredictions(ownRes.data || [])
-      setProfiles(profileRes.data || [])
-      setAllPredictions(allRes.data || [])
-      setSeasonId((current) => current || seasonList.find((item) => item.is_active)?.id || seasonList[0]?.id || '')
-    } catch (err) {
-      setError(err.message || 'Não foi possível carregar seus palpites.')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
-
-  useEffect(() => { loadPredictions() }, [user.id])
-  useEffect(() => { setRoundFilter('all'); setExpanded(new Set()) }, [seasonId])
-
-  const season = seasons.find((item) => item.id === seasonId) || null
-
-  const seasonPredictions = useMemo(
-    () => predictions.filter((item) => item.matches?.rounds?.season_id === seasonId),
-    [predictions, seasonId],
-  )
-
-  const seasonAllPredictions = useMemo(
-    () => allPredictions.filter((item) => item.matches?.rounds?.season_id === seasonId),
-    [allPredictions, seasonId],
-  )
-
-  const rounds = useMemo(() => {
-    const map = new Map()
-    seasonPredictions.forEach((item) => {
-      const round = item.matches?.rounds
-      if (round?.id) map.set(round.id, round)
-    })
-    return [...map.values()].sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0))
-  }, [seasonPredictions])
-
-  const standings = useMemo(() => {
-    const activeUserIds = new Set(seasonAllPredictions.map((item) => item.user_id).filter(Boolean))
-    const rows = [...profiles]
-      .filter((profile) => activeUserIds.has(profile.id))
-      .map((profile) => {
-        const settled = seasonAllPredictions.filter((item) => item.user_id === profile.id && hasResult(item.matches))
-        return {
-          id: profile.id,
-          display_name: profile.display_name || 'Jogador',
-          points: settled.reduce((sum, item) => sum + calculatePoints(item, item.matches), 0),
-          exact: settled.filter((item) => isExactPrediction(item, item.matches)).length,
-          winners: settled.filter((item) => didPickWinner(item, item.matches)).length,
-        }
-      })
-      .sort(sortStats)
-
-    return withRank(rows)
-  }, [profiles, seasonAllPredictions])
-
-  const currentStanding = standings.find((item) => item.id === user.id) || null
-
-  const stats = useMemo(() => {
-    const settled = seasonPredictions.filter((item) => hasResult(item.matches))
-    const scores = settled.map((item) => calculatePoints(item, item.matches))
-    const points = scores.reduce((sum, value) => sum + value, 0)
-    const exact = settled.filter((item) => isExactPrediction(item, item.matches)).length
-    const winners = settled.filter((item) => didPickWinner(item, item.matches)).length
-    const correct = scores.filter((value) => value > 0).length
-    const scoredRounds = new Set(settled.map((item) => item.matches?.rounds?.id).filter(Boolean)).size
-
-    return {
-      points,
-      exact,
-      winners,
-      correct,
-      settled: settled.length,
-      rate: settled.length ? Math.round((correct / settled.length) * 100) : 0,
-      average: scoredRounds ? (points / scoredRounds).toFixed(1).replace('.', ',') : '0,0',
-      rank: currentStanding?.rank || null,
-      participants: standings.length,
-    }
-  }, [seasonPredictions, currentStanding?.rank, standings.length])
-
-  const roundPerformance = useMemo(() => {
-    const map = new Map()
-    seasonPredictions.filter((item) => hasResult(item.matches)).forEach((item) => {
-      const round = item.matches?.rounds
-      if (!round?.id) return
-      const current = map.get(round.id) || { round, points: 0 }
-      current.points += calculatePoints(item, item.matches)
-      map.set(round.id, current)
-    })
-    return [...map.values()].sort((a, b) => (a.round.sort_order || 0) - (b.round.sort_order || 0))
-  }, [seasonPredictions])
-
-  const chartMax = Math.max(1, ...roundPerformance.map((item) => item.points))
-
-  const scopedPredictions = useMemo(
-    () => seasonPredictions.filter((item) => roundFilter === 'all' || item.matches?.rounds?.id === roundFilter),
-    [seasonPredictions, roundFilter],
-  )
-
-  const openPredictions = useMemo(
-    () => scopedPredictions.filter((item) => !hasResult(item.matches)).sort((a, b) => new Date(a.matches?.kickoff_at) - new Date(b.matches?.kickoff_at)),
-    [scopedPredictions],
-  )
-
-  const finishedPredictions = useMemo(
-    () => scopedPredictions.filter((item) => hasResult(item.matches)),
-    [scopedPredictions],
-  )
-
-  const finishedGroups = useMemo(() => {
-    const map = new Map()
-    finishedPredictions.forEach((prediction) => {
-      const round = prediction.matches?.rounds
-      const key = round?.id || 'sem-rodada'
-      if (!map.has(key)) map.set(key, { round, items: [] })
-      map.get(key).items.push(prediction)
-    })
-    return [...map.values()].sort((a, b) => (b.round?.sort_order || 0) - (a.round?.sort_order || 0))
-  }, [finishedPredictions])
+  const loadSequence = useRef(0)
 
   useEffect(() => {
-    if (!finishedGroups.length) return
-    setExpanded((current) => {
-      if (current.size) return current
-      return new Set([finishedGroups[0].round?.id || 'sem-rodada'])
-    })
-  }, [finishedGroups.length, seasonId, roundFilter, statusFilter])
+    let cancelled = false
+    async function loadBase() {
+      setLoading(true)
+      setError('')
+      try {
+        const [{ data: seasonData, error: seasonError }, { data: profileData, error: profileError }] = await Promise.all([
+          supabase.from('seasons').select('*').order('created_at', { ascending: false }),
+          supabase.from('profiles').select('*').order('display_name'),
+        ])
+        if (seasonError) throw seasonError
+        if (profileError) throw profileError
+        if (cancelled) return
+        const list = seasonData || []
+        setSeasons(list)
+        setProfiles(profileData || [])
+        setSeasonId(list.find((item) => item.is_active)?.id || list[0]?.id || '')
+      } catch (loadError) {
+        if (!cancelled) setError(loadError.message || 'Não foi possível carregar sua campanha.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadBase()
+    return () => { cancelled = true }
+  }, [])
 
-  function toggleRound(key) {
-    setExpanded((current) => {
-      const next = new Set(current)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
+  const loadSeason = useCallback(async (selectedSeasonId, { silent = false } = {}) => {
+    const sequence = ++loadSequence.current
+    if (!selectedSeasonId) {
+      setRounds([])
+      setOwnPredictions([])
+      setRankingPredictions([])
+      return
+    }
+    if (silent) setRefreshing(true)
+    else {
+      setLoading(true)
+      setRounds([])
+      setOwnPredictions([])
+      setRankingPredictions([])
+    }
+    setError('')
+    try {
+      const { data: roundRows, error: roundsError } = await supabase.from('rounds').select('*, matches(*)').eq('season_id', selectedSeasonId).order('sort_order')
+      if (roundsError) throw roundsError
+      const loadedRounds = (roundRows || []).map((round) => ({
+        ...round,
+        matches: [...(round.matches || [])].sort((a, b) => new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0)),
+      }))
+      const matchList = loadedRounds.flatMap((round) => round.matches.map((match) => ({ ...match, rounds: round })))
+      const matchIds = matchList.map((match) => match.id)
+      const settledIds = matchList.filter(hasResult).map((match) => match.id)
+      const [ownResult, rankingResult] = await Promise.all([
+        matchIds.length
+          ? supabase.from('predictions').select('*').eq('user_id', user.id).in('match_id', matchIds)
+          : Promise.resolve({ data: [], error: null }),
+        settledIds.length
+          ? supabase.from('predictions').select('*').in('match_id', settledIds)
+          : Promise.resolve({ data: [], error: null }),
+      ])
+      if (ownResult.error) throw ownResult.error
+      if (rankingResult.error) throw rankingResult.error
+      if (sequence !== loadSequence.current) return
+      setRounds(loadedRounds)
+      setOwnPredictions(ownResult.data || [])
+      setRankingPredictions(rankingResult.data || [])
+      if (!silent) {
+        const ownMap = new Map((ownResult.data || []).map((prediction) => [prediction.match_id, prediction]))
+        const priority = ['pending', 'upcoming', 'live', 'results'].find((category) => matchList.some((match) => matchCategory(match, ownMap.get(match.id)) === category))
+        setStatus(priority || 'pending')
+      }
+    } catch (loadError) {
+      if (sequence !== loadSequence.current) return
+      setError(loadError.message || 'Não foi possível carregar seus palpites.')
+      if (!silent) {
+        setRounds([])
+        setOwnPredictions([])
+        setRankingPredictions([])
+      }
+    } finally {
+      if (sequence === loadSequence.current) {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    }
+  }, [user.id])
+
+  useEffect(() => {
+    if (!seasonId) return undefined
+    loadSeason(seasonId)
+    return () => { loadSequence.current += 1 }
+  }, [seasonId, loadSeason])
+
+  useEffect(() => {
+    setStatus('pending')
+  }, [seasonId])
+
+  const allMatches = useMemo(() => rounds.flatMap((round) => (round.matches || []).map((match) => ({ ...match, rounds: round }))), [rounds])
+  const predictionByMatch = useMemo(() => new Map(ownPredictions.map((prediction) => [prediction.match_id, prediction])), [ownPredictions])
+  const categories = useMemo(() => {
+    const result = { pending: [], upcoming: [], live: [], results: [] }
+    allMatches.forEach((match) => result[matchCategory(match, predictionByMatch.get(match.id))].push(match))
+    result.pending.sort((a, b) => new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0))
+    result.upcoming.sort((a, b) => new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0))
+    result.live.sort((a, b) => new Date(b.kickoff_at || 0) - new Date(a.kickoff_at || 0))
+    result.results.sort((a, b) => new Date(b.kickoff_at || 0) - new Date(a.kickoff_at || 0))
+    return result
+  }, [allMatches, predictionByMatch])
+
+  const standings = useMemo(() => rankParticipants(profiles, rankingPredictions, allMatches.filter(hasResult)), [profiles, rankingPredictions, allMatches])
+  const standing = standings.find((row) => row.id === user.id)
+  const settledOwn = ownPredictions.map((prediction) => ({ prediction, match: allMatches.find((match) => match.id === prediction.match_id) }))
+    .filter((item) => item.match && hasResult(item.match))
+  const stats = useMemo(() => {
+    const scores = settledOwn.map((item) => calculatePoints(item.prediction, item.match))
+    const exact = settledOwn.filter((item) => isExactPrediction(item.prediction, item.match)).length
+    const outcomes = settledOwn.filter((item) => didPickWinner(item.prediction, item.match)).length
+    const correct = scores.filter((score) => score > 0).length
+    return {
+      points: scores.reduce((sum, score) => sum + score, 0),
+      exact,
+      outcomes,
+      settled: settledOwn.length,
+      correct,
+      rate: settledOwn.length ? Math.round(correct / settledOwn.length * 100) : 0,
+      rank: standing?.rank || null,
+      participants: standings.length,
+    }
+  }, [settledOwn, standing?.rank, standings.length])
+  const season = seasons.find((item) => item.id === seasonId)
+  const seasonEyebrow = season?.name
+    ? `CHAMPIONS LEAGUE ${season.name.replace(/^champions league\s*/i, '').trim()}`.trim()
+    : 'CHAMPIONS LEAGUE'
+  const visibleMatches = categories[status] || []
+  const groupedMatches = useMemo(() => {
+    const map = new Map()
+    visibleMatches.forEach((match) => {
+      const key = match.kickoff_at ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(match.kickoff_at)) : 'unknown'
+      if (!map.has(key)) map.set(key, { title: key === 'unknown' ? 'Data a confirmar' : dateLabel(match.kickoff_at), matches: [] })
+      map.get(key).matches.push(match)
     })
+    return [...map.values()]
+  }, [visibleMatches])
+
+  useLayoutEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const scroller = document.scrollingElement
+      if (!scroller) return
+      const maxScrollTop = Math.max(0, scroller.scrollHeight - window.innerHeight)
+      if (scroller.scrollTop > maxScrollTop) scroller.scrollTop = maxScrollTop
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [status, seasonId, performanceOpen, rounds])
+
+  async function savePrediction(matchId, homeScore, awayScore) {
+    const match = allMatches.find((item) => item.id === matchId)
+    if (!match || isLocked(match)) throw new Error('O prazo para palpitar nesta partida terminou.')
+    const { error: saveError } = await supabase.from('predictions').upsert({
+      user_id: user.id,
+      match_id: matchId,
+      home_score: Number(homeScore),
+      away_score: Number(awayScore),
+    }, { onConflict: 'match_id,user_id' })
+    if (saveError) throw saveError
+    await loadSeason(seasonId, { silent: true })
   }
 
-  if (loading) return <Loading label="Carregando seus palpites..." />
-
-  const showOpen = statusFilter === 'all' || statusFilter === 'open'
-  const showFinished = statusFilter === 'all' || statusFilter === 'finished'
-  const visibleCount = (showOpen ? openPredictions.length : 0) + (showFinished ? finishedPredictions.length : 0)
-  const openCount = seasonPredictions.filter((item) => !hasResult(item.matches)).length
-  const finishedCount = seasonPredictions.filter((item) => hasResult(item.matches)).length
+  if (loading) return <Loading label="Carregando sua campanha..." />
+  if (error && !rounds.length && seasons.length) return <div className="page-wrap my-campaign-page"><div className="form-error mc-error">{error}</div></div>
 
   return (
-    <div className="page-wrap predictions-v2-page">
-      {error && <div className="form-error predictions-v2-error-banner">{error}</div>}
+    <div className="page-wrap my-campaign-page">
+      <header className="round-explorer-header mc-header">
+        <div className="round-explorer-heading"><span>{seasonEyebrow}</span><h1>Meus palpites</h1></div>
+        <div className="round-explorer-season-select mc-season-picker"><span>Temporada</span><AccessibleSelect ariaLabel="Selecionar temporada" value={seasonId} options={seasons.map((item) => ({ value: item.id, label: `${item.name}${item.is_active ? ' · atual' : ''}` }))} onChange={setSeasonId} className="mc-select" /></div>
+      </header>
 
-      {!seasons.length ? (
-        <EmptyState title="Nenhuma temporada" text="Crie uma temporada para começar a registrar seus palpites." />
-      ) : (
+      {error && <div className="form-error mc-error" role="alert">{error}</div>}
+
+      {seasons.length === 0 ? <EmptyState title="Nenhuma temporada" text="Ainda não há uma temporada disponível para acompanhar." /> : (
         <>
-          <header className="predictions-v2-header">
-            <div className="predictions-v2-header-copy">
-              <span>{season?.name || 'Champions League'}</span>
-              <h1>Meus palpites</h1>
-              <p>Acompanhe seus palpites e desempenho na temporada.</p>
-              {refreshing && <small>Atualizando…</small>}
+          <section className="mc-campaign" aria-label="Resumo da campanha">
+            <div className="mc-campaign-primary">
+              <div className="mc-stat-primary"><span>PONTUAÇÃO</span><strong>{stats.points}<small> pts</small></strong><em>{stats.settled} partidas apuradas</em></div>
+              <div className="mc-stat-primary mc-rank-stat"><span>CLASSIFICAÇÃO</span><strong>{stats.rank ? `${stats.rank}º` : '—'}<small>{stats.participants ? ` / ${stats.participants}` : ''}</small></strong><em>{stats.rank ? 'posição oficial da temporada' : 'sem posição apurada'}</em></div>
             </div>
-
-            <label className="predictions-v2-season-select">
-              <span>Temporada</span>
-              <select value={seasonId} onChange={(event) => setSeasonId(event.target.value)}>
-                {seasons.map((item) => <option value={item.id} key={item.id}>{item.name}{item.is_active ? ' · atual' : ''}</option>)}
-              </select>
-            </label>
-          </header>
-
-          <section className="predictions-v2-season-strip" aria-label="Resumo da temporada">
-            <div className="predictions-v2-season-title">Minha temporada</div>
-
-            <div className="predictions-v2-season-metrics">
-              <div className="predictions-v2-season-metric">
-                <NavIcon name="podium" size={17} />
-                <strong>{stats.points}<small> pts</small></strong>
-                <span>Pontos</span>
-              </div>
-              <div className="predictions-v2-season-metric">
-                <span className="predictions-v2-metric-icon">◎</span>
-                <strong>{stats.exact}</strong>
-                <span>Exatos</span>
-              </div>
-              <div className="predictions-v2-season-metric">
-                <span className="predictions-v2-metric-icon">♛</span>
-                <strong>{stats.winners}</strong>
-                <span>Vencedores</span>
-              </div>
-              <div className="predictions-v2-season-metric accent-cyan">
-                <span className="predictions-v2-metric-icon">▥</span>
-                <strong>{stats.rate}<small>%</small></strong>
-                <span>Acerto</span>
-              </div>
-              <div className="predictions-v2-season-metric accent-gold">
-                <span className="predictions-v2-metric-icon">★</span>
-                <strong>{placement(stats.rank)}</strong>
-                <span>Posição</span>
-              </div>
+            <div className="mc-precision-group">
+              <div className="mc-precision-main"><strong>{stats.rate}%</strong><span>Taxa de acerto</span></div>
+              <div className="mc-precision-secondary"><div><strong>{stats.exact}</strong><span>Placares exatos</span></div><div><strong>{stats.outcomes}</strong><span>Desfechos corretos</span></div></div>
             </div>
-
-            <aside className="predictions-v2-mini-chart" aria-label="Desempenho por rodada">
-              <div className="predictions-v2-mini-chart-head">
-                <span>Desempenho por rodada</span>
-                <small>{roundPerformance.length ? `${roundPerformance.length} ${roundPerformance.length === 1 ? 'rodada' : 'rodadas'}` : 'sem dados'}</small>
-              </div>
-              {roundPerformance.length ? (
-                <div className="predictions-v2-mini-bars">
-                  {roundPerformance.map((item) => (
-                    <div className="predictions-v2-mini-bar-item" key={item.round.id} title={`${item.round.name}: ${item.points} pts`}>
-                      <div className="predictions-v2-mini-track"><i style={{ height: `${Math.max(14, (item.points / chartMax) * 100)}%` }} /></div>
-                      <span>R{item.round.sort_order}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="predictions-v2-mini-empty">O gráfico aparece após o primeiro resultado.</div>
-              )}
-            </aside>
+            <div className="mc-performance">
+              <div className="mc-performance-heading"><div><span>EVOLUÇÃO</span><strong>Pontos por rodada</strong></div><button className="mc-chart-toggle" type="button" aria-expanded={performanceOpen} onClick={() => setPerformanceOpen((value) => !value)}>{performanceOpen ? 'Recolher' : 'Ver evolução'}<svg className={performanceOpen ? 'is-open' : ''} viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button></div>
+              <div className={`mc-performance-content${performanceOpen ? ' is-open' : ''}`}><PerformanceChart rounds={rounds} predictionByMatch={predictionByMatch} /></div>
+            </div>
           </section>
 
-          <div className="predictions-v2-controls">
-            <div className="predictions-v2-tabs" role="tablist" aria-label="Status dos palpites">
-              <button className={statusFilter === 'open' ? 'active' : ''} onClick={() => setStatusFilter('open')}>Em aberto <span>{openCount}</span></button>
-              <button className={statusFilter === 'finished' ? 'active' : ''} onClick={() => setStatusFilter('finished')}>Finalizados <span>{finishedCount}</span></button>
-              <button className={statusFilter === 'all' ? 'active' : ''} onClick={() => setStatusFilter('all')}>Todos <span>{seasonPredictions.length}</span></button>
+          <section className="mc-center" aria-labelledby="mc-center-title">
+            <div className="mc-section-heading"><h2 id="mc-center-title">Seus jogos</h2></div>
+            <div className="mc-status-tabs" role="tablist" aria-label="Categorias de jogos">
+              {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                <button key={key} id={`mc-tab-${key}`} type="button" role="tab" aria-selected={status === key} aria-controls="mc-match-panel" className={status === key ? 'is-active' : ''} onClick={() => setStatus(key)}>
+                  <span>{label}</span><b>{categories[key].length}</b>
+                </button>
+              ))}
             </div>
-
-            <label className="predictions-v2-round-filter">
-              <span>Rodada</span>
-              <select value={roundFilter} onChange={(event) => setRoundFilter(event.target.value)}>
-                <option value="all">Todas as rodadas</option>
-                {rounds.map((round) => <option value={round.id} key={round.id}>{round.name}</option>)}
-              </select>
-            </label>
-          </div>
-
-          {!seasonPredictions.length ? (
-            <EmptyState title="Você ainda não fez nenhum palpite" text="Depois que você salvar o primeiro, ele aparecerá aqui. Jogos sem palpite nunca são exibidos nesta página." />
-          ) : !visibleCount ? (
-            <div className="prediction-filter-empty">Nenhum palpite encontrado com estes filtros.</div>
-          ) : (
-            <main className="predictions-v2-content">
-              {showOpen && openPredictions.length > 0 && (
-                <section className="predictions-v2-section predictions-v2-open-section">
-                  <div className="predictions-v2-section-head">
-                    <div>
-                      <span>Em aberto</span>
-                      <h2>Palpites em andamento</h2>
-                      <p>{openPredictions.length} {openPredictions.length === 1 ? 'palpite aguardando resultado' : 'palpites aguardando resultado'}</p>
-                    </div>
-                  </div>
-
-                  <div className="predictions-v2-open-grid">
-                    {openPredictions.map((prediction) => <OpenPredictionCard prediction={prediction} onSaved={() => loadPredictions(true)} key={prediction.id} />)}
-                  </div>
-                </section>
+            <div id="mc-match-panel" role="tabpanel" aria-labelledby={`mc-tab-${status}`} className="mc-match-panel">
+              {refreshing && <div className="mc-refreshing" role="status">Atualizando sua campanha…</div>}
+              {!rounds.length ? <div className="mc-empty"><strong>Sem partidas nesta temporada</strong><span>Os jogos aparecerão aqui quando forem cadastrados.</span></div> : !visibleMatches.length ? <div className="mc-empty"><strong>{STATUS_EMPTY[status]}</strong><span>{status === 'pending' && 'Quando houver partidas futuras sem palpite, elas aparecerão aqui.'}</span></div> : status === 'results' ? (
+                <div className="mc-history-list">
+                  <div className="mc-history-columns" aria-hidden="true"><span>Confronto · resultado</span><span>Meu palpite</span><span>Desempenho</span></div>
+                  {rounds.filter((round) => (round.matches || []).some(hasResult)).sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0)).map((round) => <ResultRound key={round.id} round={round} predictionByMatch={predictionByMatch} />)}
+                </div>
+              ) : (
+                <div className="mc-date-groups">
+                  {groupedMatches.map((group) => <MatchGroup key={group.title} title={group.title} matches={group.matches} predictionByMatch={predictionByMatch} profiles={profiles} userId={user.id} onSaved={savePrediction} />)}
+                </div>
               )}
-
-              {showFinished && finishedGroups.length > 0 && (
-                <section className="predictions-v2-section predictions-v2-history-section">
-                  <div className="predictions-v2-section-head history">
-                    <div>
-                      <span>Histórico</span>
-                      <h2>Histórico por rodada</h2>
-                      <p>Acompanhe os resultados e veja quanto você pontuou.</p>
-                    </div>
-                    <small>{finishedPredictions.length} finalizados</small>
-                  </div>
-
-                  <div className="predictions-v2-round-list">
-                    {finishedGroups.map(({ round, items }) => {
-                      const key = round?.id || 'sem-rodada'
-                      const isExpanded = expanded.has(key)
-                      const ordered = [...items].sort((a, b) => new Date(a.matches?.kickoff_at) - new Date(b.matches?.kickoff_at))
-                      const scores = ordered.map((item) => calculatePoints(item, item.matches))
-                      const points = scores.reduce((sum, value) => sum + value, 0)
-                      const exact = ordered.filter((item) => isExactPrediction(item, item.matches)).length
-                      const winners = ordered.filter((item) => didPickWinner(item, item.matches)).length
-                      const misses = scores.filter((value) => value === 0).length
-                      const title = roundTitle(round)
-
-                      return (
-                        <article className={`predictions-v2-round ${isExpanded ? 'expanded' : ''}`} key={key}>
-                          <button className="predictions-v2-round-head" onClick={() => toggleRound(key)} aria-expanded={isExpanded}>
-                            <span className="predictions-v2-round-number">{String(round?.sort_order || '').padStart(2, '0')}</span>
-                            <div className="predictions-v2-round-title">
-                              <strong>{title.stage ? `${title.stage} · Rodada ${title.detail}` : `Rodada ${title.detail}`}</strong>
-                              <span>{points} pts <i>·</i> {exact} {exact === 1 ? 'exato' : 'exatos'} <i>·</i> {winners} {winners === 1 ? 'vencedor' : 'vencedores'} <i>·</i> {misses} {misses === 1 ? 'erro' : 'erros'}</span>
-                            </div>
-                            <span className="predictions-v2-round-chevron">{isExpanded ? '⌃' : '⌄'}</span>
-                          </button>
-
-                          {isExpanded && (
-                            <div className="predictions-v2-round-body">
-                              <div className="predictions-v2-history-labels" aria-hidden="true">
-                                <span>Data</span>
-                                <span>Confronto</span>
-                                <span>Seu palpite</span>
-                                <span>Desempenho</span>
-                              </div>
-
-                              {ordered.map((prediction) => {
-                                const match = prediction.matches
-                                const score = calculatePoints(prediction, match)
-                                const feedback = feedbackFor(score)
-                                const date = shortDate(match.kickoff_at)
-                                return (
-                                  <div className={`predictions-v2-history-row tone-${feedback.className}`} key={prediction.id}>
-                                    <div className="predictions-v2-history-date">
-                                      <strong>{date.day}</strong>
-                                      <span>{date.time}</span>
-                                    </div>
-
-                                    <div className="predictions-v2-history-match">
-                                      <div className="predictions-v2-history-team home"><TeamCrest team={match.home_team} size="small" /><span>{match.home_team}</span></div>
-                                      <strong>{scoreText(match.home_score, match.away_score)}</strong>
-                                      <div className="predictions-v2-history-team away"><span>{match.away_team}</span><TeamCrest team={match.away_team} size="small" /></div>
-                                    </div>
-
-                                    <div className="predictions-v2-history-pick">
-                                      <small>Seu palpite</small>
-                                      <strong>{scoreText(prediction.home_score, prediction.away_score)}</strong>
-                                    </div>
-
-                                    <div className={`predictions-v2-history-feedback ${feedback.className}`}>
-                                      <span>{feedback.label}</span>
-                                      <strong>{score > 0 ? '+' : ''}{score} {score === 1 ? 'pt' : 'pts'}</strong>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </article>
-                      )
-                    })}
-                  </div>
-                </section>
-              )}
-            </main>
-          )}
+            </div>
+          </section>
         </>
       )}
     </div>
