@@ -19,8 +19,8 @@
 .mc-error { margin: 0 0 18px; }
 
 /* Compact, single-surface campaign summary; the six metrics share one rhythm. */
-.mc-campaign.round-explorer-summary { display: grid; grid-template-columns: minmax(0, 3.2fr) minmax(190px, 1fr); align-items: stretch; gap: 0; margin-bottom: 24px; padding: 8px 10px; border-color: rgba(127, 148, 205, .16); border-radius: 15px; background: linear-gradient(110deg, rgba(13, 20, 47, .9), rgba(7, 12, 29, .84)); }
-.mc-campaign-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: center; }
+.mc-campaign.round-explorer-summary { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(220px, 1fr); align-items: stretch; gap: 0; margin-bottom: 24px; padding: 8px 10px; border-color: rgba(127, 148, 205, .16); border-radius: 15px; background: linear-gradient(110deg, rgba(13, 20, 47, .9), rgba(7, 12, 29, .84)); }
+.mc-campaign-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; }
 .mc-campaign-metrics > div { display: grid; justify-items: center; gap: 4px; min-width: 0; padding: 0 8px; border-left: 1px solid rgba(174, 190, 232, .13); text-align: center; }
 .mc-campaign-metrics > div:first-child { border-left: 0; }
 .mc-campaign-metrics strong { color: #f5f6ff; font-size: 19px; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -70,9 +70,9 @@
 .mc-match-meta time { color: #edf0ff; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mc-match-contest { display: grid; min-width: 0; grid-area: contest; grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr); align-items: center; gap: 10px; }
 .mc-match-team { display: flex; min-width: 0; align-items: center; gap: 8px; }
-.mc-match-team--home { flex-direction: row-reverse; justify-content: flex-start; text-align: right; }
-.mc-match-team--away { flex-direction: row-reverse; justify-content: flex-start; text-align: left; }
-.mc-match-team strong { min-width: 0; overflow: hidden; color: #ecf0ff; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.mc-match-team--home { justify-content: flex-end; text-align: right; }
+.mc-match-team--away { justify-content: flex-start; text-align: left; }
+.mc-match-team strong { display: -webkit-box; min-width: 0; max-width: calc(100% - 38px); overflow: hidden; color: #ecf0ff; font-size: 13px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .mc-match-team .team-crest { width: 30px; height: 30px; flex: 0 0 30px; }
 .mc-match-score { display: grid; justify-items: center; gap: 2px; }
 .mc-match-score small { color: #9ba9cb; font-size: 9px; font-weight: 800; letter-spacing: .09em; white-space: nowrap; }
@@ -158,7 +158,7 @@ body:has(.my-campaign-page),.app-shell.topbar-shell.my-predictions-shell { backg
 
 @media (max-width: 1100px) and (min-width: 761px) {
   .page-wrap.my-campaign-page { padding-inline: 22px; }
-  .mc-campaign.round-explorer-summary { grid-template-columns: minmax(0, 3fr) minmax(170px, 1fr); }
+  .mc-campaign.round-explorer-summary { grid-template-columns: minmax(0, 2.1fr) minmax(210px, 1fr); }
   .mc-campaign-metrics > div { padding-inline: 4px; }
   .mc-campaign-metrics strong { font-size: 17px; }
   .mc-campaign-metrics span { font-size: 8px; }
@@ -220,9 +220,10 @@ body:has(.my-campaign-page),.app-shell.topbar-shell.my-predictions-shell { backg
   .mc-match-contest { grid-template-columns: minmax(0, 1fr) 82px minmax(0, 1fr); gap: 4px; }
   .mc-match-team { flex-direction: column; justify-content: center; gap: 4px; text-align: center; }
   .mc-match-team--home { flex-direction: column; }
-  .mc-match-team strong { display: -webkit-box; width: 100%; font-size: 10px; line-height: 1.2; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .mc-match-team strong { width: 100%; max-width: 100%; font-size: 10px; line-height: 1.2; }
   .mc-match-team .team-crest { width: 28px; height: 28px; flex-basis: 28px; }
   .mc-match-score strong { font-size: 19px; }
+  .mc-match-team--home .team-crest { order: -1; }
   .mc-match-personal { justify-items: end; text-align: right; }
   .mc-match-personal strong { font-size: 10px; }
   .mc-match-personal.is-result { justify-items: start; text-align: left; }

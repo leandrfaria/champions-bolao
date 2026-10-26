@@ -418,7 +418,6 @@ export default function MyPredictionsPage() {
               <div><strong>{stats.exact}</strong><span>Placares exatos</span></div>
               <div><strong>{stats.outcomes}</strong><span>Vencedores</span></div>
               <div><strong>{stats.rate}%</strong><span>Taxa de acerto</span></div>
-              <div className="mc-summary-primary"><strong>{stats.rank ? `${stats.rank}º` : '—'}{stats.participants ? `/${stats.participants}` : ''}</strong><span>Posição</span></div>
             </div>
             <div className="mc-campaign-evolution">
               <strong>Evolução por rodada</strong>

@@ -20,9 +20,9 @@ function kickoff(value) {
 export function CampaignContest({ match, scoreValue, scoreLabel, official = false }) {
   return (
     <div className="mc-match-contest" aria-label={`${match.home_team} ${official ? `${match.home_score} a ${match.away_score}` : 'contra'} ${match.away_team}`}>
-      <div className="mc-match-team mc-match-team--home"><TeamCrest team={match.home_team} size="small" /><strong title={match.home_team}>{match.home_team}</strong></div>
+      <div className="mc-match-team mc-match-team--home"><strong title={match.home_team}>{match.home_team}</strong><TeamCrest team={match.home_team} size="small" /></div>
       <div className={`mc-match-score${official ? ' is-official' : ''}`}><small>{scoreLabel}</small><strong>{scoreValue}</strong></div>
-      <div className="mc-match-team mc-match-team--away"><strong title={match.away_team}>{match.away_team}</strong><TeamCrest team={match.away_team} size="small" /></div>
+      <div className="mc-match-team mc-match-team--away"><TeamCrest team={match.away_team} size="small" /><strong title={match.away_team}>{match.away_team}</strong></div>
     </div>
   )
 }
