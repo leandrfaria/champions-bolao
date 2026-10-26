@@ -1,0 +1,68 @@
+.accessible-select {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.accessible-select:focus-within,
+.accessible-select:has(.accessible-select-listbox) { z-index: 30; }
+
+.accessible-select-trigger {
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: #f2f4ff;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.accessible-select-trigger > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.accessible-select-trigger:hover { color: #fff; }
+.accessible-select-trigger svg { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: #aab8d7; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; transition: transform .16s ease, stroke .16s ease; }
+.accessible-select:has(.accessible-select-listbox) .accessible-select-trigger svg { transform: rotate(180deg); stroke: #c4b1ff; }
+.accessible-select-trigger:focus-visible { outline: 2px solid #bbaaff; outline-offset: 4px; }
+
+.accessible-select-listbox {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 7px);
+  right: -8px;
+  left: -8px;
+  max-height: var(--accessible-select-max-height, min(280px, 55vh));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  border: 1px solid rgba(146, 162, 210, .24);
+  border-radius: 12px;
+  background: #0c1429;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .48), inset 0 1px rgba(255, 255, 255, .035);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(157, 142, 209, .45) transparent;
+}
+
+.accessible-select-listbox.opens-up { top: auto; bottom: calc(100% + 7px); }
+.accessible-select-option { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 8px; color: #c3cce0; font-size: 12px; font-weight: 630; cursor: pointer; }
+.accessible-select-option.is-active { color: #f7f4ff; background: rgba(134, 107, 215, .14); }
+.accessible-select-option.is-selected { color: #d9cdff; }
+.accessible-select-check { color: #c0aaff; font-size: 13px; }
+
+@media (max-width: 760px) {
+  .accessible-select-trigger { min-height: 26px; font-size: 11px; }
+  .accessible-select-listbox { right: -5px; left: -5px; max-height: min(260px, 45vh); }
+  .accessible-select-option { min-height: 42px; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accessible-select-trigger svg { transition: none; }
+}

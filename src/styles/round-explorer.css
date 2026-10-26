@@ -1,17 +1,23 @@
 .page-wrap.season-rounds-page.round-explorer-page {
   max-width: 1440px;
-  padding: 28px 36px 72px;
+  padding: 28px 36px 36px;
   background: transparent;
 }
 
-.page-wrap.season-rounds-page.round-explorer-page::before {
-  background:
-    radial-gradient(ellipse at 15% 0%, rgba(67, 104, 185, .20), transparent 52%),
-    radial-gradient(ellipse at 90% 8%, rgba(74, 94, 158, .12), transparent 48%),
-    linear-gradient(180deg, rgba(15, 26, 52, .42), rgba(10, 18, 37, .16) 52%, rgba(8, 7, 19, .02));
+.page-wrap.season-rounds-page.round-explorer-page::before { content: none; }
+
+/* The shared overflow-x:hidden rule creates vertical scroll containers on html,
+   body and #root. Keep the browser viewport as the only scroller on this route. */
+html:has(.rounds-explorer-shell),
+body:has(.rounds-explorer-shell),
+#root:has(.rounds-explorer-shell) {
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .round-explorer-header {
+  position: relative;
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,7 +45,7 @@
 }
 
 .round-explorer-season-select,
-.round-explorer-filters label {
+.round-explorer-filter {
   display: grid;
   gap: 5px;
   min-width: 210px;
@@ -48,30 +54,25 @@
   border-radius: 12px;
   background: rgba(8, 13, 32, .78);
 }
+.round-explorer-season-select:focus-within,
+.round-explorer-filter:focus-within { border-color: rgba(169, 145, 239, .48); box-shadow: 0 0 0 2px rgba(135, 108, 212, .1); }
+@media (hover: hover) and (pointer: fine) {
+  .round-explorer-season-select:hover,
+  .round-explorer-filter:hover { border-color: rgba(142, 157, 208, .36); }
+}
 
 .round-explorer-season-select > span,
-.round-explorer-filters label > span {
+.round-explorer-filter > span {
   color: #8d9bbd;
   font-size: 10px;
   font-weight: 700;
 }
 
-.round-explorer-season-select select,
-.round-explorer-filters select {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  color: #f5f6ff;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.round-explorer-season-select option,
-.round-explorer-filters option { color: #101222; }
+.round-explorer-season-select .accessible-select-trigger { font-size: 13px; }
 
 .round-explorer-controls {
+  position: relative;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -111,7 +112,7 @@
 }
 
 .round-explorer-filters { display: flex; gap: 9px; }
-.round-explorer-filters label { min-width: 155px; padding-block: 6px; }
+.round-explorer-filter { min-width: 155px; padding-block: 6px; }
 
 .round-explorer-summary {
   display: grid;
@@ -197,8 +198,11 @@
 .round-explorer-day h3 { margin: 0; padding: 10px 2px 7px; color: #aebcdd; font-size: 11px; font-weight: 850; letter-spacing: .12em; }
 .round-explorer-match-list { overflow: hidden; border: 1px solid rgba(126, 147, 201, .14); border-radius: 12px; background: rgba(5, 10, 25, .55); }
 .round-explorer-match + .round-explorer-match { border-top: 1px solid rgba(126, 147, 201, .13); }
-.round-explorer-match-main { display: grid; gap: 5px; padding: 7px 14px 9px; transition: background .16s ease; }
+.round-explorer-match-main { display: grid; gap: 5px; padding: 7px 14px 9px; border-radius: 10px; transition: background .16s ease; }
 .round-explorer-match.is-expanded .round-explorer-match-main { background: rgba(110, 128, 190, .055); }
+@media (hover: hover) and (pointer: fine) {
+  .round-explorer-match-main:hover { background: rgba(116, 133, 187, .055); }
+}
 .round-explorer-match-meta { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .round-explorer-match-meta time { color: #b9c5df; font-size: 11px; font-variant-numeric: tabular-nums; }
 .round-explorer-match-status { display: inline-flex; align-items: center; gap: 6px; color: #98a7c2; font-size: 9px; font-weight: 750; }
@@ -208,7 +212,6 @@
 .round-explorer-match-status.open { color: #b8a5ff; }
 .round-explorer-match-line { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto 42px; align-items: center; gap: 9px; }
 .round-explorer-match-toggle { grid-column: 1; width: 100%; min-width: 0; min-height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr) minmax(138px, .62fr); align-items: center; gap: 14px; padding: 2px 4px; border: 0; border-radius: 9px; color: inherit; background: transparent; text-align: left; cursor: pointer; }
-.round-explorer-match-toggle:hover { background: rgba(116, 133, 187, .07); }
 .round-explorer-match-toggle:focus-visible { outline: 2px solid #bbaaff; outline-offset: -2px; }
 .round-explorer-team { display: flex; min-width: 0; align-items: center; gap: 10px; }
 .round-explorer-team.home { justify-content: flex-end; }
@@ -230,7 +233,6 @@
 .round-explorer-match-points.winner { color: #f0c766; }
 .round-explorer-match-points.miss { color: #ef8fa3; }
 .round-explorer-match-expand { grid-column: 3; width: 42px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; color: inherit; background: transparent; cursor: pointer; }
-.round-explorer-match-expand:hover { background: rgba(116, 133, 187, .1); }
 .round-explorer-match-expand:focus-visible { outline: 2px solid #bbaaff; outline-offset: -2px; }
 .round-explorer-bet-action { min-width: 76px; min-height: 34px; padding: 0 11px; border: 1px solid rgba(170, 146, 255, .24); border-radius: 9px; color: #d2c4ff; background: rgba(105, 81, 206, .09); font-size: 11px; font-weight: 780; white-space: nowrap; cursor: pointer; }
 .round-explorer-bet-action:hover { border-color: rgba(183, 164, 255, .45); background: rgba(105, 81, 206, .17); }
@@ -244,7 +246,7 @@
 .round-explorer-details-heading span,
 .round-explorer-details-heading small { color: #8c9ab8; font-size: 9px; }
 .round-explorer-participants { display: grid; }
-.round-explorer-player-row { min-height: 48px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(145px, .7fr) 54px; align-items: center; gap: 18px; border-top: 1px solid rgba(137, 155, 204, .1); }
+.round-explorer-player-row { min-height: 48px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(145px, .7fr) 54px; align-items: center; gap: 18px; padding-inline: 10px; border-top: 1px solid rgba(137, 155, 204, .1); border-radius: 9px; }
 .round-explorer-player-person { min-width: 0; display: flex; align-items: center; gap: 10px; }
 .round-explorer-player-row .avatar.small { width: 34px; height: 34px; flex: 0 0 34px; }
 .round-explorer-player-name { min-width: 0; display: flex; align-items: center; gap: 7px; overflow: hidden; color: #e1e7f5; font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
@@ -255,7 +257,7 @@
 .round-explorer-player-points.exact { color: #56dba8; }
 .round-explorer-player-points.winner { color: #efc45f; }
 .round-explorer-player-points.miss { color: #ef8fa3; }
-.round-explorer-player-row.is-mine { background: linear-gradient(90deg, rgba(119, 91, 228, .08), transparent 86%); }
+.round-explorer-player-row.is-mine { margin-block: 3px; border: 1px solid rgba(151, 126, 236, .2); background: linear-gradient(100deg, rgba(109, 83, 187, .16), rgba(16, 22, 43, .3)); box-shadow: inset 2px 0 rgba(174, 148, 255, .42); }
 .round-explorer-match:not(.is-live):not(.is-finished) .round-explorer-player-row { grid-template-columns: minmax(0, 1fr) minmax(145px, .7fr); }
 
 @media (max-width: 1100px) and (min-width: 761px) {
@@ -274,13 +276,12 @@
   .round-explorer-heading h1 { margin-top: 2px; font-size: 29px; }
   .round-explorer-season-select { min-width: 0; width: min(57vw, 240px); padding: 7px 9px; border-radius: 10px; }
   .round-explorer-season-select > span { font-size: 9px; }
-  .round-explorer-season-select select { font-size: 11px; }
+  .round-explorer-season-select .accessible-select-trigger { font-size: 11px; }
   .round-explorer-controls { display: grid; gap: 9px; margin: 12px 0 10px; }
   .round-explorer-mode { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .round-explorer-mode button { min-height: 44px; font-size: 12px; }
   .round-explorer-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-  .round-explorer-filters label { min-width: 0; padding: 6px 9px; }
-  .round-explorer-filters select { font-size: 11px; }
+  .round-explorer-filter { min-width: 0; padding: 6px 9px; }
   .round-explorer-summary { grid-template-columns: 1fr; gap: 10px; padding: 12px; border-radius: 13px; }
   .round-explorer-summary-title { font-size: 11px; }
   .round-explorer-summary-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }

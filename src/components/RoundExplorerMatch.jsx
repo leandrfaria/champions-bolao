@@ -35,7 +35,7 @@ function PlayerRow({ profile, prediction, currentUserId, match, started, finishe
   const ownPick = isMine ? prediction : null
   const pickText = prediction ? score(prediction.home_score, prediction.away_score) : null
   const points = prediction && finished ? calculatePoints(prediction, match) : null
-  const participantStatus = started ? (pickText || 'Sem palpite') : (ownPick ? `Seu palpite: ${pickText}` : (isMine ? 'Sem palpite' : hasPredicted ? 'Enviado' : 'Pendente'))
+  const participantStatus = started ? (pickText || 'Sem palpite') : (ownPick ? pickText : (isMine ? 'Sem palpite' : hasPredicted ? 'Enviado' : 'Pendente'))
 
   return (
     <div className={`round-explorer-player-row${isMine ? ' is-mine' : ''}`}>

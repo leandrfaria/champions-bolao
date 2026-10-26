@@ -2,20 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import Loading from '../components/Loading'
 import NavIcon from '../components/NavIcon'
+import AccessibleSelect from '../components/AccessibleSelect'
 import RoundExplorerMatch from '../components/RoundExplorerMatch'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
 import '../styles/round-explorer.css'
 
-const stageFilters = [
-  { key: 'all', label: 'Todas as fases' },
-  { key: 'league', label: 'Fase de liga / grupos' },
-  { key: 'r16', label: 'Oitavas' },
-  { key: 'quarters', label: 'Quartas' },
-  { key: 'semis', label: 'Semifinal' },
-  { key: 'final', label: 'Final' },
-]
+function seasonLabel(season) {
+  if (!season) return 'Champions League'
+  return season.name || 'Champions League'
+}
 
 function stageKey(stage = '') {
   const value = String(stage).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
@@ -24,11 +21,6 @@ function stageKey(stage = '') {
   if (value.includes('quart')) return 'quarters'
   if (value.includes('final')) return 'final'
   return 'league'
-}
-
-function seasonLabel(season) {
-  if (!season) return 'Champions League'
-  return season.name || 'Champions League'
 }
 
 function roundDates(round) {
@@ -68,6 +60,14 @@ function roundDisplayName(round) {
   if (!detail) detail = `Rodada ${round?.sort_order || ''}`.trim()
   if (/^\d+\s+de\s+\d+$/i.test(detail)) detail = `Rodada ${detail}`
   return stage ? `${stage} · ${detail}` : detail
+}
+
+function roundFilterLabel(round) {
+  const display = roundDisplayName(round)
+  const stage = String(round?.stage || '').trim()
+  return stage && display.toLocaleLowerCase().startsWith(`${stage.toLocaleLowerCase()} ·`)
+    ? display.slice(stage.length + 3).trim()
+    : display
 }
 
 function RoundChevron({ expanded }) {
@@ -310,9 +310,20 @@ export default function RoundsPage() {
   const currentRound = useMemo(() => rounds.find((round) => !round.closed_at) || null, [rounds])
 
   const filteredRounds = useMemo(() => {
-    const list = rounds.filter((round) => filter === 'all' || stageKey(round.stage) === filter)
+    const list = rounds.filter((round) => filter === 'all' || round.id === filter)
     return [...list].sort((a, b) => roundOrder === 'asc' ? a.sort_order - b.sort_order : b.sort_order - a.sort_order)
   }, [rounds, filter, roundOrder])
+
+  const roundFilterOptions = useMemo(() => [
+    { value: 'all', label: 'Todas as rodadas' },
+    ...[...rounds]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((round) => ({ value: round.id, label: roundFilterLabel(round) })),
+  ], [rounds])
+
+  useEffect(() => {
+    if (filter !== 'all' && !rounds.some((round) => round.id === filter)) setFilter('all')
+  }, [filter, rounds])
 
   useEffect(() => {
     if (expandedRoundId && !filteredRounds.some((round) => round.id === expandedRoundId)) {
@@ -349,10 +360,12 @@ export default function RoundsPage() {
   }
 
   function handleSeasonChange(nextSeasonId) {
+    if (nextSeasonId === seasonId) return
     setSeasonLoading(true)
     setRounds([])
     setPredictions([])
     setPresence([])
+    setFilter('all')
     setExpandedRoundId('')
     setExpandedMatchIds(new Set())
     setSeasonId(nextSeasonId)
@@ -388,12 +401,15 @@ export default function RoundsPage() {
           <h1>Rodadas</h1>
         </div>
         {seasons.length > 0 && (
-          <label className="round-explorer-season-select">
+          <div className="round-explorer-season-select">
             <span>Temporada</span>
-            <select value={seasonId} onChange={(event) => handleSeasonChange(event.target.value)}>
-              {seasons.map((item) => <option value={item.id} key={item.id}>{item.name}{item.is_active ? ' · atual' : ''}</option>)}
-            </select>
-          </label>
+            <AccessibleSelect
+              value={seasonId}
+              ariaLabel="Selecionar temporada"
+              onChange={handleSeasonChange}
+              options={seasons.map((item) => ({ value: item.id, label: `${item.name}${item.is_active ? ' · atual' : ''}` }))}
+            />
+          </div>
         )}
       </header>
 
@@ -417,19 +433,27 @@ export default function RoundsPage() {
               </button>
             </div>
             <div className="round-explorer-filters">
-              <label>
-                <span>Fase</span>
-                <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filtrar por fase">
-                  {stageFilters.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}
-                </select>
-              </label>
-              <label>
+              <div className="round-explorer-filter">
+                <span>Rodada</span>
+                <AccessibleSelect
+                  value={filter}
+                  onChange={setFilter}
+                  ariaLabel="Filtrar por rodada"
+                  options={roundFilterOptions}
+                />
+              </div>
+              <div className="round-explorer-filter">
                 <span>Ordem</span>
-                <select value={roundOrder} onChange={(event) => setRoundOrder(event.target.value)} aria-label="Ordenar rodadas">
-                  <option value="desc">Mais recentes</option>
-                  <option value="asc">Mais antigas</option>
-                </select>
-              </label>
+                <AccessibleSelect
+                  value={roundOrder}
+                  onChange={setRoundOrder}
+                  ariaLabel="Ordenar rodadas"
+                  options={[
+                    { value: 'desc', label: 'Mais recentes' },
+                    { value: 'asc', label: 'Mais antigas' },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
@@ -547,7 +571,7 @@ export default function RoundsPage() {
                 })}
               </div>
             ) : (
-              <EmptyState title="Nenhuma rodada nesta fase" text="Altere o filtro de fase para consultar outras rodadas da temporada." />
+              <EmptyState title="Nenhuma rodada encontrada" text="Altere o filtro para consultar outras rodadas da temporada." />
             )}
           </section>
         </>
