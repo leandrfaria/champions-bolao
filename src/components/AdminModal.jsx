@@ -9,7 +9,7 @@ export default function AdminModal({ title, eyebrow, children, onClose, wide = f
 
   const modalContent = (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }}>
-      <section className={`admin-modal ${wide ? 'admin-modal-wide' : ''}`.trim()} role="dialog" aria-modal="true" aria-label={title}>
+      <section className={`admin-modal admin-modal-v2 ${wide ? 'admin-modal-wide' : ''}`.trim()} role="dialog" aria-modal="true" aria-label={title}>
         <header className="admin-modal-header">
           <div>
             {eyebrow && <span className="eyebrow">{eyebrow}</span>}

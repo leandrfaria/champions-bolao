@@ -9,6 +9,7 @@ import TeamCrest from '../components/TeamCrest'
 import TeamPicker from '../components/TeamPicker'
 import TrophyIcon from '../components/TrophyIcon'
 import UserAvatar, { clearAvatarCache } from '../components/UserAvatar'
+import '../styles/admin-console.css'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { formatDateTime, hasResult, isLocked, localDateTimeValue } from '../lib/utils'
@@ -18,6 +19,8 @@ const TABS = [
   ['rounds', 'Rodadas e jogos'],
   ['results', 'Resultados'],
   ['participants', 'Participantes'],
+  ['seasons', 'Temporadas'],
+  ['maintenance', 'Manutenção'],
 ]
 
 const emptySeason = { name: 'Champions League 2026/27' }
@@ -129,6 +132,7 @@ function AdminStatus({ tone, children }) {
 
 function Icon({ type }) {
   const paths = {
+    overview: <><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></>,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></>,
     match: <><circle cx="12" cy="12" r="8"/><path d="m9 8 3-2 3 2 1 4-4 3-4-3zM12 15v5M8 12 4 15M16 12l4 3"/></>,
     result: <><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
@@ -137,6 +141,8 @@ function Icon({ type }) {
     plus: <><path d="M12 5v14M5 12h14"/></>,
     edit: <><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></>,
     dots: <><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></>,
+    seasons: <><path d="M4 5h16M4 12h16M4 19h16"/><circle cx="8" cy="5" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="19" r="2"/></>,
+    maintenance: <><path d="M14 6a5 5 0 0 0-6.8 6.8L3 17l4 4 4.2-4.2A5 5 0 0 0 18 10l-3 3-4-4z"/></>,
   }
   return <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[type] || paths.calendar}</g></svg>
 }
@@ -154,8 +160,9 @@ export default function AdminPage() {
   const [participants, setParticipants] = useState([])
   const [presence, setPresence] = useState([])
   const [selectedSeasonId, setSelectedSeasonId] = useState('')
-  const [selectedRoundId, setSelectedRoundId] = useState('')
+  const [selectedRoundId, setSelectedRoundId] = useState(searchParams.get('round') || '')
   const [resultFilter, setResultFilter] = useState('pending')
+  const [resultRoundId, setResultRoundId] = useState('')
   const [resultForms, setResultForms] = useState({})
   const [seasonDialog, setSeasonDialog] = useState(null)
   const [roundDialog, setRoundDialog] = useState(null)
@@ -253,6 +260,10 @@ export default function AdminPage() {
     setSelectedRoundId(operational?.id || seasonRounds[0].id)
   }, [selectedSeasonId, seasonRounds, selectedRoundId])
 
+  useEffect(() => {
+    if (resultRoundId && !seasonRounds.some((round) => round.id === resultRoundId)) setResultRoundId('')
+  }, [seasonRounds, resultRoundId])
+
   const selectedRound = seasonRounds.find((round) => round.id === selectedRoundId) || null
   const selectedRoundMatches = selectedRound ? (matchesByRound.get(selectedRound.id) || []) : []
   const currentRound = seasonRounds.find((round) => !round.closed_at) || seasonRounds.at(-1) || null
@@ -263,18 +274,13 @@ export default function AdminPage() {
   const predictionsPossible = participants.length * currentRoundMatches.length
   const pendingResults = seasonMatches.filter((match) => isLocked(match) && !hasResult(match))
   const finalizedResults = seasonMatches.filter(hasResult).sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
-  const openCurrentMatches = currentRoundMatches.filter((match) => !isLocked(match) && !hasResult(match))
-  const openIds = new Set(openCurrentMatches.map((match) => match.id))
-  const openSent = presence.filter((item) => openIds.has(item.match_id) && item.has_predicted).length
-  const openPossible = participants.length * openCurrentMatches.length
-  const missingPredictions = Math.max(0, openPossible - openSent)
-
+  const visiblePendingResults = resultRoundId ? pendingResults.filter((match) => match.round_id === resultRoundId) : pendingResults
+  const visibleFinalizedResults = resultRoundId ? finalizedResults.filter((match) => match.round_id === resultRoundId) : finalizedResults
   const recentRounds = [...seasonRounds].sort((a, b) => b.sort_order - a.sort_order).slice(0, 8)
   const attention = []
   if (pendingResults.length) attention.push({ type: 'result', title: `${pendingResults.length} ${pendingResults.length === 1 ? 'partida aguarda' : 'partidas aguardam'} resultado`, text: 'Registre os placares finais para atualizar a classificação.', action: 'Registrar resultados', tab: 'results' })
   const emptyRoundTarget = seasonRounds.find((round) => !round.closed_at && (matchesByRound.get(round.id) || []).length === 0)
   if (emptyRoundTarget) attention.push({ type: 'round', title: `${emptyRoundTarget.name} ainda não possui jogos`, text: 'Adicione as partidas para liberar os palpites da rodada.', action: `Gerenciar ${emptyRoundTarget.name}`, tab: 'rounds', roundId: emptyRoundTarget.id })
-  if (missingPredictions > 0 && openCurrentMatches.length) attention.push({ type: 'prediction', title: `${missingPredictions} ${missingPredictions === 1 ? 'palpite ainda não foi enviado' : 'palpites ainda não foram enviados'}`, text: `Considerando os ${openCurrentMatches.length} jogos ainda abertos da ${currentRound?.name || 'rodada atual'}.`, action: 'Ver rodada', tab: 'rounds', roundId: currentRound?.id })
   const closeReady = seasonRounds.find((round) => !round.closed_at && (matchesByRound.get(round.id) || []).length > 0 && (matchesByRound.get(round.id) || []).every(hasResult))
   if (closeReady) attention.push({ type: 'round', title: `${closeReady.name} está pronta para encerrar`, text: 'Todos os resultados já foram registrados.', action: 'Encerrar rodada', tab: 'rounds', roundId: closeReady.id })
 
@@ -291,8 +297,20 @@ export default function AdminPage() {
   }
 
   function goTab(nextTab, roundId) {
-    setSearchParams({ tab: nextTab })
-    if (roundId) setSelectedRoundId(roundId)
+    const params = new URLSearchParams(searchParams)
+    params.set('tab', nextTab)
+    if (roundId) {
+      setSelectedRoundId(roundId)
+      params.set('round', roundId)
+    }
+    setSearchParams(params)
+  }
+
+  function selectRound(roundId) {
+    setSelectedRoundId(roundId)
+    const params = new URLSearchParams(searchParams)
+    params.set('round', roundId)
+    setSearchParams(params)
   }
 
   function openSeasonCreate() {
@@ -658,45 +676,36 @@ export default function AdminPage() {
     }
   }
 
-  const tabActions = tab === 'overview'
-    ? <><button className="admin-quiet-button admin-reset-roulette" type="button" onClick={askResetRoulette}>Redefinir roleta</button><button className="admin-danger-link admin-clear-activities" type="button" onClick={askClearActivities}>Limpar atividades</button><button className="admin-quiet-button" type="button" onClick={openSeasonCreate}><Icon type="plus" /> Nova temporada</button></>
-    : tab === 'rounds'
+  const tabActions = tab === 'rounds'
       ? <><button className="admin-quiet-button" type="button" onClick={openRoundCreate} disabled={!selectedSeasonId}><Icon type="plus" /> Nova rodada</button><button className="primary-button admin-header-primary" type="button" onClick={() => openMatchCreate()} disabled={!selectedRound}><Icon type="plus" /> Adicionar jogo</button></>
       : null
 
   return (
-    <div className="page-wrap admin-workspace sports-surface">
-      <header className="admin-mobile-header">
-        <div>
-          <span className="eyebrow">Área administrativa</span>
-          <h1>Administração</h1>
-          <p>{activeSeason?.name || 'Nenhuma temporada ativa'}</p>
-        </div>
-        <details className="admin-mobile-actions-menu">
-          <summary aria-label="Mais ações administrativas"><Icon type="dots" /></summary>
-          <div>
-            <button type="button" onClick={openSeasonCreate}><Icon type="plus" /> Nova temporada</button>
-            <button type="button" onClick={askResetRoulette}>Redefinir participantes da roleta</button>
-            <button className="danger" type="button" onClick={askClearActivities}>Limpar atividades</button>
-          </div>
-        </details>
-      </header>
-
+    <div className="page-wrap admin-workspace admin-console sports-surface">
       <PageHeader
         eyebrow="Área administrativa"
         title="Administração"
-        description="Gerencie a competição, rodadas, jogos e participantes."
+        description="Central de operação da competição."
         actions={tabActions}
       />
 
-      <nav className="admin-tabs" aria-label="Seções da administração">
-        {TABS.map(([value, label]) => (
-          <button key={value} className={tab === value ? 'active' : ''} type="button" onClick={() => goTab(value)}>
-            <span className="admin-tab-label-desktop">{label}</span>
-            <span className="admin-tab-label-mobile">{value === 'rounds' ? 'Rodadas' : label}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="admin-console-mobile-nav">
+        <label htmlFor="admin-section-select">Seção administrativa</label>
+        <select id="admin-section-select" value={tab} onChange={(event) => goTab(event.target.value)}>
+          {TABS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
+
+      <div className="admin-console-layout">
+        <nav className="admin-console-nav" aria-label="Seções da administração">
+          <span className="admin-console-nav-label">OPERAÇÃO</span>
+          {TABS.map(([value, label]) => (
+            <button key={value} className={tab === value ? 'active' : ''} type="button" onClick={() => goTab(value)} aria-current={tab === value ? 'page' : undefined}>
+              <Icon type={value} /><span>{label}</span><i aria-hidden="true">›</i>
+            </button>
+          ))}
+        </nav>
+        <main className="admin-console-main">
 
       {(message || error) && <div className={error ? 'form-error admin-flash' : 'form-success admin-flash'}>{error || message}</div>}
 
@@ -704,159 +713,60 @@ export default function AdminPage() {
         <div className="admin-overview">
           {!activeSeason ? (
             <section className="admin-empty admin-empty-main">
-              <TrophyIcon size={42} />
-              <h2>Nenhuma temporada ativa</h2>
-              <p>Crie a primeira temporada para começar a organizar rodadas e partidas.</p>
-              <button className="primary-button" type="button" onClick={openSeasonCreate}>Criar temporada</button>
+              <TrophyIcon size={42} /><h2>Nenhuma temporada ativa</h2>
+              <p>Crie uma temporada para começar a organizar a competição.</p>
+              <button className="primary-button" type="button" onClick={() => goTab('seasons')}>Abrir temporadas</button>
             </section>
-          ) : (
-            <>
-              <section className="admin-overview-summary">
-                <div className="admin-mobile-overview-round">
-                  <div>
-                    <span>Rodada atual</span>
-                    <strong>{currentRound?.name || 'Nenhuma rodada'}</strong>
-                    <small>{currentRound?.stage || 'Crie uma rodada para começar'}</small>
-                  </div>
-                  {currentRound && (() => { const state = ROUND_STATE[roundState(currentRound, currentRoundMatches)]; return <AdminStatus tone={state.tone}>{state.label}</AdminStatus> })()}
-                </div>
-                <div className="admin-mobile-overview-metrics">
-                  <div><strong>{currentRoundMatches.length}</strong><span>{currentRoundMatches.length === 1 ? 'Jogo' : 'Jogos'}</span></div>
-                  <div><strong>{predictionsPossible ? `${predictionsSent}/${predictionsPossible}` : '—'}</strong><span>Palpites</span></div>
-                  <div><strong>{pendingResults.length}</strong><span>Resultados pendentes</span></div>
-                  <div><strong>{participants.length}</strong><span>Participantes</span></div>
-                </div>
+          ) : <>
+            <section className="admin-ops-summary" aria-label="Resumo da competição">
+              <div className="admin-ops-season"><TrophyIcon size={24}/><div><span>Temporada ativa</span><strong>{activeSeason.name}</strong><small>{currentRound?.name || 'Sem rodada atual'}{currentRound?.stage ? ` · ${currentRound.stage}` : ''}</small><small>Estado: {currentRound ? ROUND_STATE[roundState(currentRound, currentRoundMatches)].label : 'sem rodada'}</small></div><AdminStatus tone="finished">ATIVA</AdminStatus></div>
+              <div className="admin-ops-metrics">
+                <div><span>Partidas na rodada</span><strong>{currentRoundMatches.length}</strong></div>
+                <div><span>Palpites enviados</span><strong>{predictionsPossible ? `${predictionsSent}/${predictionsPossible}` : '—'}</strong></div>
+                <div><span>Participantes</span><strong>{participants.length}</strong></div>
+              </div>
+            </section>
 
-                <div className="admin-overview-season">
-                  <div className="admin-season-icon"><TrophyIcon size={24} /></div>
-                  <div>
-                    <span>Temporada ativa</span>
-                    <h2>{activeSeason.name}</h2>
-                    <small>{currentRound ? `${currentRound.name} · ${currentRound.stage}` : 'Nenhuma rodada em andamento'}</small>
-                  </div>
-                  <AdminStatus tone="finished">ATIVA</AdminStatus>
-                </div>
-
-                <div className="admin-overview-core-metrics">
-                  <div>
-                    <span>Rodada atual</span>
-                    <strong>{currentRound?.name || '—'}</strong>
-                    <small>{currentRoundMatches.length ? `${currentRoundMatches.length} ${currentRoundMatches.length === 1 ? 'jogo' : 'jogos'}` : 'Sem jogos'}</small>
-                  </div>
-                  <div>
-                    <span>Palpites enviados</span>
-                    <strong>{predictionsPossible ? `${predictionsSent}/${predictionsPossible}` : '—'}</strong>
-                    <small>{predictionsPossible ? 'na rodada atual' : 'sem rodada ativa'}</small>
-                  </div>
-                  <div>
-                    <span>Aguardando resultado</span>
-                    <strong>{pendingResults.length}</strong>
-                    <small>{pendingResults.length ? 'ação necessária' : 'nenhum pendente'}</small>
-                  </div>
-                  <div>
-                    <span>Participantes</span>
-                    <strong>{participants.length}</strong>
-                    <small>cadastrados</small>
-                  </div>
-                </div>
-
-                <div className="admin-overview-season-actions">
-                  {seasons.length > 1 && (
-                    <details className="admin-season-switcher">
-                      <summary>Temporadas</summary>
-                      <div>
-                        {seasons.map((season) => (
-                          <div key={season.id}>
-                            <button type="button" onClick={() => { setSelectedSeasonId(season.id); if (!season.is_active) activateSeason(season.id) }}>
-                              <span>{season.name}</span><small>{season.is_active ? 'Ativa' : 'Tornar ativa'}</small>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                  <details className="admin-context-menu">
-                    <summary aria-label="Opções da temporada"><Icon type="dots" /></summary>
-                    <div>
-                      <button type="button" onClick={() => openSeasonEdit(activeSeason)}>Editar temporada</button>
-                      <button className="danger" type="button" onClick={() => askDeleteSeason(activeSeason)}>Excluir temporada</button>
-                    </div>
-                  </details>
-                </div>
+            <div className="admin-ops-grid">
+              <section className="admin-ops-card">
+                <div className="admin-section-title"><div><span className="eyebrow">Fila operacional</span><h2>Operações pendentes</h2></div><b className="admin-ops-count">{attention.filter((item) => item.type !== 'prediction').length}</b></div>
+                {attention.filter((item) => item.type !== 'prediction').length ? <div className="admin-ops-pending-list">
+                  {attention.filter((item) => item.type !== 'prediction').slice(0, 4).map((item, index) => <div className={`admin-ops-pending ${item.type}`} key={`${item.title}-${index}`}><span className="attention-dot"/><div><strong>{item.title}</strong><small>{item.text}</small></div><button type="button" onClick={() => { goTab(item.tab, item.roundId); if (item.action === 'Encerrar rodada') window.setTimeout(() => askCloseRound(closeReady), 0) }}>{item.action} <span aria-hidden="true">→</span></button></div>)}
+                </div> : <p className="admin-ops-clear">✓ Nenhuma operação pendente</p>}
               </section>
 
-              <section className="admin-overview-commandbar" aria-label="Ações rápidas">
-                <div><span className="eyebrow">Ações rápidas</span><p>O que você precisa operar agora?</p></div>
-                <div className="admin-command-actions">
-                  <button type="button" onClick={() => goTab('rounds', currentRound?.id)}><Icon type="calendar" /><span>Gerenciar rodada</span></button>
-                  <button type="button" onClick={() => { goTab('rounds', currentRound?.id); window.setTimeout(() => openMatchCreate(currentRound?.id), 0) }}><Icon type="plus" /><span>Adicionar jogo</span></button>
-                  <button type="button" onClick={() => goTab('results')}><Icon type="result" /><span>Registrar resultados</span>{pendingResults.length > 0 && <b>{pendingResults.length}</b>}</button>
-                  <button type="button" onClick={askResetRoulette}><Icon type="users" /><span>Redefinir roleta</span></button>
-                </div>
+              <section className="admin-ops-card admin-ops-shortcuts">
+                <div className="admin-section-title"><div><span className="eyebrow">Acesso rápido</span><h2>Começar uma tarefa</h2></div></div>
+                <button type="button" onClick={() => goTab('rounds', currentRound?.id)}><Icon type="calendar"/><span><strong>Gerenciar rodada atual</strong><small>{currentRound?.name || 'Selecionar rodada'}</small></span><i>→</i></button>
+                <button type="button" onClick={() => { goTab('rounds', currentRound?.id); window.setTimeout(() => openMatchCreate(currentRound?.id), 0) }} disabled={!currentRound}><Icon type="plus"/><span><strong>Adicionar jogo</strong><small>À rodada atual</small></span><i>→</i></button>
+                <button type="button" onClick={() => goTab('results')}><Icon type="result"/><span><strong>Registrar resultados</strong><small>{pendingResults.length ? `${pendingResults.length} aguardando` : 'Central de apuração'}</small></span><i>→</i></button>
               </section>
+            </div>
 
-              <section className="admin-attention-panel admin-attention-panel-wide">
-                <div className="admin-section-title"><div><span className="eyebrow">Operação</span><h2>Precisa da sua atenção</h2></div><span className="admin-title-icon"><Icon type="alert" /></span></div>
-                {attention.length ? (
-                  <div className="admin-attention-list">
-                    {attention.slice(0, 3).map((item, index) => (
-                      <div className={`admin-attention-item ${item.type}`} key={`${item.title}-${index}`}>
-                        <span className="attention-dot" />
-                        <div><strong>{item.title}</strong><p>{item.text}</p></div>
-                        <button type="button" onClick={() => {
-                          goTab(item.tab, item.roundId)
-                          if (item.action === 'Encerrar rodada') window.setTimeout(() => askCloseRound(closeReady), 0)
-                        }}>{item.action}</button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="admin-all-good"><span>✓</span><div><strong>Tudo certo por enquanto</strong><p>Não há nenhuma ação administrativa pendente.</p></div></div>
-                )}
-              </section>
-
-              <section className="admin-recent-rounds">
-                <div className="admin-section-title"><div><span className="eyebrow">Temporada</span><h2>Rodadas recentes</h2></div><button className="text-button" type="button" onClick={() => goTab('rounds')}>Gerenciar todas →</button></div>
-                {recentRounds.length ? (
-                  <div className="admin-round-table">
-                    <div className="admin-round-table-head"><span>Rodada</span><span>Período</span><span>Fase</span><span>Jogos</span><span>Status</span><span /></div>
-                    {recentRounds.map((round) => {
-                      const list = matchesByRound.get(round.id) || []
-                      const state = ROUND_STATE[roundState(round, list)]
-                      return (
-                        <div className="admin-round-table-row" key={round.id}>
-                          <strong>{String(round.sort_order).padStart(2, '0')} · {round.name}</strong>
-                          <span>{formatRoundPeriod(list)}</span>
-                          <span>{round.stage}</span>
-                          <span>{list.length}</span>
-                          <span><AdminStatus tone={state.tone}>{state.label}</AdminStatus></span>
-                          <button type="button" onClick={() => goTab('rounds', round.id)}>Gerenciar →</button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : <div className="admin-empty"><h3>Nenhuma rodada cadastrada</h3><p>Crie a primeira rodada para começar a organizar a temporada.</p><button className="secondary-button" type="button" onClick={() => { setSelectedSeasonId(activeSeason.id); goTab('rounds'); window.setTimeout(openRoundCreate, 0) }}>Criar rodada</button></div>}
-              </section>
-            </>
-          )}
+            <section className="admin-ops-recent">
+              <div className="admin-section-title"><div><span className="eyebrow">Temporada</span><h2>Rodadas recentes</h2></div><button className="text-button" type="button" onClick={() => goTab('rounds')}>Ver todas →</button></div>
+              {recentRounds.length ? <div className="admin-ops-round-list">{recentRounds.slice(0, 5).map((round) => { const list = matchesByRound.get(round.id) || []; const state = ROUND_STATE[roundState(round, list)]; return <button type="button" key={round.id} onClick={() => goTab('rounds', round.id)}><span className="admin-ops-round-number">{String(round.sort_order).padStart(2, '0')}</span><span className="admin-ops-round-name"><strong>{round.name}</strong><small>{round.stage} · {formatRoundPeriod(list)} · {list.length} {list.length === 1 ? 'jogo' : 'jogos'}</small></span><AdminStatus tone={state.tone}>{state.label}</AdminStatus><i>→</i></button>})}</div> : <div className="admin-empty"><h3>Nenhuma rodada cadastrada</h3><button className="secondary-button" type="button" onClick={() => goTab('rounds')}>Criar rodada</button></div>}
+            </section>
+          </>}
         </div>
       )}
-
       {tab === 'rounds' && (
         <div className="admin-rounds-workspace">
           {!seasons.length ? (
             <div className="admin-empty admin-empty-main"><h2>Nenhuma temporada</h2><p>Crie uma temporada antes de cadastrar rodadas e jogos.</p><button className="primary-button" type="button" onClick={openSeasonCreate}>Nova temporada</button></div>
           ) : (
             <>
-              <section className="admin-workspace-toolbar">
+          <section className="admin-workspace-toolbar">
                 <label><span>Temporada</span><select value={selectedSeasonId} onChange={(event) => setSelectedSeasonId(event.target.value)}>{seasons.map((season) => <option value={season.id} key={season.id}>{season.name}{season.is_active ? ' · ativa' : ''}</option>)}</select></label>
                 {selectedSeason?.is_active && <AdminStatus tone="finished">ATIVA</AdminStatus>}
-                <div className="admin-round-chips" aria-label="Selecionar rodada">
-                  {seasonRounds.map((round) => <button key={round.id} className={round.id === selectedRoundId ? 'active' : ''} type="button" onClick={() => setSelectedRoundId(round.id)}>{String(round.sort_order).padStart(2, '0')}</button>)}
-                  <button className="add" type="button" onClick={openRoundCreate} aria-label="Nova rodada">+</button>
-                </div>
               </section>
 
+              <div className="admin-rounds-content">
+                <aside className="admin-round-list-panel" aria-label="Rodadas da temporada">
+                  <div className="admin-round-list-heading"><div><span className="eyebrow">Temporada</span><h2>Rodadas</h2></div><button type="button" onClick={openRoundCreate} disabled={!selectedSeasonId} aria-label="Criar rodada">+</button></div>
+                  {seasonRounds.length ? seasonRounds.map((round) => { const list = matchesByRound.get(round.id) || []; const state = ROUND_STATE[roundState(round, list)]; return <button type="button" className={`admin-round-list-item${round.id === selectedRoundId ? ' is-selected' : ''}`} key={round.id} onClick={() => selectRound(round.id)} aria-current={round.id === selectedRoundId ? 'true' : undefined}><span className="admin-round-list-number">{String(round.sort_order).padStart(2, '0')}</span><span><strong>{round.name}</strong><small>{list.length} {list.length === 1 ? 'partida' : 'partidas'}</small></span><AdminStatus tone={state.tone}>{state.label}</AdminStatus></button>}) : <p className="admin-round-list-empty">Nenhuma rodada nesta temporada.</p>}
+                </aside>
+                <div className="admin-round-detail-pane">
               {!selectedRound ? (
                 <div className="admin-empty admin-empty-main"><h2>Nenhuma rodada cadastrada</h2><p>Crie a primeira rodada desta temporada para adicionar os jogos.</p><button className="primary-button" type="button" onClick={openRoundCreate}>Criar rodada</button></div>
               ) : (
@@ -909,6 +819,8 @@ export default function AdminPage() {
                   )}
                 </>
               )}
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -918,6 +830,7 @@ export default function AdminPage() {
         <div className="admin-results-workspace">
           <section className="admin-workspace-toolbar results-toolbar">
             <label><span>Temporada</span><select value={selectedSeasonId} onChange={(event) => setSelectedSeasonId(event.target.value)}>{seasons.map((season) => <option value={season.id} key={season.id}>{season.name}{season.is_active ? ' · ativa' : ''}</option>)}</select></label>
+            <label className="admin-result-round-filter"><span>Rodada</span><select value={resultRoundId} onChange={(event) => setResultRoundId(event.target.value)}><option value="">Todas as rodadas</option>{seasonRounds.map((round) => <option value={round.id} key={round.id}>{round.name}</option>)}</select></label>
             <div className="admin-segmented"><button type="button" className={resultFilter === 'pending' ? 'active' : ''} onClick={() => setResultFilter('pending')}>Aguardando resultado <b>{pendingResults.length}</b></button><button type="button" className={resultFilter === 'finished' ? 'active' : ''} onClick={() => setResultFilter('finished')}>Finalizados <b>{finalizedResults.length}</b></button></div>
           </section>
 
@@ -932,9 +845,9 @@ export default function AdminPage() {
           </section>
 
           {resultFilter === 'pending' ? (
-            pendingResults.length ? (
+            visiblePendingResults.length ? (
               <div className="admin-result-list">
-                {pendingResults.map((match) => {
+                {visiblePendingResults.map((match) => {
                   const values = resultForms[match.id] || { home_score: '', away_score: '' }
                   return (
                     <article className="admin-result-row" key={match.id}>
@@ -950,9 +863,9 @@ export default function AdminPage() {
               </div>
             ) : <div className="admin-empty"><span className="admin-empty-check">✓</span><h3>Nenhum resultado pendente</h3><p>Todos os jogos que já começaram possuem resultado registrado.</p></div>
           ) : (
-            finalizedResults.length ? (
+            visibleFinalizedResults.length ? (
               <div className="admin-result-list finalized">
-                {finalizedResults.map((match) => (
+                {visibleFinalizedResults.map((match) => (
                   <article className="admin-result-row" key={match.id}>
                     <div className="admin-result-meta"><span>{formatDateTime(match.kickoff_at)}</span><small>{match.rounds?.name}</small></div>
                     <div className="admin-result-team home"><TeamCrest team={match.home_team} size="medium" /><strong>{match.home_team}</strong></div>
@@ -978,10 +891,9 @@ export default function AdminPage() {
                 <div className="admin-participant-row" key={participant.id}>
                   <div className="admin-participant-person"><UserAvatar profile={participant} size="medium" /><div><strong>{participant.display_name}</strong><small className="admin-participant-label-desktop">{participant.id === currentProfile?.id ? 'Você' : 'Participante'}</small>{participant.id === currentProfile?.id && <small className="admin-participant-label-mobile">Você</small>}</div></div>
                   <span>{participant.role === 'admin' ? 'Administrador · jogador' : 'Jogador'}</span>
-                  <span>{participant.avatar_path ? 'Foto cadastrada' : 'Usando iniciais'}</span>
+                <span>{!participant.avatar_path ? 'Sem foto' : null}</span>
                   <div className="admin-participant-actions">
-                    <button className="secondary-button compact" type="button" onClick={() => openAvatar(participant)}>{participant.avatar_path ? 'Alterar foto' : 'Adicionar foto'}</button>
-                    {participant.id !== currentProfile?.id && <button className="admin-participant-delete" type="button" onClick={() => askDeleteParticipant(participant)}>Excluir</button>}
+                    <details className="admin-participant-menu"><summary aria-label={`Ações para ${participant.display_name}`}><Icon type="dots" /></summary><div><button type="button" onClick={() => openAvatar(participant)}>Gerenciar foto</button>{participant.id !== currentProfile?.id && <button className="danger" type="button" onClick={() => askDeleteParticipant(participant)}>Excluir participante</button>}</div></details>
                   </div>
                 </div>
               ))}
@@ -990,9 +902,23 @@ export default function AdminPage() {
         </div>
       )}
 
+      {tab === 'seasons' && (
+        <section className="admin-seasons-workspace">
+          <div className="admin-section-title"><div><span className="eyebrow">Estrutura da competição</span><h2>Temporadas</h2><p>Gerencie temporadas, rodadas e o estado ativo.</p></div><button className="primary-button" type="button" onClick={openSeasonCreate}><Icon type="plus"/> Nova temporada</button></div>
+          {seasons.length ? <div className="admin-season-list">{seasons.map((season) => { const count = rounds.filter((round) => round.season_id === season.id).length; return <article className={`admin-season-item${season.is_active ? ' is-active' : ''}`} key={season.id}><div className="admin-season-item-icon"><TrophyIcon size={22}/></div><div className="admin-season-item-copy"><div><h3>{season.name}</h3><AdminStatus tone={season.is_active ? 'finished' : 'muted'}>{season.is_active ? 'ATIVA' : 'INATIVA'}</AdminStatus></div><p>{count} {count === 1 ? 'rodada' : 'rodadas'}</p></div><div className="admin-season-item-actions"><button className="secondary-button compact" type="button" onClick={() => { setSelectedSeasonId(season.id); goTab('rounds', rounds.find((round) => round.season_id === season.id)?.id) }}>Gerenciar</button><button className="admin-quiet-button" type="button" onClick={() => openSeasonEdit(season)}>Editar</button>{!season.is_active && <button className="admin-quiet-button" type="button" disabled={busy} onClick={() => activateSeason(season.id)}>Ativar</button>}<details className="admin-participant-menu"><summary aria-label={`Ações perigosas para ${season.name}`}><Icon type="dots"/></summary><div><button className="danger" type="button" onClick={() => askDeleteSeason(season)}>Excluir temporada</button></div></details></div></article>})}</div> : <div className="admin-empty"><h3>Nenhuma temporada cadastrada</h3><button className="primary-button" type="button" onClick={openSeasonCreate}>Criar temporada</button></div>}
+        </section>
+      )}
+
+      {tab === 'maintenance' && (
+        <section className="admin-maintenance-workspace"><div className="admin-section-title"><div><span className="eyebrow">Ações excepcionais</span><h2>Manutenção</h2><p>Operações de impacto elevado, disponíveis apenas com confirmação.</p></div></div><div className="admin-maintenance-list"><article><div><span className="admin-maintenance-icon"><Icon type="users"/></span><div><h3>Redefinir participantes da roleta</h3><p>Devolve à roleta os participantes já sorteados. O histórico de sorteios é mantido.</p></div></div><button className="admin-quiet-button" type="button" onClick={askResetRoulette}>Redefinir roleta</button></article><article className="is-danger"><div><span className="admin-maintenance-icon"><Icon type="alert"/></span><div><h3>Limpar atividades</h3><p>Remove os itens atuais da timeline de atividades. Novos acontecimentos continuarão sendo registrados.</p></div></div><button className="admin-danger-link" type="button" onClick={askClearActivities}>Limpar atividades</button></article></div></section>
+      )}
+
       {tab === 'rounds' && selectedRound && !selectedRound.closed_at && (
         <button className="admin-mobile-context-cta" type="button" onClick={() => openMatchCreate(selectedRound.id)}>+ Adicionar jogo</button>
       )}
+
+        </main>
+      </div>
 
       {seasonDialog && (
         <AdminModal title={seasonDialog.mode === 'edit' ? 'Editar temporada' : 'Nova temporada'} eyebrow="Temporada" onClose={() => setSeasonDialog(null)} footer={<><button className="secondary-button" type="button" onClick={() => setSeasonDialog(null)}>Cancelar</button><button className="primary-button" type="submit" form="season-admin-form" disabled={busy}>{busy ? 'Salvando...' : seasonDialog.mode === 'edit' ? 'Salvar alterações' : 'Criar temporada'}</button></>}>
