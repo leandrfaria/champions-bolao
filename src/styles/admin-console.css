@@ -3,6 +3,12 @@
    creating several nested scrollports. Keep Admin on the document scroller. */
 html:has(.admin-console), body:has(.admin-console), #root:has(.admin-console) { overflow-x: clip; overflow-y: visible; }
 body:has(.admin-console), .app-shell.topbar-shell:has(.admin-console) { background: linear-gradient(180deg, #080e20 0%, #070b18 470px, #070b18 100%); }
+/* The shared 1020px atmosphere is absolutely positioned by layout-redesign.css.
+   On short Admin sections it extended the document past the real content. */
+.app-shell.topbar-shell:has(.admin-console)::before,
+.app-shell.topbar-shell:has(.admin-console)::after { position: fixed; inset-block-start: 0; }
+.app-shell.topbar-shell:has(.admin-console)::before { height: min(1020px, 100vh); }
+.app-shell.topbar-shell:has(.admin-console)::after { width: min(780px, 72vw, 100vh); height: min(780px, 72vw, 100vh); }
 .admin-workspace.admin-console > .page-header { display: flex !important; align-items: end; margin: 0 0 18px; padding: 8px 0 18px; border-bottom: 1px solid rgba(151, 167, 207, .14); }
 .admin-console .page-header h1 { font-size: clamp(29px, 2.5vw, 38px); }
 .admin-console .page-header p { margin-top: 5px; color: #aab5cc; }
@@ -210,6 +216,16 @@ body:has(.admin-console), .app-shell.topbar-shell:has(.admin-console) { backgrou
    after the legacy admin responsive rules in styles.css. */
 .admin-console .admin-game-row { grid-template-columns: 58px minmax(0,1fr) minmax(132px,auto) 62px; }
 .admin-console .admin-rounds-content { display: block; }
+@media (max-width: 760px) {
+  .app-shell.topbar-shell:has(.admin-console)::before { height: min(760px, 100vh); }
+  .app-shell.topbar-shell:has(.admin-console)::after { right: -24vw; width: min(92vw, 100vh); height: min(92vw, 100vh); }
+}
+@supports (height: 100svh) {
+  @media (max-width: 760px) {
+    .app-shell.topbar-shell:has(.admin-console)::before { height: min(760px, 100svh); }
+    .app-shell.topbar-shell:has(.admin-console)::after { width: min(92vw, 100svh); height: min(92vw, 100svh); }
+  }
+}
 @media (max-width: 1000px) {
   .admin-console .admin-workspace-toolbar:not(.results-toolbar) > label { width: min(310px, 42%); }
   .admin-console .admin-game-row { grid-template-columns: 50px minmax(0,1fr) minmax(118px,auto) 56px; }

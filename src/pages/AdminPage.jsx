@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import AdminModal from '../components/AdminModal'
 import Loading from '../components/Loading'
@@ -155,6 +155,13 @@ export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const tab = TABS.some(([value]) => value === tabParam) ? tabParam : 'overview'
+  const previousTab = useRef(tab)
+
+  useLayoutEffect(() => {
+    if (previousTab.current === tab) return
+    previousTab.current = tab
+    window.scrollTo(0, 0)
+  }, [tab])
 
   const [loading, setLoading] = useState(true)
   const [seasons, setSeasons] = useState([])
