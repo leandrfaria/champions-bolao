@@ -3,10 +3,11 @@ import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
 import UserAvatar from '../components/UserAvatar'
 import TrophyIcon from '../components/TrophyIcon'
-import NavIcon from '../components/NavIcon'
+import AccessibleSelect from '../components/AccessibleSelect'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
+import '../styles/leaderboard.css'
 
 function sortStats(a, b) {
   return b.points - a.points || b.exact - a.exact || b.winners - a.winners || a.display_name.localeCompare(b.display_name)
@@ -57,6 +58,37 @@ function buildPlayerStats(profiles, matches, predictions) {
   })
 }
 
+function rankTone(rank) {
+  return rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'neutral'
+}
+
+function RaceCard({ row, index, leader, tieCount, userId, mode }) {
+  const tone = rankTone(row.rank)
+  const isLeader = index === 0
+  const gap = Math.max(0, (leader?.points || 0) - row.points)
+  return (
+    <article className={`standings-v4-race-card tone-${tone}${isLeader ? ' is-leader' : ''}${row.id === userId ? ' is-user' : ''}`}>
+      <div className="standings-v4-race-rank">
+        {isLeader && <TrophyIcon size={15} />}
+        <strong>{row.rank}º</strong>
+      </div>
+      <UserAvatar profile={row} size="podium" />
+      <div className="standings-v4-race-player">
+        <span>{isLeader ? (tieCount > 1 ? 'Liderança compartilhada' : mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : `${row.rank}º lugar`}</span>
+        <div><strong>{row.display_name}</strong>{row.id === userId && <em>Você</em>}</div>
+        <small>{row.exact} {row.exact === 1 ? 'placar exato' : 'placares exatos'} · {row.winners} {row.winners === 1 ? 'vencedor' : 'vencedores'}</small>
+      </div>
+      <div className="standings-v4-race-points"><strong>{row.points}</strong><span>pts</span>
+        {!isLeader && <small>{gap === 0 ? 'A mesma pontuação do líder' : `${gap} ${gap === 1 ? 'ponto' : 'pontos'} atrás`}</small>}
+      </div>
+    </article>
+  )
+}
+
+function SummaryMetric({ label, value, detail }) {
+  return <div className="standings-v4-summary-metric"><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>
+}
+
 export default function LeaderboardPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -71,6 +103,7 @@ export default function LeaderboardPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     async function bootstrap() {
       setLoading(true)
       setError('')
@@ -81,17 +114,19 @@ export default function LeaderboardPage() {
         ])
         if (profilesError) throw profilesError
         if (seasonsError) throw seasonsError
+        if (cancelled) return
         const list = seasonData || []
         setProfiles(profileData || [])
         setSeasons(list)
         setSeasonId(list.find((item) => item.is_active)?.id || list[0]?.id || '')
       } catch (err) {
-        setError(err.message || 'Não foi possível carregar a classificação.')
+        if (!cancelled) setError(err.message || 'Não foi possível carregar a classificação.')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
     bootstrap()
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -99,12 +134,14 @@ export default function LeaderboardPage() {
       setRounds([])
       setPredictions([])
       setRoundId('')
-      return
+      return undefined
     }
     let cancelled = false
     async function loadSeason() {
       setSeasonLoading(true)
       setError('')
+      setRounds([])
+      setPredictions([])
       try {
         const { data: roundData, error: roundError } = await supabase
           .from('rounds')
@@ -142,9 +179,7 @@ export default function LeaderboardPage() {
   const season = seasons.find((item) => item.id === seasonId) || null
   const selectedRound = rounds.find((round) => round.id === roundId) || null
   const allFinishedMatches = useMemo(() => rounds.flatMap((round) => round.matches).filter(hasResult), [rounds])
-
   const seasonRows = useMemo(() => rankStats(buildPlayerStats(profiles, allFinishedMatches, predictions)), [profiles, allFinishedMatches, predictions])
-
   const roundMetrics = useMemo(() => {
     const map = new Map()
     rounds.forEach((round) => {
@@ -159,8 +194,12 @@ export default function LeaderboardPage() {
   const displayRows = mode === 'round' ? (roundMetrics.get(roundId) || []) : seasonRows
   const topThree = displayRows.slice(0, 3)
   const leader = displayRows[0] || null
-  const currentRow = displayRows.find((item) => item.id === user.id) || null
+  const currentRow = displayRows.find((item) => item.id === user?.id) || null
   const selectedRoundFinishedCount = selectedRound?.matches.filter(hasResult).length || 0
+  const leaderTieCount = displayRows.filter((row) => row.rank === 1).length
+  const seasonTitle = season?.name || 'Champions League'
+  const roundOptions = rounds.map((round) => ({ value: round.id, label: round.name }))
+  const seasonOptions = seasons.map((item) => ({ value: item.id, label: `${item.name}${item.is_active ? ' · atual' : ''}` }))
 
   const highlights = useMemo(() => {
     if (!seasonRows.length) return null
@@ -175,54 +214,33 @@ export default function LeaderboardPage() {
         }
       })
     })
-    return { leader: seasonRows[0], exactLeader, winnerLeader, bestRound }
+    return { exactLeader, winnerLeader, bestRound }
   }, [seasonRows, roundMetrics, rounds])
-
-  const titleRaceRows = displayRows.slice(0, 3)
-  const leaderTieCount = displayRows.filter((row) => row.rank === 1).length
-  const seasonTitle = season?.name || 'Champions League'
 
   if (loading) return <Loading label="Carregando classificação..." />
 
   return (
-    <div className="page-wrap standings-v3-page sports-surface">
-      <header className="standings-v3-header">
-        <div className="standings-v3-header-copy">
-          <span className="standings-v3-eyebrow">{seasonTitle.toUpperCase()}</span>
+    <main className="page-wrap standings-v4-page sports-surface">
+      <header className="standings-v4-header">
+        <div className="standings-v4-heading">
+          <span className="standings-v4-eyebrow">{seasonTitle.toUpperCase()}</span>
           <h1>Classificação</h1>
-          <p>Veja quem está liderando a disputa pelo título.</p>
+          <p>Veja quem lidera a disputa pelo título.</p>
         </div>
-
-        {seasons.length > 0 && (
-          <label className="standings-v3-season-select">
-            <span>Temporada</span>
-            <select value={seasonId} onChange={(event) => setSeasonId(event.target.value)} aria-label="Selecionar temporada">
-              {seasons.map((item) => <option value={item.id} key={item.id}>{item.name}{item.is_active ? ' · atual' : ''}</option>)}
-            </select>
-          </label>
-        )}
+        {seasons.length > 0 && <label className="standings-v4-select"><span>Temporada</span><AccessibleSelect value={seasonId} options={seasonOptions} onChange={setSeasonId} ariaLabel="Selecionar temporada" /></label>}
       </header>
 
-      <div className="standings-v3-controls">
-        <div className="standings-v3-tabs" role="tablist" aria-label="Tipo de classificação">
-          <button className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>Geral</button>
-          <button className={mode === 'round' ? 'active' : ''} onClick={() => setMode('round')}>Por rodada</button>
+      <nav className="standings-v4-controls" aria-label="Visão da classificação">
+        <div className="standings-v4-tabs" role="tablist" aria-label="Tipo de classificação">
+          <button type="button" role="tab" aria-selected={mode === 'general'} className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>Geral</button>
+          <button type="button" role="tab" aria-selected={mode === 'round'} className={mode === 'round' ? 'active' : ''} onClick={() => setMode('round')}>Por rodada</button>
         </div>
+        {(mode === 'round' && rounds.length > 0) ? <label className="standings-v4-select round"><span>Rodada</span><AccessibleSelect value={roundId} options={roundOptions} onChange={setRoundId} ariaLabel="Selecionar rodada" /></label> : null}
+      </nav>
 
-        {mode === 'round' && rounds.length > 0 && (
-          <label className="standings-v3-round-select">
-            <span>Rodada</span>
-            <select value={roundId} onChange={(event) => setRoundId(event.target.value)}>
-              {rounds.map((round) => <option value={round.id} key={round.id}>{round.name}</option>)}
-            </select>
-          </label>
-        )}
-      </div>
-
-      {error && <div className="form-error">{error}</div>}
-
+      {error && <div className="form-error" role="alert">{error}</div>}
       {!seasons.length ? (
-        <EmptyState title="Nenhuma temporada" text="Crie uma temporada para começar a disputar a classificação." />
+        <EmptyState title="Nenhuma temporada" text="Crie uma temporada para começar a disputa pela classificação." />
       ) : seasonLoading ? (
         <Loading label="Calculando classificação da temporada..." />
       ) : !profiles.length ? (
@@ -233,115 +251,59 @@ export default function LeaderboardPage() {
         <EmptyState title="Rodada sem pontuação" text="Ainda não há jogos finalizados nesta rodada. O ranking dela aparece assim que um resultado for registrado." />
       ) : (
         <>
-          <section className="standings-v3-race-section">
-            <div className="standings-v3-section-heading">
-              <div>
-                <span>Corrida pelo título</span>
-                <h2>{mode === 'general' ? 'Na frente da temporada' : 'Destaques da rodada'}</h2>
+          {mode === 'general' ? (
+            <section className="standings-v4-overview" aria-label="Resumo da classificação geral">
+              <div className="standings-v4-overview-title"><span>Corrida pelo título</span><strong>Geral da temporada</strong></div>
+              <div className="standings-v4-race-grid">
+                {topThree.map((row, index) => <RaceCard key={row.id} row={row} index={index} leader={leader} tieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
               </div>
-              <p>{mode === 'general' ? 'Os participantes mais próximos da liderança.' : selectedRound?.name}</p>
-            </div>
-
-            <div className={`standings-v3-race-grid count-${titleRaceRows.length}`}>
-              {titleRaceRows.map((row, index) => {
-                const isLeadCard = index === 0
-                const gap = leader ? Math.max(0, leader.points - row.points) : 0
-                const tone = row.rank === 1 ? 'gold' : row.rank === 2 ? 'silver' : row.rank === 3 ? 'bronze' : 'neutral'
-                return (
-                  <article className={`standings-v3-racer ${isLeadCard ? 'is-leader' : 'is-chaser'} tone-${tone} ${row.id === user.id ? 'is-user' : ''}`} key={row.id}>
-                    <div className="standings-v3-racer-position">
-                      {isLeadCard && <TrophyIcon size={16} />}
-                      <strong>{row.rank}º</strong>
-                    </div>
-                    <UserAvatar profile={row} size="podium" />
-                    <div className="standings-v3-racer-copy">
-                      <span>{isLeadCard ? (leaderTieCount > 1 ? 'Liderança compartilhada' : mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : `${row.rank}º lugar`}</span>
-                      <div className="standings-v3-racer-name"><h3>{row.display_name}</h3>{row.id === user.id && <em>VOCÊ</em>}</div>
-                      <small>{row.exact} {row.exact === 1 ? 'exato' : 'exatos'} · {row.winners} {row.winners === 1 ? 'vencedor' : 'vencedores'}</small>
-                    </div>
-                    <div className="standings-v3-racer-score">
-                      <strong>{row.points}</strong>
-                      <span>pts</span>
-                      {!isLeadCard && <small>{gap === 0 ? 'Empatado com o líder' : `${gap} ${gap === 1 ? 'ponto' : 'pontos'} atrás`}</small>}
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          </section>
-
-          {mode === 'general' && highlights && (
-            <section className="standings-v3-highlights">
-              <div className="standings-v3-highlights-title">Destaques da temporada</div>
-              <div className="standings-v3-highlight-item">
-                <span className="standings-v3-highlight-icon">◎</span>
-                <div><small>Mais placares exatos</small><strong>{highlights.exactLeader?.display_name || '—'}</strong><span>{highlights.exactLeader ? `${highlights.exactLeader.exact} ${highlights.exactLeader.exact === 1 ? 'exato' : 'exatos'}` : ''}</span></div>
+              <div className="standings-v4-season-insights">
+                <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} detail={currentRow && leader ? (currentRow.rank === 1 ? 'Na liderança' : `${Math.max(0, leader.points - currentRow.points)} pts do topo`) : 'Na classificação'} />
+                <SummaryMetric label="Participantes" value={seasonRows.length} detail="na temporada" />
+                <SummaryMetric label="Mais exatos" value={highlights?.exactLeader?.display_name || '—'} detail={highlights ? `${highlights.exactLeader.exact} ${highlights.exactLeader.exact === 1 ? 'placar' : 'placares'}` : ''} />
+                <SummaryMetric label="Mais vencedores" value={highlights?.winnerLeader?.display_name || '—'} detail={highlights ? `${highlights.winnerLeader.winners} acertos` : ''} />
+                {highlights?.bestRound && <SummaryMetric label="Melhor rodada" value={highlights.bestRound.display_name} detail={`${highlights.bestRound.points} pts · ${highlights.bestRound.round.name}`} />}
               </div>
-              <div className="standings-v3-highlight-item">
-                <span className="standings-v3-highlight-icon"><NavIcon name="leaderboard" size={18} /></span>
-                <div><small>Melhor rodada</small><strong>{highlights.bestRound?.display_name || '—'}</strong><span>{highlights.bestRound ? `${highlights.bestRound.points} pts · ${highlights.bestRound.round.name}` : ''}</span></div>
+            </section>
+          ) : selectedRound && (
+            <section className="standings-v4-round-overview" aria-label="Resumo da rodada selecionada">
+              <div className="standings-v4-round-title"><div><span>Classificação por rodada</span><h2>{selectedRound.name}</h2><p>{selectedRound.stage || 'Fase da competição'} · {roundDates(selectedRound)}</p></div><span className="standings-v4-round-progress">{selectedRoundFinishedCount}/{selectedRound.matches.length}<small>jogos finalizados</small></span></div>
+              <div className="standings-v4-round-metrics">
+                <SummaryMetric label="Líder da rodada" value={leader?.display_name || '—'} detail={leader ? `${leader.points} pts` : 'Sem pontuação'} />
+                <SummaryMetric label="Seu desempenho" value={currentRow ? `${currentRow.rank}º lugar` : '—'} detail={currentRow ? `${currentRow.points} pts na rodada` : 'Participante'} />
+                <SummaryMetric label="Distância do líder" value={currentRow && leader ? `${Math.max(0, leader.points - currentRow.points)} pts` : '—'} detail={currentRow?.rank === 1 ? 'Você lidera' : 'nesta rodada'} />
               </div>
-              <div className="standings-v3-highlight-item">
-                <span className="standings-v3-highlight-icon"><NavIcon name="podium" size={18} /></span>
-                <div><small>Mais vencedores</small><strong>{highlights.winnerLeader?.display_name || '—'}</strong><span>{highlights.winnerLeader ? `${highlights.winnerLeader.winners} acertos` : ''}</span></div>
+              <div className="standings-v4-round-podium">
+                {topThree.map((row, index) => <RaceCard key={row.id} row={row} index={index} leader={leader} tieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
               </div>
             </section>
           )}
 
-          {mode === 'round' && selectedRound && (
-            <section className="standings-v3-round-context">
-              <div><small>Rodada selecionada</small><strong>{selectedRound.name}</strong><span>{roundDates(selectedRound)} · {selectedRound.stage}</span></div>
-              <div><small>Jogos finalizados</small><strong>{selectedRound.matches.filter(hasResult).length}/{selectedRound.matches.length}</strong></div>
-              <div><small>Sua posição</small><strong>{currentRow ? `${currentRow.rank}º` : '—'}</strong><span>{currentRow ? `${currentRow.points} pts` : ''}</span></div>
-            </section>
-          )}
-
-          <section className="standings-v3-list-section">
-            <div className="standings-v3-list-heading">
-              <div>
-                <span>{mode === 'general' ? 'Classificação geral' : 'Classificação da rodada'}</span>
-                <p>Critérios: pontos, placares exatos e vencedores.</p>
-              </div>
+          <section className="standings-v4-ranking" aria-labelledby="standings-v4-ranking-title">
+            <div className="standings-v4-ranking-heading">
+              <div><span>{mode === 'general' ? 'Temporada completa' : `Rodada · ${selectedRound?.name || ''}`}</span><h2 id="standings-v4-ranking-title">{mode === 'general' ? 'Classificação geral' : 'Ranking da rodada'}</h2></div>
+              <p>{displayRows.length} {displayRows.length === 1 ? 'participante' : 'participantes'}</p>
             </div>
-
-            <div className="standings-v3-table" role="table" aria-label={mode === 'general' ? 'Classificação geral' : 'Classificação da rodada'}>
-              <div className="standings-v3-table-head" role="row">
-                <span>Pos.</span>
-                <span>Jogador</span>
-                <span>Pontos</span>
-                <span>Exatos</span>
-                <span>Vencedores</span>
-              </div>
-
-              <div className="standings-v3-table-body">
+            <div className="standings-v4-table" role="table" aria-label={mode === 'general' ? 'Classificação geral' : `Classificação da rodada ${selectedRound?.name || ''}`}>
+              <div className="standings-v4-table-head" role="row"><span role="columnheader">Posição</span><span role="columnheader">Jogador</span><span role="columnheader">Pontos</span><span role="columnheader">Placares exatos</span><span role="columnheader">Vencedores</span></div>
+              <div className="standings-v4-table-body">
                 {displayRows.map((row) => {
-                  const tone = row.rank === 1 ? 'gold' : row.rank === 2 ? 'silver' : row.rank === 3 ? 'bronze' : 'neutral'
-                  return (
-                    <div className={`standings-v3-row rank-${row.rank} tone-${tone} ${row.id === user.id ? 'is-user' : ''}`} role="row" key={row.id}>
-                      <span className={`standings-v3-rank tone-${tone}`}>{row.rank}</span>
-                      <div className="standings-v3-player">
-                        <UserAvatar profile={row} size="small" />
-                        <div>
-                          <div className="standings-v3-player-name"><strong>{row.display_name}</strong>{row.id === user.id && <em>VOCÊ</em>}</div>
-                          <small>{row.exact} {row.exact === 1 ? 'exato' : 'exatos'} · {row.winners} {row.winners === 1 ? 'vencedor' : 'vencedores'}</small>
-                        </div>
-                      </div>
-                      <div className="standings-v3-points"><strong>{row.points}</strong><span>pts</span></div>
-                      <span className="standings-v3-exact">{row.exact}</span>
-                      <span className="standings-v3-winners">{row.winners}</span>
-                    </div>
-                  )
+                  const tone = rankTone(row.rank)
+                  return <div className={`standings-v4-row tone-${tone}${row.id === user?.id ? ' is-user' : ''}`} role="row" key={row.id}>
+                    <span className={`standings-v4-rank tone-${tone}`} role="cell">{row.rank}<small>º</small></span>
+                    <div className="standings-v4-player" role="cell"><UserAvatar profile={row} size="small" /><div className="standings-v4-player-copy"><strong>{row.display_name}</strong>{row.id === user?.id && <em>Você</em>}</div></div>
+                    <div className="standings-v4-stat points" role="cell"><strong>{row.points}</strong><small>pts</small></div>
+                    <div className="standings-v4-stat" role="cell"><strong>{row.exact}</strong><small>exatos</small></div>
+                    <div className="standings-v4-stat" role="cell"><strong>{row.winners}</strong><small>vencedores</small></div>
+                  </div>
                 })}
               </div>
             </div>
           </section>
 
-          <div className="standings-v3-tiebreak">
-            <span className="standings-v3-info-icon">i</span>
-            <div><strong>Desempate</strong><p>Pontos → Placares exatos → Vencedores acertados. Se todos forem iguais, os participantes permanecem empatados.</p></div>
-          </div>
+          <aside className="standings-v4-tiebreak"><span aria-hidden="true">i</span><p><strong>Critérios de desempate:</strong> pontos → placares exatos → vencedores acertados. Se os critérios forem iguais, os participantes compartilham a posição.</p></aside>
         </>
       )}
-    </div>
+    </main>
   )
 }
