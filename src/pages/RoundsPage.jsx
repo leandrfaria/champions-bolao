@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import Loading from '../components/Loading'
 import NavIcon from '../components/NavIcon'
+import RoundExplorerMatch from '../components/RoundExplorerMatch'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
+import '../styles/round-explorer.css'
 
 const stageFilters = [
   { key: 'all', label: 'Todas as fases' },
@@ -41,8 +42,8 @@ function roundDates(round) {
   const day = (date) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date)
   const month = (date) => new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'America/Sao_Paulo' }).format(date).replace('.', '').toLowerCase()
 
-  if (first.toDateString() === last.toDateString()) return `${day(first)} ${month(first)}`
-  if (first.getMonth() === last.getMonth()) return `${day(first)}–${day(last)} ${month(last)}`
+  if (getMatchDayKey(first) === getMatchDayKey(last)) return `${day(first)} ${month(first)}`
+  if (getMatchDayKey(first).slice(0, 7) === getMatchDayKey(last).slice(0, 7)) return `${day(first)}–${day(last)} ${month(last)}`
   return `${day(first)} ${month(first)} – ${day(last)} ${month(last)}`
 }
 
@@ -55,13 +56,6 @@ function roundDisplayName(round) {
   if (!detail) detail = `Rodada ${round?.sort_order || ''}`.trim()
   if (/^\d+\s+de\s+\d+$/i.test(detail)) detail = `Rodada ${detail}`
   return stage ? `${stage} · ${detail}` : detail
-}
-
-function roundSecondaryName(round) {
-  const full = roundDisplayName(round)
-  const stage = String(round?.stage || '').trim()
-  if (stage && full.toLowerCase().startsWith(stage.toLowerCase())) return full.slice(stage.length).replace(/^[\s·\-–—:]+/, '').trim()
-  return full
 }
 
 function sortStats(a, b) {
@@ -92,6 +86,41 @@ function getRoundStatus(round, currentRound) {
   return { label: 'Em breve', className: 'upcoming' }
 }
 
+function getMatchDayKey(value) {
+  if (!value) return 'undated'
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'America/Sao_Paulo',
+  }).formatToParts(new Date(value))
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+function formatMatchDay(value) {
+  if (!value) return 'DATA NÃO INFORMADA'
+  const date = new Date(value)
+  const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' })
+    .format(date).replace(/-feira$/i, '').toLocaleUpperCase('pt-BR')
+  const dayMonth = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: 'short', timeZone: 'America/Sao_Paulo',
+  }).format(date).replace('.', '').toLocaleUpperCase('pt-BR')
+  return `${weekday} · ${dayMonth}`
+}
+
+function groupMatchesByDay(matches) {
+  const groups = new Map()
+  const orderedMatches = [...matches].sort((a, b) => {
+    if (!a.kickoff_at) return b.kickoff_at ? 1 : 0
+    if (!b.kickoff_at) return -1
+    return new Date(a.kickoff_at) - new Date(b.kickoff_at)
+  })
+  orderedMatches.forEach((match) => {
+    const key = getMatchDayKey(match.kickoff_at)
+    if (!groups.has(key)) groups.set(key, { label: formatMatchDay(match.kickoff_at), matches: [] })
+    groups.get(key).matches.push(match)
+  })
+  return [...groups.values()]
+}
+
 export default function RoundsPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -105,6 +134,8 @@ export default function RoundsPage() {
   const [mode, setMode] = useState('individual')
   const [filter, setFilter] = useState('all')
   const [roundOrder, setRoundOrder] = useState('desc')
+  const [expandedRoundId, setExpandedRoundId] = useState('')
+  const [expandedMatchId, setExpandedMatchId] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -122,6 +153,7 @@ export default function RoundsPage() {
         setSeasons(list)
         setProfiles(profileData || [])
         const initial = list.find((item) => item.is_active) || list[0]
+        setSeasonLoading(Boolean(initial?.id))
         setSeasonId(initial?.id || '')
       } catch (err) {
         setError(err.message)
@@ -162,7 +194,7 @@ export default function RoundsPage() {
         let presenceData = []
         if (ids.length) {
           const [predictionResult, presenceResult] = await Promise.all([
-            supabase.from('predictions').select('*').in('match_id', ids),
+            supabase.from('predictions').select('*, profiles(id, display_name, avatar_path, role)').in('match_id', ids),
             supabase.rpc('get_prediction_presence', { p_match_ids: ids }),
           ])
           if (predictionResult.error) throw predictionResult.error
@@ -198,6 +230,26 @@ export default function RoundsPage() {
     })
     return map
   }, [presence, rounds])
+
+  const predictionsByMatch = useMemo(() => {
+    const map = new Map()
+    predictions.forEach((item) => {
+      const list = map.get(item.match_id) || []
+      list.push(item)
+      map.set(item.match_id, list)
+    })
+    return map
+  }, [predictions])
+
+  const presenceByMatch = useMemo(() => {
+    const map = new Map()
+    presence.forEach((item) => {
+      const list = map.get(item.match_id) || []
+      list.push(item)
+      map.set(item.match_id, list)
+    })
+    return map
+  }, [presence])
 
   const computed = useMemo(() => {
     const roundMetrics = new Map()
@@ -242,6 +294,13 @@ export default function RoundsPage() {
     return [...list].sort((a, b) => roundOrder === 'asc' ? a.sort_order - b.sort_order : b.sort_order - a.sort_order)
   }, [rounds, filter, roundOrder])
 
+  useEffect(() => {
+    if (expandedRoundId && !filteredRounds.some((round) => round.id === expandedRoundId)) {
+      setExpandedRoundId('')
+      setExpandedMatchId('')
+    }
+  }, [expandedRoundId, filteredRounds])
+
   const latestSnapshot = useMemo(() => {
     const lastRelevant = [...rounds].reverse().find((round) => round.closed_at || round.id === currentRound?.id) || rounds.at(-1)
     return lastRelevant ? computed.snapshots.get(lastRelevant.id) : null
@@ -269,30 +328,49 @@ export default function RoundsPage() {
     return { participants, submitted, points }
   }
 
+  function handleSeasonChange(nextSeasonId) {
+    setSeasonLoading(true)
+    setRounds([])
+    setPredictions([])
+    setPresence([])
+    setExpandedRoundId('')
+    setExpandedMatchId('')
+    setSeasonId(nextSeasonId)
+  }
+
+  async function savePrediction(matchId, homeScore, awayScore) {
+    const payload = {
+      match_id: matchId,
+      user_id: user.id,
+      home_score: Number(homeScore),
+      away_score: Number(awayScore),
+    }
+    const { error: saveError } = await supabase.from('predictions').upsert(payload, { onConflict: 'match_id,user_id' })
+    if (saveError) throw saveError
+
+    const ownProfile = profiles.find((profile) => profile.id === user.id)
+    setPredictions((current) => [
+      ...current.filter((item) => !(item.match_id === matchId && item.user_id === user.id)),
+      { ...current.find((item) => item.match_id === matchId && item.user_id === user.id), ...payload, profiles: ownProfile },
+    ])
+    setPresence((current) => current.map((item) => item.match_id === matchId && item.user_id === user.id
+      ? { ...item, has_predicted: true }
+      : item))
+  }
+
   if (loading) return <Loading label="Carregando temporadas..." />
 
-  const currentStats = currentRound ? roundStats(currentRound) : null
-  const currentGeneral = currentRound ? generalRoundStats(currentRound) : null
-  const currentProgress = currentRound
-    ? Math.min(100, mode === 'individual'
-      ? (currentStats.submitted / Math.max(1, currentRound.matches.length)) * 100
-      : (currentGeneral.submitted / Math.max(1, currentRound.matches.length * profiles.length)) * 100)
-    : 0
-
   return (
-    <div className="page-wrap season-rounds-page">
-      <header className="season-rounds-hero">
-        <div className="season-rounds-hero-art" aria-hidden="true" />
-        <div className="season-rounds-heading">
+    <div className="page-wrap season-rounds-page round-explorer-page">
+      <header className="round-explorer-header">
+        <div className="round-explorer-heading">
           <span>{seasonLabel(season)}</span>
           <h1>Rodadas</h1>
-          <p>Acompanhe sua campanha rodada a rodada.</p>
         </div>
-
         {seasons.length > 0 && (
-          <label className="season-rounds-season-select">
+          <label className="round-explorer-season-select">
             <span>Temporada</span>
-            <select value={seasonId} onChange={(event) => setSeasonId(event.target.value)}>
+            <select value={seasonId} onChange={(event) => handleSeasonChange(event.target.value)}>
               {seasons.map((item) => <option value={item.id} key={item.id}>{item.name}{item.is_active ? ' · atual' : ''}</option>)}
             </select>
           </label>
@@ -309,25 +387,24 @@ export default function RoundsPage() {
         <EmptyState title="Nenhuma rodada cadastrada" text="Assim que o administrador criar as rodadas, elas aparecem aqui." />
       ) : (
         <>
-          <div className="season-rounds-toolbar">
-            <div className="season-rounds-mode" role="tablist" aria-label="Modo de visualização">
-              <button className={mode === 'individual' ? 'active' : ''} onClick={() => setMode('individual')}>
-                <NavIcon name="predictions" size={19} /> Individual
+          <div className="round-explorer-controls">
+            <div className="round-explorer-mode" role="group" aria-label="Modo de visualização">
+              <button type="button" aria-pressed={mode === 'individual'} className={mode === 'individual' ? 'active' : ''} onClick={() => setMode('individual')}>
+                <NavIcon name="predictions" size={18} /> Individual
               </button>
-              <button className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>
-                <NavIcon name="leaderboard" size={19} /> Geral
+              <button type="button" aria-pressed={mode === 'general'} className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>
+                <NavIcon name="leaderboard" size={18} /> Geral
               </button>
             </div>
-
-            <div className="season-rounds-filters">
+            <div className="round-explorer-filters">
               <label>
-                <NavIcon name="rounds" size={18} />
+                <span>Fase</span>
                 <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filtrar por fase">
                   {stageFilters.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}
                 </select>
               </label>
               <label>
-                <span className="season-rounds-sort-icon">⇅</span>
+                <span>Ordem</span>
                 <select value={roundOrder} onChange={(event) => setRoundOrder(event.target.value)} aria-label="Ordenar rodadas">
                   <option value="desc">Mais recentes</option>
                   <option value="asc">Mais antigas</option>
@@ -336,100 +413,116 @@ export default function RoundsPage() {
             </div>
           </div>
 
-          <section className={`season-rounds-overview ${currentRound ? '' : 'single'}`.trim()}>
-            {currentRound && (
-              <article className="season-current-round-card">
-                <div className="season-current-round-art" aria-hidden="true" />
-                <span className="season-current-badge">● Agora</span>
-                <div className="season-current-title">
-                  <strong>{String(currentRound.sort_order).padStart(2, '0')}</strong>
-                  <div>
-                    <h2>{roundDisplayName(currentRound)}</h2>
-                    <p>{roundDates(currentRound)} · {currentRound.matches.length} {currentRound.matches.length === 1 ? 'jogo' : 'jogos'} <span>● Em andamento</span></p>
-                  </div>
-                </div>
-
-                {mode === 'individual' ? (
-                  <div className="season-current-metrics">
-                    <div><strong>{currentStats.submitted}/{currentRound.matches.length}</strong><span>palpites enviados</span></div>
-                    <div className="positive"><strong>{currentStats.points}</strong><span>pontos conquistados</span></div>
-                    <div><strong>{currentStats.exact}</strong><span>placares exatos</span></div>
-                  </div>
-                ) : (
-                  <div className="season-current-metrics">
-                    <div><strong>{currentGeneral.participants}</strong><span>participantes</span></div>
-                    <div><strong>{currentGeneral.submitted}</strong><span>palpites enviados</span></div>
-                    <div className="positive"><strong>{currentGeneral.points}</strong><span>pontos distribuídos</span></div>
-                  </div>
-                )}
-
-                <div className="season-current-progress-row">
-                  <div className="season-current-progress"><i style={{ width: `${currentProgress}%` }} /></div>
-                  <b>{Math.round(currentProgress)}%</b>
-                  <Link to={`/rodadas/${currentRound.id}`}>Ver rodada completa <span>→</span></Link>
-                </div>
-              </article>
-            )}
-
-            <article className="season-performance-card">
-              <div className="season-performance-head">
-                <div><NavIcon name="leaderboard" size={24} /><h2>{mode === 'individual' ? 'Sua temporada' : 'Panorama da temporada'}</h2></div>
-                <Link to="/classificacao">Ver classificação geral <span>→</span></Link>
+          <section className="round-explorer-summary" aria-label={mode === 'individual' ? 'Resumo pessoal da temporada' : 'Resumo geral da temporada'}>
+            <div className="round-explorer-summary-title">
+              <NavIcon name={mode === 'individual' ? 'predictions' : 'leaderboard'} size={18} />
+              <span>{mode === 'individual' ? 'Sua campanha' : 'Panorama da temporada'}</span>
+            </div>
+            {mode === 'individual' ? (
+              <div className="round-explorer-summary-metrics">
+                <div><strong>{ownSeason.points}</strong><span>pontos</span></div>
+                <div><strong>{ownSeason.exact}</strong><span>placares exatos</span></div>
+                <div><strong>{ownSeason.winners}</strong><span>desfechos certos</span></div>
+                <div><strong>{placement(ownCurrentPosition)}</strong><span>posição</span></div>
               </div>
-
-              {mode === 'individual' ? (
-                <div className="season-performance-metrics">
-                  <div><NavIcon name="podium" size={22} /><strong>{ownSeason.points}</strong><span>Total de pontos</span></div>
-                  <div><span className="metric-symbol">◎</span><strong>{ownSeason.exact}</strong><span>Placares exatos</span></div>
-                  <div><NavIcon name="leaderboard" size={22} /><strong>{ownSeason.winners}</strong><span>Vencedores</span></div>
-                  <div><span className="metric-symbol">▥</span><strong className="gold">{placement(ownCurrentPosition)}</strong><span>Posição atual</span></div>
-                </div>
-              ) : (
-                <div className="season-performance-metrics">
-                  <div><span className="metric-symbol">▥</span><strong>{seasonTotalPoints}</strong><span>Pontos distribuídos</span></div>
-                  <div><NavIcon name="leaderboard" size={22} /><strong>{profiles.length}</strong><span>Participantes</span></div>
-                  <div><span className="metric-symbol">≈</span><strong>{seasonAveragePoints.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</strong><span>Média por participante</span></div>
-                  <div><NavIcon name="podium" size={22} /><strong className="metric-name">{leader?.display_name || '—'}</strong><span>{leader ? `${leader.points} pts` : 'Maior pontuação'}</span></div>
-                </div>
-              )}
-            </article>
+            ) : (
+              <div className="round-explorer-summary-metrics">
+                <div><strong>{seasonTotalPoints}</strong><span>pontos distribuídos</span></div>
+                <div><strong>{profiles.length}</strong><span>participantes</span></div>
+                <div><strong>{seasonAveragePoints.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</strong><span>média por participante</span></div>
+                <div><strong className="leader-name">{leader?.display_name || '—'}</strong><span>{leader ? `${leader.points} pts · líder` : 'líder'}</span></div>
+              </div>
+            )}
           </section>
 
-          <section className="season-round-history">
-            <div className="season-round-history-head">
-              <div><NavIcon name="activity" size={24} /><div><h2>Histórico da temporada</h2><p>Todas as rodadas da {seasonLabel(season)}.</p></div></div>
+          <section className="round-explorer-history" aria-labelledby="round-explorer-history-title">
+            <div className="round-explorer-history-heading">
+              <div>
+                <span>HISTÓRICO DA COMPETIÇÃO</span>
+                <h2 id="round-explorer-history-title">{seasonLabel(season)}</h2>
+              </div>
+              <span>{filteredRounds.length} {filteredRounds.length === 1 ? 'rodada' : 'rodadas'}</span>
             </div>
 
-            {filteredRounds.length > 0 && (
-              <div className="season-round-list">
+            {filteredRounds.length ? (
+              <div className="round-explorer-list">
                 {filteredRounds.map((round) => {
                   const stats = roundStats(round)
                   const general = generalRoundStats(round)
                   const status = getRoundStatus(round, currentRound)
+                  const expanded = expandedRoundId === round.id
+                  const roundPanelId = `round-explorer-panel-${round.id}`
+                  const groupedMatches = groupMatchesByDay(round.matches)
+                  const pointsVisible = Boolean(round.closed_at || round.id === currentRound?.id)
                   return (
-                    <article className={`season-round-row ${status.className}`} key={round.id}>
-                      <span className="season-round-index">{String(round.sort_order).padStart(2, '0')}</span>
-                      <div className="season-round-name"><strong>{round.stage || round.name}</strong><span>{roundSecondaryName(round)}</span></div>
-                      <div className="season-round-date"><NavIcon name="rounds" size={18} /><span>{roundDates(round)}<small>{round.matches.length} {round.matches.length === 1 ? 'jogo' : 'jogos'}</small></span></div>
-                      {mode === 'individual' ? (
-                        <>
-                          <div className="season-round-stat submitted"><strong>{stats.submitted ? `${stats.submitted}/${round.matches.length}` : '-/-'}</strong><span>palpites</span></div>
-                          <div className="season-round-stat points positive"><strong>{round.closed_at || round.id === currentRound?.id ? stats.points : '-'}</strong><span>pontos</span></div>
-                          <div className="season-round-stat extra"><strong>{round.closed_at || round.id === currentRound?.id ? stats.exact : '-'}</strong><span>exatos</span></div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="season-round-stat submitted"><strong>{general.participants || '-'}</strong><span>participantes</span></div>
-                          <div className="season-round-stat points"><strong>{general.submitted || '-'}</strong><span>palpites</span></div>
-                          <div className="season-round-stat extra positive"><strong>{round.closed_at || round.id === currentRound?.id ? general.points : '-'}</strong><span>pontos</span></div>
-                        </>
-                      )}
-                      <span className={`season-round-status ${status.className}`}>{status.label}</span>
-                      <Link className="season-round-link" to={`/rodadas/${round.id}`}>{round.id === currentRound?.id ? 'Ver rodada completa' : 'Ver detalhes'} <span>→</span></Link>
+                    <article className={`round-explorer-round ${status.className}${expanded ? ' is-expanded' : ''}`} key={round.id}>
+                      <button
+                        type="button"
+                        className="round-explorer-round-toggle"
+                        aria-expanded={expanded}
+                        aria-controls={roundPanelId}
+                        onClick={() => {
+                          const nextRoundId = expanded ? '' : round.id
+                          setExpandedRoundId(nextRoundId)
+                          setExpandedMatchId('')
+                        }}
+                      >
+                        <span className="round-explorer-round-number">{String(round.sort_order).padStart(2, '0')}</span>
+                        <span className="round-explorer-round-copy">
+                          <strong>{roundDisplayName(round)}</strong>
+                          <small>{roundDates(round)} <i>·</i> {round.matches.length} {round.matches.length === 1 ? 'partida' : 'partidas'}</small>
+                        </span>
+                        <span className="round-explorer-round-metrics">
+                          {mode === 'individual' ? (
+                            <>
+                              <span><strong>{stats.submitted}/{round.matches.length}</strong><small>palpites</small></span>
+                              <span><strong>{pointsVisible ? stats.points : '—'}</strong><small>pontos</small></span>
+                              <span className="round-explorer-round-exact"><strong>{pointsVisible ? stats.exact : '—'}</strong><small>exatos</small></span>
+                            </>
+                          ) : (
+                            <>
+                              <span><strong>{general.participants}/{profiles.length}</strong><small>participantes</small></span>
+                              <span><strong>{general.submitted}</strong><small>palpites</small></span>
+                              <span className="round-explorer-round-exact"><strong>{pointsVisible ? general.points : '—'}</strong><small>pontos</small></span>
+                            </>
+                          )}
+                        </span>
+                        <span className={`round-explorer-round-status ${status.className}`}>{status.label}</span>
+                        <span className={`round-explorer-round-chevron${expanded ? ' open' : ''}`} aria-hidden="true">⌄</span>
+                      </button>
+
+                      <div id={roundPanelId} className={`round-explorer-round-panel${expanded ? ' is-open' : ''}`} aria-hidden={!expanded} inert={!expanded}>
+                        <div className="round-explorer-round-panel-inner">
+                          {round.matches.length ? groupedMatches.map((group) => (
+                            <section className="round-explorer-day" key={`${round.id}-${group.label}`} aria-label={group.label}>
+                              <h3>{group.label}</h3>
+                              <div className="round-explorer-match-list">
+                                {group.matches.map((match) => (
+                                  <RoundExplorerMatch
+                                    key={match.id}
+                                    match={match}
+                                    mode={mode}
+                                    ownPrediction={predictionByUserMatch.get(`${user.id}:${match.id}`)}
+                                    predictions={predictionsByMatch.get(match.id) || []}
+                                    presence={presenceByMatch.get(match.id) || []}
+                                    profiles={profiles}
+                                    currentUserId={user.id}
+                                    expanded={expandedMatchId === match.id}
+                                    onToggle={() => setExpandedMatchId((current) => current === match.id ? '' : match.id)}
+                                    onSave={savePrediction}
+                                  />
+                                ))}
+                              </div>
+                            </section>
+                          )) : <p className="round-explorer-empty">Esta rodada ainda não tem partidas cadastradas.</p>}
+                        </div>
+                      </div>
                     </article>
                   )
                 })}
               </div>
+            ) : (
+              <EmptyState title="Nenhuma rodada nesta fase" text="Altere o filtro de fase para consultar outras rodadas da temporada." />
             )}
           </section>
         </>
