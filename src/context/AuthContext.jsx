@@ -3,6 +3,16 @@ import { supabase } from '../lib/supabase'
 import { emailForUsername, normalizeUsername } from '../config/users'
 
 const AuthContext = createContext(null)
+const AUTH_REQUEST_TIMEOUT_MS = 12000
+
+function withTimeout(promise, label) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => reject(new Error(`${label} excedeu o tempo limite.`)), AUTH_REQUEST_TIMEOUT_MS)
+  })
+
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer))
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -20,6 +30,7 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
+      .abortSignal(AbortSignal.timeout(AUTH_REQUEST_TIMEOUT_MS))
 
     if (error) throw error
     setProfile(data)
@@ -29,17 +40,39 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return
-      setSession(data.session)
+    const initializeAuth = async () => {
+      let initialSession = null
       try {
-        if (data.session?.user) await loadProfile(data.session.user.id)
+        const { data, error } = await withTimeout(supabase.auth.getSession(), 'A inicialização da sessão')
+        if (error) throw error
+        if (!mounted) return
+        initialSession = data.session
+        setSession(initialSession)
       } catch (error) {
-        console.error(error)
+        if (mounted) {
+          console.error('Não foi possível inicializar a sessão:', error)
+          setSession(null)
+          setProfile(null)
+        }
+      } finally {
+        if (mounted && !initialSession?.user) setLoading(false)
+      }
+
+      if (!mounted || !initialSession?.user) return
+
+      try {
+        await withTimeout(loadProfile(initialSession.user.id), 'A leitura do perfil')
+      } catch (error) {
+        if (mounted) {
+          console.error('Não foi possível carregar o perfil:', error)
+          setProfile(null)
+        }
       } finally {
         if (mounted) setLoading(false)
       }
-    })
+    }
+
+    initializeAuth()
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!mounted) return
@@ -51,7 +84,7 @@ export function AuthProvider({ children }) {
       }
 
       window.setTimeout(() => {
-        loadProfile(nextSession.user.id)
+        withTimeout(loadProfile(nextSession.user.id), 'A leitura do perfil')
           .catch((error) => console.error(error))
           .finally(() => { if (mounted) setLoading(false) })
       }, 0)

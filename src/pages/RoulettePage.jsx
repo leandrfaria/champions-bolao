@@ -274,7 +274,7 @@ export default function RoulettePage() {
 
             <div className="roulette-ops-metrics" aria-label="Resumo da roleta">
               <span><strong>{available.length}</strong> disponíveis</span>
-              <span><strong>{excluded.length}</strong> sorteados no total</span>
+              <span><strong>{excludedIds.size}</strong> sorteados no total</span>
               <span><strong>{assignedCount}/2</strong> nesta rodada</span>
               <span><strong>{remainingSlots}</strong> vagas restantes</span>
             </div>
