@@ -12,7 +12,6 @@
 .roulette-ops-panel,
 .roulette-round-result,
 .roulette-stage,
-.roulette-pool-section,
 .roulette-history-section {
   border: 1px solid rgba(116, 135, 194, .18);
   border-radius: 16px;
@@ -105,7 +104,7 @@
 .roulette-page .roulette-winner-card { position: relative; min-width: 0; min-height: 112px; display: grid; grid-template-rows: auto 1fr; align-content: stretch; gap: 12px; padding: 13px 14px; overflow: hidden; border: 1px solid rgba(119, 136, 190, .16); border-radius: 12px; background: linear-gradient(145deg, rgba(8, 14, 32, .76), rgba(5, 10, 25, .48)); text-align: left; }
 .roulette-page .roulette-winner-card.has-profile { border-color: rgba(158, 129, 232, .3); background: linear-gradient(115deg, rgba(103, 78, 164, .15), rgba(6, 11, 27, .54) 72%); }
 .roulette-page .roulette-slot-heading { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.roulette-page .roulette-slot-number { position: static; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 0 9px; border: 1px solid rgba(133, 149, 201, .2); border-radius: 7px; color: #a6b2cd; background: rgba(13, 20, 42, .72); font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+.roulette-page .roulette-slot-number { position: static; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: auto; height: auto; min-height: 24px; padding: 0 9px; border: 1px solid rgba(133, 149, 201, .2); border-radius: 7px; color: #a6b2cd; background: rgba(13, 20, 42, .72); font-size: 10px; font-weight: 800; letter-spacing: .02em; line-height: 1; white-space: nowrap; }
 .roulette-page .roulette-winner-card.has-profile .roulette-slot-number { color: #d5c4fb; border-color: rgba(163, 132, 234, .25); background: rgba(120, 87, 191, .13); }
 .roulette-page .roulette-slot-body { min-width: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 11px; }
 .roulette-page .roulette-winner-card .avatar.large { width: 44px; height: 44px; }
@@ -119,24 +118,10 @@
 .roulette-status-note.tone-partial { color: #ccbaff; border-color: rgba(163, 132, 234, .22); }
 .roulette-status-note.tone-complete { color: #83dfbb; border-color: rgba(84, 200, 157, .2); }
 
-.roulette-page .roulette-pool-section,
 .roulette-page .roulette-history-section { margin-top: 14px; padding: 17px 19px; }
 .roulette-page .sports-section-heading { margin-bottom: 12px; }
 .roulette-page .sports-section-heading h2 { margin-top: 3px; font-size: 19px; }
 .roulette-page .sports-section-heading > small { color: #8996b1; font-size: 10px; }
-.roulette-participant-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.roulette-participant-row { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 54px; padding: 7px 9px; border: 1px solid rgba(117, 134, 190, .12); border-radius: 10px; background: rgba(5, 10, 25, .32); }
-.roulette-participant-row.is-selected { border-color: rgba(162, 131, 233, .24); background: rgba(96, 68, 156, .12); }
-.roulette-participant-row .avatar { width: 34px; height: 34px; }
-.roulette-participant-row > strong { min-width: 0; overflow: hidden; color: #e5e9f4; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.roulette-participant-status { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; color: #8793ae; font-size: 9px; white-space: nowrap; }
-.roulette-participant-status i { width: 6px; height: 6px; flex-basis: 6px; }
-.roulette-participant-status.available { color: #77d6ae; }
-.roulette-participant-status.available i { background: #61cda2; }
-.roulette-participant-status.selected { color: #ccbaff; }
-.roulette-participant-status.selected i { background: #ad87ff; }
-.roulette-participant-status.unavailable { color: #9ba5ba; }
-.roulette-participant-status.unavailable i { background: #818ca6; }
 .roulette-empty-pool,
 .roulette-history-empty { padding: 16px; border: 1px dashed rgba(119, 136, 190, .2); border-radius: 10px; color: #98a3ba; font-size: 12px; }
 .roulette-history-list { display: grid; gap: 8px; }
@@ -159,7 +144,6 @@
   .roulette-page { padding-inline: 24px; }
   .roulette-ops-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .roulette-console-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .roulette-participant-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .roulette-history-event { grid-template-columns: 125px minmax(120px, .7fr) minmax(0, 1.3fr); gap: 9px; }
 }
 
@@ -191,13 +175,8 @@
   .roulette-page .roulette-winner-placeholder { width: 40px; height: 40px; }
   .roulette-page .roulette-slot-copy strong { font-size: 12px; }
   .roulette-page .roulette-slot-state { padding: 4px 7px; }
-  .roulette-page .roulette-pool-section,
   .roulette-page .roulette-history-section { margin-top: 10px; padding: 13px; }
   .roulette-page .sports-section-heading h2 { font-size: 17px; }
-  .roulette-participant-list { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-  .roulette-participant-row { min-height: 50px; }
-  .roulette-participant-row > strong { font-size: 12px; }
-  .roulette-participant-status { font-size: 10px; }
   .roulette-history-event { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 10px; }
   .roulette-history-sequence { order: 2; }
   .roulette-history-winners { order: 3; flex-wrap: wrap; gap: 7px; }

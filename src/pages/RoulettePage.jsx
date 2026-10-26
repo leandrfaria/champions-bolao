@@ -107,7 +107,6 @@ export default function RoulettePage() {
   }, [])
 
   const available = useMemo(() => profiles.filter((profile) => !excludedIds.has(profile.id)), [profiles, excludedIds])
-  const excluded = useMemo(() => profiles.filter((profile) => excludedIds.has(profile.id)), [profiles, excludedIds])
   const profileMap = useMemo(() => new Map(profiles.map((profile) => [profile.id, profile])), [profiles])
   const roundMap = useMemo(() => new Map(rounds.map((round) => [round.id, round])), [rounds])
   const selectedRound = roundMap.get(selectedRoundId) || null
@@ -302,7 +301,7 @@ export default function RoulettePage() {
                   return (
                     <div className={`roulette-winner-card ${profile ? 'has-profile' : ''}${isRevealing ? ' is-arriving' : ''}`} key={slot}>
                       <div className="roulette-slot-heading">
-                        <span className="roulette-slot-number">Vaga {slot + 1}</span>
+                        <span className="roulette-slot-number">{slot + 1}ª vaga</span>
                         <span className={`roulette-slot-state ${profile ? 'is-filled' : ''}`}>{profile ? 'Definido' : 'Em aberto'}</span>
                       </div>
                       <div className="roulette-slot-body">
@@ -315,24 +314,6 @@ export default function RoulettePage() {
               </div>
               <p className={`roulette-status-note tone-${status.tone}`}>{status.label} · {status.detail}{selectedRound && remainingSlots > 0 ? ` · ${remainingSlots === 1 ? 'falta 1 participante' : 'faltam 2 participantes'}` : ''}</p>
             </section>
-          </section>
-
-          <section className="roulette-pool-section">
-            <div className="sports-section-heading"><div><span>Elenco</span><h2>Participantes da roleta</h2></div><small>{profiles.length} no total</small></div>
-            {profiles.length ? (
-              <div className="roulette-participant-list">
-                {profiles.map((profile) => {
-                  const isOnRound = roundPlayers.some((player) => player.id === profile.id)
-                  const isUnavailable = excludedIds.has(profile.id)
-                  const state = isOnRound ? 'Nesta rodada' : isUnavailable ? 'Já sorteado' : 'Disponível'
-                  return <div className={`roulette-participant-row ${isOnRound ? 'is-selected' : ''}`} key={profile.id}>
-                    <UserAvatar profile={profile} size="small" />
-                    <strong>{profile.display_name}</strong>
-                    <span className={`roulette-participant-status ${isOnRound ? 'selected' : isUnavailable ? 'unavailable' : 'available'}`}><i />{state}</span>
-                  </div>
-                })}
-              </div>
-            ) : <div className="roulette-empty-pool">Nenhum participante cadastrado.</div>}
           </section>
 
           <section className="roulette-history-section">
