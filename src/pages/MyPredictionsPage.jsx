@@ -2,8 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import Loading from '../components/Loading'
 import EmptyState from '../components/EmptyState'
 import AccessibleSelect from '../components/AccessibleSelect'
-import MyCampaignMatch from '../components/MyCampaignMatch'
-import TeamCrest from '../components/TeamCrest'
+import MyCampaignMatch, { CampaignContest } from '../components/MyCampaignMatch'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction, isLocked } from '../lib/utils'
@@ -92,6 +91,10 @@ function scoreForRound(round, predictionByMatch) {
   }
 }
 
+function pluralCount(value, singular, plural = `${singular}s`) {
+  return `${value} ${value === 1 ? singular : plural}`
+}
+
 function PerformanceChart({ rounds, predictionByMatch }) {
   const data = rounds.map((round) => ({ round, ...scoreForRound(round, predictionByMatch) })).filter((item) => item.settled > 0)
   const max = Math.max(1, ...data.map((item) => item.points))
@@ -139,7 +142,7 @@ function ResultRound({ round, predictionByMatch }) {
       <button type="button" className="mc-history-toggle" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
         <span className="mc-history-round-number">{String(round.sort_order || '—').padStart(2, '0')}</span>
         <span className="mc-history-round-copy"><strong>{shortRound(round)}</strong><small>{round.stage || 'Competição'} · {score.settled}/{score.total} apurados</small></span>
-        <span className="mc-history-round-stats"><b>{score.points} <small>pts</small></b><small>{score.exact} exatos · {score.outcomes} desfechos</small></span>
+        <span className="mc-history-round-stats"><b>{score.points} <small>pts</small></b><small>{pluralCount(score.exact, 'placar exato', 'placares exatos')} · {pluralCount(score.outcomes, 'vencedor', 'vencedores')}</small></span>
         <svg className={expanded ? 'is-open' : ''} aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5" /></svg>
       </button>
       {expanded && (
@@ -151,17 +154,19 @@ function ResultRound({ round, predictionByMatch }) {
             const outcome = prediction && didPickWinner(prediction, match)
             const tone = !prediction ? 'neutral' : exact ? 'exact' : outcome ? 'outcome' : 'miss'
             const resultLabel = !prediction
-              ? 'SEM PALPITE'
+              ? 'Sem palpite'
               : exact
-                ? 'PLACAR EXATO'
+                ? 'Placar Exato'
                 : outcome
-                  ? Number(match.home_score) === Number(match.away_score) ? 'EMPATE' : 'VENCEDOR'
-                  : 'ERROU'
+                  ? Number(match.home_score) === Number(match.away_score) ? 'Empate' : 'Vencedor'
+                  : 'Errou'
+            const matchDate = kickoffLabel(match.kickoff_at)
             return (
               <div className="mc-history-match" key={match.id}>
-                <div className="mc-history-game"><small>{kickoffLabel(match.kickoff_at)}</small><div className="mc-history-teams"><span><TeamCrest team={match.home_team} size="small" /><b>{match.home_team}</b></span><strong>{match.home_score} × {match.away_score}</strong><span><TeamCrest team={match.away_team} size="small" /><b>{match.away_team}</b></span></div></div>
+                <time className="mc-history-date" dateTime={match.kickoff_at || undefined}>{matchDate}</time>
+                <CampaignContest match={match} scoreValue={`${match.home_score} × ${match.away_score}`} scoreLabel="OFICIAL" official />
                 <div className="mc-history-pick"><strong>{prediction ? `${prediction.home_score} × ${prediction.away_score}` : 'Sem palpite'}</strong></div>
-                <div className={`mc-points mc-points--${tone}`}><strong>{prediction ? `+${points}` : '0'}</strong><small>{resultLabel}</small></div>
+                <div className={`mc-points mc-points--${tone}`}><strong>{prediction && points > 0 ? `+${points}` : points}</strong><small>{resultLabel}</small></div>
               </div>
             )
           })}
@@ -310,13 +315,14 @@ export default function MyPredictionsPage() {
       points: scores.reduce((sum, score) => sum + score, 0),
       exact,
       outcomes,
+      sent: ownPredictions.length,
       settled: settledOwn.length,
       correct,
       rate: settledOwn.length ? Math.round(correct / settledOwn.length * 100) : 0,
       rank: standing?.rank || null,
       participants: standings.length,
     }
-  }, [settledOwn, standing?.rank, standings.length])
+  }, [ownPredictions.length, settledOwn, standing?.rank, standings.length])
   const season = seasons.find((item) => item.id === seasonId)
   const seasonEyebrow = season?.name
     ? `CHAMPIONS LEAGUE ${season.name.replace(/^champions league\s*/i, '').trim()}`.trim()
@@ -336,11 +342,12 @@ export default function MyPredictionsPage() {
     const frame = window.requestAnimationFrame(() => {
       const scroller = document.scrollingElement
       if (!scroller) return
-      const maxScrollTop = Math.max(0, scroller.scrollHeight - window.innerHeight)
+      const viewportHeight = scroller.clientHeight || document.documentElement.clientHeight || window.innerHeight
+      const maxScrollTop = Math.max(0, scroller.scrollHeight - viewportHeight)
       if (scroller.scrollTop > maxScrollTop) scroller.scrollTop = maxScrollTop
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [status, seasonId, performanceOpen, rounds])
+  }, [status, seasonId, performanceOpen, rounds, ownPredictions])
 
   async function savePrediction(matchId, homeScore, awayScore) {
     const match = allMatches.find((item) => item.id === matchId)
@@ -369,19 +376,23 @@ export default function MyPredictionsPage() {
 
       {seasons.length === 0 ? <EmptyState title="Nenhuma temporada" text="Ainda não há uma temporada disponível para acompanhar." /> : (
         <>
-          <section className="mc-campaign" aria-label="Resumo da campanha">
-            <div className="mc-campaign-primary">
-              <div className="mc-stat-primary"><span>PONTUAÇÃO</span><strong>{stats.points}<small> pts</small></strong><em>{stats.settled} partidas apuradas</em></div>
-              <div className="mc-stat-primary mc-rank-stat"><span>CLASSIFICAÇÃO</span><strong>{stats.rank ? `${stats.rank}º` : '—'}<small>{stats.participants ? ` / ${stats.participants}` : ''}</small></strong><em>{stats.rank ? 'posição oficial da temporada' : 'sem posição apurada'}</em></div>
+          <section className="round-explorer-summary mc-campaign" aria-label="Resumo da campanha">
+            <div className="round-explorer-summary-metrics mc-campaign-metrics">
+              <div className="mc-summary-primary"><strong>{stats.sent}</strong><span>Palpites enviados</span></div>
+              <div className="mc-summary-primary"><strong>{stats.points}</strong><span>Pontos · {stats.settled} apurados</span></div>
+              <div><strong>{stats.exact}</strong><span>Placares exatos</span></div>
+              <div><strong>{stats.outcomes}</strong><span>Vencedores</span></div>
+              <div><strong>{stats.rate}%</strong><span>Taxa de acerto</span></div>
+              <div><strong>{stats.rank ? `${stats.rank}º` : '—'}{stats.participants ? `/${stats.participants}` : ''}</strong><span>Posição</span></div>
             </div>
-            <div className="mc-precision-group">
-              <div className="mc-precision-main"><strong>{stats.rate}%</strong><span>Taxa de acerto</span></div>
-              <div className="mc-precision-secondary"><div><strong>{stats.exact}</strong><span>Placares exatos</span></div><div><strong>{stats.outcomes}</strong><span>Desfechos corretos</span></div></div>
-            </div>
-            <div className="mc-performance">
-              <div className="mc-performance-heading"><div><span>EVOLUÇÃO</span><strong>Pontos por rodada</strong></div><button className="mc-chart-toggle" type="button" aria-expanded={performanceOpen} onClick={() => setPerformanceOpen((value) => !value)}>{performanceOpen ? 'Recolher' : 'Ver evolução'}<svg className={performanceOpen ? 'is-open' : ''} viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg></button></div>
-              <div className={`mc-performance-content${performanceOpen ? ' is-open' : ''}`}><PerformanceChart rounds={rounds} predictionByMatch={predictionByMatch} /></div>
-            </div>
+          </section>
+
+          <section className="mc-performance" aria-label="Evolução por rodada">
+            <button className="mc-performance-toggle" type="button" aria-expanded={performanceOpen} aria-controls="mc-performance-chart" onClick={() => setPerformanceOpen((value) => !value)}>
+              <span><strong>Evolução por rodada</strong><small>{stats.settled} partidas apuradas</small></span>
+              <svg className={performanceOpen ? 'is-open' : ''} viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
+            </button>
+            {performanceOpen && <div id="mc-performance-chart" className="mc-performance-content"><PerformanceChart rounds={rounds} predictionByMatch={predictionByMatch} /></div>}
           </section>
 
           <section className="mc-center" aria-labelledby="mc-center-title">
@@ -397,7 +408,7 @@ export default function MyPredictionsPage() {
               {refreshing && <div className="mc-refreshing" role="status">Atualizando sua campanha…</div>}
               {!rounds.length ? <div className="mc-empty"><strong>Sem partidas nesta temporada</strong><span>Os jogos aparecerão aqui quando forem cadastrados.</span></div> : !visibleMatches.length ? <div className="mc-empty"><strong>{STATUS_EMPTY[status]}</strong><span>{status === 'pending' && 'Quando houver partidas futuras sem palpite, elas aparecerão aqui.'}</span></div> : status === 'results' ? (
                 <div className="mc-history-list">
-                  <div className="mc-history-columns" aria-hidden="true"><span>Confronto · resultado</span><span>Meu palpite</span><span>Desempenho</span></div>
+                  <div className="mc-history-columns" aria-hidden="true"><span>Data / horário</span><span>Confronto · resultado</span><span>Meu palpite</span><span>Desempenho</span></div>
                   {rounds.filter((round) => (round.matches || []).some(hasResult)).sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0)).map((round) => <ResultRound key={round.id} round={round} predictionByMatch={predictionByMatch} />)}
                 </div>
               ) : (
