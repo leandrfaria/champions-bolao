@@ -62,31 +62,30 @@ function rankTone(rank) {
   return rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'neutral'
 }
 
-function RaceCard({ row, index, leader, tieCount, userId, mode }) {
+function RaceCard({ row, leaderTieCount, userId, mode }) {
   const tone = rankTone(row.rank)
-  const isLeader = index === 0
-  const gap = Math.max(0, (leader?.points || 0) - row.points)
+  const isLeader = row.rank === 1
+  const isSecond = row.rank === 2
+  const isThird = row.rank === 3
   return (
-    <article className={`standings-v4-race-card tone-${tone}${isLeader ? ' is-leader' : ''}${row.id === userId ? ' is-user' : ''}`}>
+    <article className={`standings-v4-podium-entry tone-${tone}${isLeader ? ' is-leader' : ''}${row.id === userId ? ' is-user' : ''}`}>
       <div className="standings-v4-race-rank">
-        {isLeader && <TrophyIcon size={15} />}
+        {isLeader && <TrophyIcon size={14} />}
         <strong>{row.rank}º</strong>
       </div>
       <UserAvatar profile={row} size="podium" />
       <div className="standings-v4-race-player">
-        <span>{isLeader ? (tieCount > 1 ? 'Liderança compartilhada' : mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : `${row.rank}º lugar`}</span>
+        <span>{isLeader ? (leaderTieCount > 1 ? 'Liderança compartilhada' : mode === 'general' ? 'Líder da temporada' : 'Líder da rodada') : isSecond ? 'Vice-líder' : isThird ? '3º lugar' : `${row.rank}º lugar`}</span>
         <div><strong>{row.display_name}</strong>{row.id === userId && <em>Você</em>}</div>
-        <small>{row.exact} {row.exact === 1 ? 'placar exato' : 'placares exatos'} · {row.winners} {row.winners === 1 ? 'vencedor' : 'vencedores'}</small>
+        <div className="standings-v4-race-stats"><span><strong>{row.exact}</strong> exatos</span><span><strong>{row.winners}</strong> vencedores</span></div>
       </div>
-      <div className="standings-v4-race-points"><strong>{row.points}</strong><span>pts</span>
-        {!isLeader && <small>{gap === 0 ? 'A mesma pontuação do líder' : `${gap} ${gap === 1 ? 'ponto' : 'pontos'} atrás`}</small>}
-      </div>
+      <div className="standings-v4-race-points"><strong>{row.points}</strong><span>pts</span></div>
     </article>
   )
 }
 
-function SummaryMetric({ label, value, detail }) {
-  return <div className="standings-v4-summary-metric"><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>
+function SummaryMetric({ label, value, detail, title }) {
+  return <div className="standings-v4-summary-metric" title={title} aria-label={title}><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div>
 }
 
 export default function LeaderboardPage() {
@@ -190,6 +189,20 @@ export default function LeaderboardPage() {
     })
     return map
   }, [rounds, profiles, predictions])
+  const seasonAveragePerRound = useMemo(() => {
+    const completedRoundAverages = rounds.flatMap((round) => {
+      const roundMatches = round.matches || []
+      if (!roundMatches.length || !roundMatches.every(hasResult)) return []
+      const rows = roundMetrics.get(round.id) || []
+      const participatingRows = rows.filter((row) => row.played > 0)
+      if (!participatingRows.length) return []
+      const roundPoints = participatingRows.reduce((total, row) => total + row.points, 0)
+      return [roundPoints / participatingRows.length]
+    })
+    if (!completedRoundAverages.length) return '—'
+    const mean = completedRoundAverages.reduce((total, value) => total + value, 0) / completedRoundAverages.length
+    return `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(mean)} pts`
+  }, [rounds, roundMetrics])
 
   const displayRows = mode === 'round' ? (roundMetrics.get(roundId) || []) : seasonRows
   const topThree = displayRows.slice(0, 3)
@@ -205,17 +218,8 @@ export default function LeaderboardPage() {
     if (!seasonRows.length) return null
     const exactLeader = [...seasonRows].sort((a, b) => b.exact - a.exact || sortStats(a, b))[0]
     const winnerLeader = [...seasonRows].sort((a, b) => b.winners - a.winners || sortStats(a, b))[0]
-    let bestRound = null
-    rounds.forEach((round) => {
-      const rows = roundMetrics.get(round.id) || []
-      rows.forEach((player) => {
-        if (!bestRound || player.points > bestRound.points || (player.points === bestRound.points && player.exact > bestRound.exact)) {
-          bestRound = { ...player, round }
-        }
-      })
-    })
-    return { exactLeader, winnerLeader, bestRound }
-  }, [seasonRows, roundMetrics, rounds])
+    return { exactLeader, winnerLeader }
+  }, [seasonRows])
 
   if (loading) return <Loading label="Carregando classificação..." />
 
@@ -225,9 +229,8 @@ export default function LeaderboardPage() {
         <div className="standings-v4-heading">
           <span className="standings-v4-eyebrow">{seasonTitle.toUpperCase()}</span>
           <h1>Classificação</h1>
-          <p>Veja quem lidera a disputa pelo título.</p>
         </div>
-        {seasons.length > 0 && <label className="standings-v4-select"><span>Temporada</span><AccessibleSelect value={seasonId} options={seasonOptions} onChange={setSeasonId} ariaLabel="Selecionar temporada" /></label>}
+        {seasons.length > 0 ? <div className="standings-v4-season-select"><span>Temporada</span><AccessibleSelect value={seasonId} options={seasonOptions} onChange={setSeasonId} ariaLabel="Selecionar temporada" /></div> : null}
       </header>
 
       <nav className="standings-v4-controls" aria-label="Visão da classificação">
@@ -235,7 +238,7 @@ export default function LeaderboardPage() {
           <button type="button" role="tab" aria-selected={mode === 'general'} className={mode === 'general' ? 'active' : ''} onClick={() => setMode('general')}>Geral</button>
           <button type="button" role="tab" aria-selected={mode === 'round'} className={mode === 'round' ? 'active' : ''} onClick={() => setMode('round')}>Por rodada</button>
         </div>
-        {(mode === 'round' && rounds.length > 0) ? <label className="standings-v4-select round"><span>Rodada</span><AccessibleSelect value={roundId} options={roundOptions} onChange={setRoundId} ariaLabel="Selecionar rodada" /></label> : null}
+        {(mode === 'round' && rounds.length > 0) ? <div className="standings-v4-round-select"><span>Rodada</span><AccessibleSelect value={roundId} options={roundOptions} onChange={setRoundId} ariaLabel="Selecionar rodada" /></div> : null}
       </nav>
 
       {error && <div className="form-error" role="alert">{error}</div>}
@@ -253,28 +256,30 @@ export default function LeaderboardPage() {
         <>
           {mode === 'general' ? (
             <section className="standings-v4-overview" aria-label="Resumo da classificação geral">
-              <div className="standings-v4-overview-title"><span>Corrida pelo título</span><strong>Geral da temporada</strong></div>
-              <div className="standings-v4-race-grid">
-                {topThree.map((row, index) => <RaceCard key={row.id} row={row} index={index} leader={leader} tieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
+              <div className="standings-v4-overview-heading"><span>Corrida pelo título</span><strong>Geral da temporada</strong></div>
+              <div className="standings-v4-podium" data-count={topThree.length}>
+                {topThree.map((row) => <RaceCard key={row.id} row={row} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
               </div>
-              <div className="standings-v4-season-insights">
-                <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} detail={currentRow && leader ? (currentRow.rank === 1 ? 'Na liderança' : `${Math.max(0, leader.points - currentRow.points)} pts do topo`) : 'Na classificação'} />
-                <SummaryMetric label="Participantes" value={seasonRows.length} detail="na temporada" />
-                <SummaryMetric label="Mais exatos" value={highlights?.exactLeader?.display_name || '—'} detail={highlights ? `${highlights.exactLeader.exact} ${highlights.exactLeader.exact === 1 ? 'placar' : 'placares'}` : ''} />
+              <div className="standings-v4-summary-strip" aria-label="Estatísticas da temporada">
+                <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} />
+                <SummaryMetric label="Distância para o líder" value={currentRow && leader ? `${Math.max(0, leader.points - currentRow.points)} pts` : '—'} />
+                <SummaryMetric label="Participantes" value={seasonRows.length} />
+                <SummaryMetric label="Mais placares exatos" value={highlights?.exactLeader?.display_name || '—'} detail={highlights ? `${highlights.exactLeader.exact} ${highlights.exactLeader.exact === 1 ? 'placar exato' : 'placares exatos'}` : ''} />
                 <SummaryMetric label="Mais vencedores" value={highlights?.winnerLeader?.display_name || '—'} detail={highlights ? `${highlights.winnerLeader.winners} acertos` : ''} />
-                {highlights?.bestRound && <SummaryMetric label="Melhor rodada" value={highlights.bestRound.display_name} detail={`${highlights.bestRound.points} pts · ${highlights.bestRound.round.name}`} />}
+                <SummaryMetric label="Média por jogador/rodada" value={seasonAveragePerRound} title="Média das pontuações médias por rodada concluída; entram apenas participantes com ao menos um palpite válido naquela rodada." detail="Somente rodadas concluídas" />
               </div>
             </section>
           ) : selectedRound && (
             <section className="standings-v4-round-overview" aria-label="Resumo da rodada selecionada">
-              <div className="standings-v4-round-title"><div><span>Classificação por rodada</span><h2>{selectedRound.name}</h2><p>{selectedRound.stage || 'Fase da competição'} · {roundDates(selectedRound)}</p></div><span className="standings-v4-round-progress">{selectedRoundFinishedCount}/{selectedRound.matches.length}<small>jogos finalizados</small></span></div>
-              <div className="standings-v4-round-metrics">
-                <SummaryMetric label="Líder da rodada" value={leader?.display_name || '—'} detail={leader ? `${leader.points} pts` : 'Sem pontuação'} />
-                <SummaryMetric label="Seu desempenho" value={currentRow ? `${currentRow.rank}º lugar` : '—'} detail={currentRow ? `${currentRow.points} pts na rodada` : 'Participante'} />
-                <SummaryMetric label="Distância do líder" value={currentRow && leader ? `${Math.max(0, leader.points - currentRow.points)} pts` : '—'} detail={currentRow?.rank === 1 ? 'Você lidera' : 'nesta rodada'} />
+              <div className="standings-v4-overview-heading"><span>Corrida pelo título</span><strong>Por rodada</strong></div>
+              <div className="standings-v4-round-title"><div><span>Rodada selecionada</span><h2>{selectedRound.name}</h2><p>{selectedRound.stage || 'Fase da competição'} · {roundDates(selectedRound)}</p></div><span className="standings-v4-round-progress">{selectedRoundFinishedCount}<small>de {selectedRound.matches.length} jogos finalizados</small></span></div>
+              <div className="standings-v4-podium" data-count={topThree.length}>
+                {topThree.map((row) => <RaceCard key={row.id} row={row} leaderTieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
               </div>
-              <div className="standings-v4-round-podium">
-                {topThree.map((row, index) => <RaceCard key={row.id} row={row} index={index} leader={leader} tieCount={leaderTieCount} userId={user?.id} mode={mode} />)}
+              <div className="standings-v4-summary-strip standings-v4-round-summary">
+                <SummaryMetric label="Líder da rodada" value={leader?.display_name || '—'} detail={leader ? `${leader.points} pts` : 'Sem pontuação'} />
+                <SummaryMetric label="Sua posição" value={currentRow ? `${currentRow.rank}º` : '—'} detail={currentRow ? `${currentRow.points} pts na rodada` : 'Sem pontuação'} />
+                <SummaryMetric label="Distância para o líder" value={currentRow && leader ? `${Math.max(0, leader.points - currentRow.points)} pts` : '—'} />
               </div>
             </section>
           )}
