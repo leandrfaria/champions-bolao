@@ -26334,6 +26334,27 @@ button.match-datetime-control { cursor: pointer; }
 
 /* Final participant profile rules — keep after the legacy breakpoint styles. */
 .participant-profile-v3 { width: min(780px, calc(100vw - 48px)); }
+.participant-profile-v3-rank {
+  width: auto;
+  min-width: 128px;
+  height: auto;
+  min-height: 42px;
+  display: flex;
+  grid-template-rows: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(21, 27, 54, .86);
+  box-shadow: none;
+}
+.participant-profile-v3-rank .participant-profile-icon { width: 15px; height: 15px; }
+.participant-profile-v3-rank strong { font-size: 20px; }
+.participant-profile-v3-rank span { font-size: 10px; white-space: nowrap; }
+.participant-profile-v3-rank.gold { border-color: rgba(227, 187, 73, .32); background: rgba(91, 68, 18, .22); }
+.participant-profile-v3-rank.silver { border-color: rgba(191, 202, 229, .24); background: rgba(53, 61, 84, .28); }
+.participant-profile-v3-rank.bronze { border-color: rgba(190, 126, 82, .26); background: rgba(83, 48, 30, .22); }
 .participant-profile-v3-lower.participant-profile-v3-lower-wide-chart {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "chart" "best";
@@ -26360,6 +26381,7 @@ button.match-datetime-control { cursor: pointer; }
 
 @media (max-width: 760px) {
   .participant-profile-v3 { width: 100%; }
+  .participant-profile-v3-rank { min-width: 0; }
   .participant-profile-v3-lower.participant-profile-v3-lower-wide-chart {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "chart" "best";
