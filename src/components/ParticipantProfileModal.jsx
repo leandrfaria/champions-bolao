@@ -198,7 +198,8 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const photoWasOpenRef = useRef(false)
 
   useEffect(() => {
-    const releaseScrollLock = acquirePageScrollLock()
+    const isMobileViewport = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 760
+    const releaseScrollLock = acquirePageScrollLock({ freezePosition: isMobileViewport })
     return releaseScrollLock
   }, [])
 
@@ -251,19 +252,23 @@ export default function ParticipantProfileModal({ profile, onClose }) {
           const allMatches = rounds.flatMap((round) => (round.matches || []).map((match) => ({ ...match, round_id: round.id, round_name: round.name, round_sort_order: round.sort_order })))
           const finishedMatches = allMatches.filter(hasResult)
 
-          let predictions = []
-          if (finishedMatches.length) {
-            const { data: predictionData, error: predictionError } = await supabase
-              .from('predictions')
-              .select('*')
-              .in('match_id', finishedMatches.map((match) => match.id))
-            if (predictionError) throw predictionError
-            predictions = predictionData || []
-          }
+          const [predictionResult, presenceResult] = await Promise.all([
+            finishedMatches.length
+              ? supabase.from('predictions').select('*').in('match_id', finishedMatches.map((match) => match.id))
+              : Promise.resolve({ data: [], error: null }),
+            allMatches.length
+              ? supabase.rpc('get_prediction_presence', { p_match_ids: allMatches.map((match) => match.id) })
+              : Promise.resolve({ data: [], error: null }),
+          ])
+          if (predictionResult.error) throw predictionResult.error
+          if (presenceResult.error) throw presenceResult.error
+          const predictions = predictionResult.data || []
+          const submittedPredictions = (presenceResult.data || []).filter((item) => item.user_id === resolvedProfile.id && item.has_predicted).length
 
           const ranked = withRank((profiles || []).map((item) => buildStats(item, finishedMatches, predictions)).sort(sortStats))
           const currentBase = ranked.find((item) => item.id === resolvedProfile.id) || buildStats(resolvedProfile, finishedMatches, predictions)
           const current = finishedMatches.length ? currentBase : { ...currentBase, rank: null }
+          current.sentPredictions = submittedPredictions
           const predictionMap = new Map(predictions.filter((prediction) => prediction.user_id === resolvedProfile.id).map((prediction) => [prediction.match_id, prediction]))
 
           const roundPerformance = rounds.map((round, index) => {
@@ -310,7 +315,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
           setDetails({
             profile: resolvedProfile,
             season: null,
-            stats: { ...resolvedProfile, points: 0, exact: 0, winners: 0, rank: null, finishedPredictions: 0, accuracy: 0 },
+            stats: { ...resolvedProfile, points: 0, exact: 0, winners: 0, rank: null, finishedPredictions: 0, sentPredictions: 0, accuracy: 0 },
             bestRound: null,
             totalParticipants: (profiles || []).length,
             roundPerformance: [],
@@ -380,6 +385,10 @@ export default function ParticipantProfileModal({ profile, onClose }) {
               <section className="participant-profile-v3-season" aria-label="Temporada atual">
                 <div className="participant-profile-v3-section-label">Temporada atual</div>
                 <div className="participant-profile-v3-metrics">
+                  <div className="participant-profile-v3-metric">
+                    <span>Palpites enviados</span>
+                    <strong>{stats?.sentPredictions ?? 0}</strong>
+                  </div>
                   <div className="participant-profile-v3-metric">
                     <span>Pontos</span>
                     <strong>{stats?.points ?? 0}</strong>

@@ -26333,7 +26333,21 @@ button.match-datetime-control { cursor: pointer; }
 }
 
 /* Final participant profile rules — keep after the legacy breakpoint styles. */
-.participant-profile-v3 { width: min(780px, calc(100vw - 48px)); }
+.participant-profile-backdrop-v3 {
+  background: rgba(2, 4, 14, .74) !important;
+  backdrop-filter: blur(2px) saturate(.96) !important;
+}
+.participant-profile-v3 {
+  width: min(700px, calc(100vw - 40px));
+  max-height: min(760px, calc(100dvh - 48px));
+}
+.participant-profile-v3-header { min-height: 150px; padding: 22px 26px 20px; }
+.participant-profile-v3-body { gap: 14px; padding: 16px 22px 20px; }
+.participant-profile-v3-season > .participant-profile-v3-section-label { padding: 12px 15px 0; }
+.participant-profile-v3-metrics { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.participant-profile-v3-metric { min-height: 76px; padding: 10px 12px; }
+.participant-profile-v3-metric strong { font-size: 25px; }
+.participant-profile-v3-metric span { font-size: 9px; letter-spacing: .045em; }
 .participant-profile-v3-rank {
   width: auto;
   min-width: 128px;
@@ -26360,8 +26374,8 @@ button.match-datetime-control { cursor: pointer; }
   grid-template-areas: "chart" "best";
   gap: 12px;
 }
-.participant-profile-v3-lower-wide-chart > .participant-profile-v3-chart-panel-wide { grid-area: chart; min-height: 210px; }
-.participant-profile-v3-chart-panel-wide .participant-profile-v3-chart { height: 154px; overflow: visible; }
+.participant-profile-v3-lower-wide-chart > .participant-profile-v3-chart-panel-wide { grid-area: chart; min-height: 0; padding: 14px 16px 12px; }
+.participant-profile-v3-chart-panel-wide .participant-profile-v3-chart { height: 142px; overflow: visible; }
 .participant-profile-v3-lower-wide-chart > .participant-profile-v3-best {
   grid-area: best;
   min-height: 0;
@@ -26380,13 +26394,38 @@ button.match-datetime-control { cursor: pointer; }
 .participant-photo-lightbox { z-index: 1100; }
 
 @media (max-width: 760px) {
-  .participant-profile-v3 { width: 100%; }
+  .participant-profile-backdrop-v3 { backdrop-filter: blur(2px) saturate(.96) !important; }
+  .participant-profile-v3 {
+    width: 100%;
+    max-height: min(96dvh, calc(100dvh - env(safe-area-inset-top)));
+  }
   .participant-profile-v3-rank { min-width: 0; }
+  .participant-profile-v3-header { min-height: 0; padding: 20px 18px 15px; }
+  .participant-profile-v3-body { gap: 12px; padding: 13px 16px max(18px, env(safe-area-inset-bottom)); }
+  .participant-profile-v3-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .participant-profile-v3-metric { min-height: 70px; padding: 10px 12px; }
+  .participant-profile-v3-metric:nth-child(3),
+  .participant-profile-v3-metric:nth-child(4),
+  .participant-profile-v3-metric:nth-child(5) { border-top: 1px solid rgba(120,136,196,.14); }
+  .participant-profile-v3-metric:nth-child(3) { border-left: 0; }
+  .participant-profile-v3-metric:nth-child(5) {
+    grid-column: 1 / -1;
+    min-height: 58px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 0;
+  }
+  .participant-profile-v3-metric:nth-child(5) span,
+  .participant-profile-v3-metric:nth-child(5) strong { order: initial; margin: 0; }
+  .participant-profile-v3-metric strong { font-size: 25px; }
+  .participant-profile-v3-metric span { font-size: 9px; }
   .participant-profile-v3-lower.participant-profile-v3-lower-wide-chart {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "chart" "best";
   }
   .participant-profile-v3-chart-panel-wide .participant-profile-v3-chart { height: 140px; }
+  .participant-profile-v3-lower-wide-chart > .participant-profile-v3-chart-panel-wide { padding: 13px 14px 10px; }
   .participant-profile-v3-lower-wide-chart > .participant-profile-v3-best { grid-template-columns: auto minmax(0, 1fr); }
   .participant-profile-v3-lower-wide-chart .participant-profile-v3-best-inline > small { grid-column: 1 / -1; justify-self: start; }
   .participant-photo-lightbox { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
