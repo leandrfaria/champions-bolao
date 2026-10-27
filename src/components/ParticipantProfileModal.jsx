@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TrophyIcon from './TrophyIcon'
 import UserAvatar, { getAvatarUrl } from './UserAvatar'
@@ -60,15 +60,68 @@ function resolveProfileHighlight(stats, totalParticipants) {
   return totalParticipants && stats.rank <= Math.ceil(totalParticipants / 2) ? 'Segue competitivo' : 'Temporada em andamento'
 }
 
-function pointsTone(points) {
-  if (points >= 3) return 'excellent'
-  if (points >= 1) return 'good'
-  if (points === 0) return 'bad'
-  return 'empty'
-}
-
 function sortByKickoff(a, b) {
   return new Date(a?.kickoff_at || 0).getTime() - new Date(b?.kickoff_at || 0).getTime()
+}
+
+function ParticipantPerformanceChart({ rounds }) {
+  const [activePoint, setActivePoint] = useState(null)
+  const max = Math.max(3, ...rounds.map((item) => item.points || 0))
+  const points = rounds.map((round, index) => {
+    const x = rounds.length === 1 ? 200 : 24 + (index * 352) / (rounds.length - 1)
+    const y = 112 - ((round.points || 0) / max) * 82
+    return { ...round, x, y }
+  })
+  const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  const selected = points.find((point) => point.id === activePoint)
+  const tooltipX = selected ? Math.max(6, Math.min(304, selected.x - 48)) : 0
+  const tooltipY = selected ? Math.max(2, selected.y - 40) : 0
+
+  return (
+    <div className="participant-profile-v3-chart" role="group" aria-label="Evolução dos pontos por rodada. Use Tab para consultar os valores.">
+      <svg viewBox="0 0 400 148" preserveAspectRatio="xMidYMid meet" aria-label="Pontos conquistados em cada rodada">
+        <defs>
+          <linearGradient id="participant-profile-line" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#9a72f2" />
+            <stop offset="100%" stopColor="#63c7ff" />
+          </linearGradient>
+        </defs>
+        <path className="participant-profile-v3-chart-baseline" d="M 12 114 H 388" />
+        {points.length > 1 && <path className="participant-profile-v3-chart-line" d={path} />}
+        {points.map((point) => (
+          <g
+            key={point.id}
+            className={`participant-profile-v3-chart-point${activePoint === point.id ? ' is-active' : ''}`}
+            role="button"
+            tabIndex={0}
+            aria-label={`${point.name}: ${point.points} ${point.points === 1 ? 'ponto' : 'pontos'}${point.isPartial ? ', rodada parcialmente apurada' : ''}`}
+            onMouseEnter={() => setActivePoint(point.id)}
+            onMouseLeave={() => setActivePoint(null)}
+            onFocus={() => setActivePoint(point.id)}
+            onBlur={() => setActivePoint(null)}
+            onClick={() => setActivePoint((current) => current === point.id ? null : point.id)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                setActivePoint((current) => current === point.id ? null : point.id)
+              }
+            }}
+          >
+            <circle className="participant-profile-v3-chart-hit" cx={point.x} cy={point.y} r="14" />
+            <circle className={`participant-profile-v3-chart-dot${point.isPartial ? ' is-partial' : ''}`} cx={point.x} cy={point.y} r={activePoint === point.id ? 5 : 4} />
+            <text className="participant-profile-v3-chart-label" x={point.x} y="137" textAnchor="middle">R{point.orderLabel}</text>
+          </g>
+        ))}
+        {selected && (
+          <g className="participant-profile-v3-chart-tooltip" transform={`translate(${tooltipX} ${tooltipY})`} aria-hidden="true">
+            <rect width="96" height="25" rx="7" />
+            <text x="48" y="16" textAnchor="middle">R{selected.orderLabel} · {selected.points} pts{selected.isPartial ? ' *' : ''}</text>
+          </g>
+        )}
+      </svg>
+      {selected?.isPartial && <span className="participant-profile-v3-chart-note">* Rodada parcial</span>}
+    </div>
+  )
 }
 
 function MetricIcon({ name }) {
@@ -140,6 +193,14 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const [details, setDetails] = useState(null)
   const [photoUrl, setPhotoUrl] = useState(null)
   const [photoOpen, setPhotoOpen] = useState(false)
+  const photoTriggerRef = useRef(null)
+  const photoCloseRef = useRef(null)
+  const photoWasOpenRef = useRef(false)
+
+  useEffect(() => {
+    const releaseScrollLock = acquirePageScrollLock()
+    return releaseScrollLock
+  }, [])
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -149,13 +210,18 @@ export default function ParticipantProfileModal({ profile, onClose }) {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    const releaseScrollLock = acquirePageScrollLock()
-
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      releaseScrollLock()
-    }
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [photoOpen, onClose])
+
+  useEffect(() => {
+    if (photoOpen) {
+      photoWasOpenRef.current = true
+      photoCloseRef.current?.focus()
+    } else if (photoWasOpenRef.current) {
+      photoWasOpenRef.current = false
+      photoTriggerRef.current?.focus()
+    }
+  }, [photoOpen])
 
   useEffect(() => {
     let active = true
@@ -201,7 +267,8 @@ export default function ParticipantProfileModal({ profile, onClose }) {
           const predictionMap = new Map(predictions.filter((prediction) => prediction.user_id === resolvedProfile.id).map((prediction) => [prediction.match_id, prediction]))
 
           const roundPerformance = rounds.map((round, index) => {
-            const matches = (round.matches || []).filter(hasResult).sort(sortByKickoff)
+            const roundMatches = (round.matches || []).slice().sort(sortByKickoff)
+            const matches = roundMatches.filter(hasResult)
             const entries = matches.map((match) => {
               const prediction = predictionMap.get(match.id)
               if (!prediction) return null
@@ -219,26 +286,15 @@ export default function ParticipantProfileModal({ profile, onClose }) {
               exact,
               winners,
               matches: entries.length,
+              totalMatches: roundMatches.length,
+              settledMatches: matches.length,
+              isPartial: matches.length > 0 && matches.length < roundMatches.length,
             }
           })
 
           const bestRound = roundPerformance
             .filter((item) => item.matches > 0)
             .sort((a, b) => b.points - a.points || b.exact - a.exact || a.index - b.index)[0] || null
-
-          const recentForm = finishedMatches
-            .slice()
-            .sort((a, b) => new Date(b.kickoff_at || 0).getTime() - new Date(a.kickoff_at || 0).getTime())
-            .map((match) => {
-              const prediction = predictionMap.get(match.id)
-              if (!prediction) return null
-              const points = calculatePoints(prediction, match)
-              return { matchId: match.id, points, label: points > 0 ? `+${points}` : '0' }
-            })
-            .filter(Boolean)
-            .slice(0, 7)
-
-          while (recentForm.length < 7) recentForm.push({ matchId: `empty-${recentForm.length}`, points: null, label: '–' })
 
           if (active) {
             setDetails({
@@ -248,7 +304,6 @@ export default function ParticipantProfileModal({ profile, onClose }) {
               bestRound,
               totalParticipants: ranked.length,
               roundPerformance,
-              recentForm,
             })
           }
         } else if (active) {
@@ -259,7 +314,6 @@ export default function ParticipantProfileModal({ profile, onClose }) {
             bestRound: null,
             totalParticipants: (profiles || []).length,
             roundPerformance: [],
-            recentForm: Array.from({ length: 7 }, (_, index) => ({ matchId: `empty-${index}`, points: null, label: '–' })),
           })
         }
 
@@ -283,8 +337,6 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const stats = details?.stats
   const rankingLabel = useMemo(() => formatOrdinal(stats?.rank), [stats?.rank])
   const chartSeries = (details?.roundPerformance || []).filter((item) => item.matches > 0)
-  const chartMax = Math.max(3, ...chartSeries.map((item) => item.points || 0))
-  const recentItems = (details?.recentForm || []).filter((item) => item.points != null).slice(0, 6)
   const rankTone = stats?.rank === 1 ? 'gold' : stats?.rank === 2 ? 'silver' : stats?.rank === 3 ? 'bronze' : 'standard'
 
   const modalContent = (
@@ -295,6 +347,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
 
           <header className="participant-profile-v3-header">
             <button
+              ref={photoTriggerRef}
               type="button"
               className="participant-profile-v3-avatar"
               onClick={() => photoUrl && setPhotoOpen(true)}
@@ -350,50 +403,20 @@ export default function ParticipantProfileModal({ profile, onClose }) {
                 <section className="participant-profile-v3-best">
                   <div className="participant-profile-v3-section-label">Melhor rodada</div>
                   {details?.bestRound ? (
-                    <>
+                    <div className="participant-profile-v3-best-inline">
                       <strong>{details.bestRound.points} pts</strong>
-                      <p>{details.bestRound.name}</p>
-                      <small>{details.bestRound.exact} {details.bestRound.exact === 1 ? 'exato' : 'exatos'} · {details.bestRound.winners} {details.bestRound.winners === 1 ? 'vencedor' : 'vencedores'}</small>
-                    </>
+                      <span>{details.bestRound.name}</span>
+                      <small>{details.bestRound.exact} {details.bestRound.exact === 1 ? 'placar exato' : 'placares exatos'} · {details.bestRound.winners} {details.bestRound.winners === 1 ? 'vencedor' : 'vencedores'}</small>
+                    </div>
                   ) : (
                     <p className="participant-profile-v3-empty-copy">Sem rodada pontuada ainda.</p>
                   )}
                 </section>
 
-                <section className="participant-profile-v3-recent">
-                  <div className="participant-profile-v3-section-row">
-                    <div className="participant-profile-v3-section-label">Pontos recentes</div>
-                    <small>Mais recentes primeiro</small>
-                  </div>
-                  {recentItems.length ? (
-                    <div className="participant-profile-v3-form-strip" aria-label="Pontos recentes">
-                      {recentItems.map((item) => (
-                        <span className={`participant-profile-v3-form-indicator ${pointsTone(item.points)}`} key={item.matchId}>{item.label}</span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="participant-profile-v3-empty-copy">Nenhum palpite finalizado ainda.</p>
-                  )}
-                </section>
-
                 <section className="participant-profile-v3-chart-panel participant-profile-v3-chart-panel-wide">
-                  <div className="participant-profile-v3-section-label">Desempenho por rodada</div>
+                  <div className="participant-profile-v3-section-label">Evolução por rodada</div>
                   {chartSeries.length ? (
-                    <div className="participant-profile-v3-chart" role="img" aria-label="Pontos do participante por rodada">
-                      <div className="participant-profile-v3-chart-baseline" />
-                      <div className="participant-profile-v3-chart-bars">
-                        {chartSeries.map((item) => {
-                          const height = Math.max(item.points === 0 ? 4 : 18, Math.round((item.points / chartMax) * 100))
-                          return (
-                            <div className="participant-profile-v3-bar-group" key={item.id}>
-                              <span className={`participant-profile-v3-bar-value ${pointsTone(item.points)}`}>{item.points > 0 ? `+${item.points}` : '0'}</span>
-                              <div className={`participant-profile-v3-bar ${pointsTone(item.points)}`} style={{ height: `${height}%` }} title={`${item.name}: ${item.points} pts`} />
-                              <small>R{item.orderLabel}</small>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
+                    <ParticipantPerformanceChart rounds={chartSeries} />
                   ) : (
                     <p className="participant-profile-v3-empty-copy">Sem rodadas finalizadas ainda.</p>
                   )}
@@ -404,18 +427,23 @@ export default function ParticipantProfileModal({ profile, onClose }) {
         </section>
       </div>
 
-      {photoOpen && photoUrl && (
-        <div className="participant-photo-lightbox" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPhotoOpen(false) }}>
-          <button type="button" onClick={() => setPhotoOpen(false)} aria-label="Fechar foto">×</button>
-          <figure>
-            <img src={photoUrl} alt={`Foto de ${target.display_name || 'participante'}`} />
-            <figcaption>{target.display_name}</figcaption>
-          </figure>
-        </div>
-      )}
     </>
   )
 
   if (typeof document === 'undefined') return modalContent
-  return createPortal(modalContent, document.body)
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {photoOpen && photoUrl && createPortal(
+        <div className="participant-photo-lightbox" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPhotoOpen(false) }}>
+          <button ref={photoCloseRef} type="button" onClick={() => setPhotoOpen(false)} aria-label="Fechar foto">×</button>
+          <figure>
+            <img src={photoUrl} alt={`Foto de ${target.display_name || 'participante'}`} />
+            <figcaption>{target.display_name}</figcaption>
+          </figure>
+        </div>,
+        document.body,
+      )}
+    </>
+  )
 }
