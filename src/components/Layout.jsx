@@ -143,7 +143,7 @@ export default function Layout() {
 
   return (
     <ParticipantProfileContext.Provider value={participantProfileValue}>
-      <div className={`app-shell topbar-shell${location.pathname === '/rodadas' ? ' rounds-explorer-shell' : ''}${location.pathname === '/meus-palpites' ? ' my-predictions-shell' : ''}${location.pathname === '/atividades' ? ' activity-explorer-shell' : ''}`}>
+      <div className={`app-shell topbar-shell${location.pathname === '/rodadas' ? ' rounds-explorer-shell' : ''}${location.pathname === '/meus-palpites' ? ' my-predictions-shell' : ''}${location.pathname === '/atividades' ? ' activity-explorer-shell' : ''}${location.pathname === '/podio' ? ' podium-explorer-shell' : ''}`}>
         <header className="site-header-v2" aria-label="Navegação principal do bolão">
           <div className="site-header-v2-inner">
             <NavLink to="/dashboard" className="site-brand-v2" aria-label="Champions Bolão — início">
