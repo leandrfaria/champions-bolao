@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TrophyIcon from './TrophyIcon'
 import UserAvatar, { getAvatarUrl } from './UserAvatar'
@@ -196,11 +196,22 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const photoTriggerRef = useRef(null)
   const photoCloseRef = useRef(null)
   const photoWasOpenRef = useRef(false)
+  const profileDialogRef = useRef(null)
+  const profileCloseRef = useRef(null)
+  const photoViewerRef = useRef(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const isMobileViewport = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 760
-    const releaseScrollLock = acquirePageScrollLock({ freezePosition: isMobileViewport })
-    return releaseScrollLock
+    const previouslyFocused = document.activeElement
+    const releaseScrollLock = acquirePageScrollLock({
+      freezePosition: isMobileViewport,
+      getAllowedElements: () => [profileDialogRef.current, photoViewerRef.current],
+    })
+    profileCloseRef.current?.focus({ preventScroll: true })
+    return () => {
+      releaseScrollLock()
+      if (previouslyFocused?.isConnected) previouslyFocused.focus({ preventScroll: true })
+    }
   }, [])
 
   useEffect(() => {
@@ -347,8 +358,8 @@ export default function ParticipantProfileModal({ profile, onClose }) {
   const modalContent = (
     <>
       <div className="participant-profile-backdrop participant-profile-backdrop-v3" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.() }}>
-        <section className="participant-profile-v3" role="dialog" aria-modal="true" aria-label={`Perfil de ${target.display_name || 'participante'}`}>
-          <button className="participant-profile-v3-close" type="button" onClick={onClose} aria-label="Fechar perfil">×</button>
+        <section ref={profileDialogRef} className="participant-profile-v3" role="dialog" aria-modal="true" aria-label={`Perfil de ${target.display_name || 'participante'}`}>
+          <button ref={profileCloseRef} className="participant-profile-v3-close" type="button" onClick={onClose} aria-label="Fechar perfil">×</button>
 
           <header className="participant-profile-v3-header">
             <button
@@ -369,10 +380,8 @@ export default function ParticipantProfileModal({ profile, onClose }) {
               <p>Jogador{details?.season ? ` · ${details.season.name}` : ''}</p>
             </div>
 
-            <div className={`participant-profile-v3-rank ${rankTone}`}>
-              <MetricIcon name="crown" />
+            <div className={`participant-profile-v3-rank ${rankTone}`} aria-label={`Posição oficial: ${rankingLabel}`}>
               <strong>{rankingLabel}</strong>
-              <span>na temporada</span>
             </div>
           </header>
 
@@ -444,7 +453,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
     <>
       {createPortal(modalContent, document.body)}
       {photoOpen && photoUrl && createPortal(
-        <div className="participant-photo-lightbox" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPhotoOpen(false) }}>
+        <div ref={photoViewerRef} className="participant-photo-lightbox" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPhotoOpen(false) }}>
           <button ref={photoCloseRef} type="button" onClick={() => setPhotoOpen(false)} aria-label="Fechar foto">×</button>
           <figure>
             <img src={photoUrl} alt={`Foto de ${target.display_name || 'participante'}`} />
