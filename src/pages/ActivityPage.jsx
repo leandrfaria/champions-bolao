@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import TeamCrest from '../components/TeamCrest'
 import TrophyIcon from '../components/TrophyIcon'
 import UserAvatar from '../components/UserAvatar'
+import AccessibleSelect from '../components/AccessibleSelect'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
 import { activityCategory, activityText, activityTone, isFeedActivity, parseMatchName } from '../lib/activity'
+import '../styles/activity-feed.css'
 
 const FILTERS = [
   ['all', 'Todas'],
@@ -13,6 +16,46 @@ const FILTERS = [
   ['results', 'Resultados'],
   ['classification', 'Classificação'],
 ]
+
+const PERIODS = [
+  { value: '7d', label: 'Últimos 7 dias' },
+  { value: '30d', label: 'Últimos 30 dias' },
+  { value: '90d', label: 'Últimos 90 dias' },
+  { value: 'all', label: 'Todo o histórico' },
+]
+const PAGE_SIZE = 20
+const CATEGORY_ACTIONS = {
+  predictions: ['prediction_created', 'prediction_updated'],
+  rounds: ['round_created', 'round_started', 'round_finished', 'season_created', 'season_activated', 'season_deleted', 'round_deleted', 'roulette_spun'],
+  results: ['result_updated'],
+  classification: ['leader_changed', 'second_changed'],
+}
+const FEED_ACTIONS = [
+  'prediction_created', 'prediction_updated', 'round_created', 'round_started', 'round_finished',
+  'result_updated', 'season_created', 'season_activated', 'season_deleted', 'round_deleted',
+  'leader_changed', 'second_changed', 'roulette_spun',
+]
+
+function periodStart(period) {
+  const hours = period === '7d' ? 168 : period === '30d' ? 720 : period === '90d' ? 2160 : null
+  return hours ? new Date(Date.now() - hours * 60 * 60 * 1000).toISOString() : null
+}
+
+async function fetchActivityBatch({ offset, period, filter, clearedAt }) {
+  let query = supabase
+    .from('audit_logs')
+    .select('*, profiles(id, display_name, avatar_path)')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .range(offset, offset + PAGE_SIZE - 1)
+
+  query = query.in('action', filter === 'all' ? FEED_ACTIONS : CATEGORY_ACTIONS[filter] || FEED_ACTIONS)
+  if (clearedAt) query = query.gt('created_at', new Date(clearedAt).toISOString())
+  const start = periodStart(period)
+  if (start) query = query.gte('created_at', start)
+
+  return query
+}
 
 function EventGlyph({ action }) {
   if (action === 'all') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/><circle cx="8" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
@@ -33,52 +76,10 @@ function dateKey(value) {
   }).format(new Date(value))
 }
 
-function dayLabel(value) {
-  const key = dateKey(value)
-  const today = dateKey(new Date())
-  const yesterdayDate = new Date(Date.now() - 86400000)
-  const yesterday = dateKey(yesterdayDate)
-  if (key === today) return 'Hoje'
-  if (key === yesterday) return 'Ontem'
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: 'long', timeZone: 'America/Sao_Paulo',
-  }).format(new Date(value))
-}
-
-function dayCaption(value) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: 'long', timeZone: 'America/Sao_Paulo',
-  }).format(new Date(value))
-}
-
 function timeLabel(value) {
   return new Intl.DateTimeFormat('pt-BR', {
     hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo',
   }).format(new Date(value))
-}
-
-function relativeTimeLabel(value) {
-  const date = new Date(value)
-  const diffMs = Math.max(0, Date.now() - date.getTime())
-  const minutes = Math.floor(diffMs / 60000)
-  if (minutes < 1) return 'agora'
-  if (minutes < 60) return `há ${minutes} min`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `há ${hours} h`
-  const yesterday = new Date(Date.now() - 86400000)
-  if (dateKey(date) === dateKey(yesterday)) return `ontem, ${timeLabel(date)}`
-  return `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date)}, ${timeLabel(date)}`
-}
-
-function roundDateLabel(round) {
-  const matches = [...(round?.matches || [])]
-    .filter((match) => match.kickoff_at)
-    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
-  if (!matches.length) return 'Sem data definida'
-  const first = new Date(matches[0].kickoff_at)
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo',
-  }).format(first)
 }
 
 function buildStanding(profiles, predictions, matchMap, matchIds) {
@@ -208,160 +209,196 @@ function deriveCompetitionEvents({ logs, profiles, rounds, predictions }) {
 
 function formatScore(value) {
   if (!value) return ''
-  return String(value).replace(/\s*:\s*/g, 'x')
+  return String(value).replace(/\s*:\s*/g, ' × ')
 }
 
-function ActivityMatchContext({ item }) {
+function ActivityMatchContext({ item, compact = false }) {
   const parsed = item.match
     ? { home: item.match.home_team, away: item.match.away_team }
     : parseMatchName(item.metadata?.match_name)
   if (!parsed) return null
-
   const result = item.action === 'result_updated' ? formatScore(item.metadata?.result || '') : ''
-
   return (
-    <div className={`activity-live-match ${result ? 'has-result' : ''}`} aria-label={`${parsed.home} x ${parsed.away}`}>
-      <div className="activity-live-match-team home">
-        <TeamCrest team={parsed.home} size="small" />
-        <span>{parsed.home}</span>
-      </div>
-      <strong className="activity-live-match-score">{result || '×'}</strong>
-      <div className="activity-live-match-team away">
-        <span>{parsed.away}</span>
-        <TeamCrest team={parsed.away} size="small" />
-      </div>
+    <div className={`activity-v2-match${result ? ' has-result' : ''}${compact ? ' is-compact' : ''}`} aria-label={`${parsed.home} ${result || 'contra'} ${parsed.away}`}>
+      <div className="activity-v2-match-team home"><span>{parsed.home}</span><TeamCrest team={parsed.home} size="small" /></div>
+      <strong className="activity-v2-match-score">{result || '×'}</strong>
+      <div className="activity-v2-match-team away"><TeamCrest team={parsed.away} size="small" /><span>{parsed.away}</span></div>
     </div>
   )
 }
 
-function eventDescription(item) {
-  switch (item.action) {
-    case 'prediction_created': return 'Palpite registrado. O placar continua secreto até o início da partida.'
-    case 'prediction_updated': return 'Palpite atualizado dentro do prazo permitido.'
-    case 'result_updated': return 'Os pontos da partida já podem impactar a classificação.'
-    case 'round_created': return 'A rodada entrou no calendário do bolão.'
-    case 'round_started': return 'Os jogos desta rodada já começaram a ser disputados.'
-    case 'round_finished': return `${item.metadata?.games || 0} ${item.metadata?.games === 1 ? 'jogo concluído' : 'jogos concluídos'} nesta rodada.`
-    case 'season_created': return 'Nova temporada preparada para receber rodadas e partidas.'
-    case 'season_activated': return 'Esta passou a ser a temporada ativa da competição.'
-    case 'round_deleted': return 'A rodada e os dados ligados a ela foram removidos pelo administrador.'
-    case 'season_deleted': return 'A temporada e toda a sua estrutura foram removidas pelo administrador.'
-    case 'leader_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
-    case 'second_changed': return `${item.metadata?.points ?? 0} pts na classificação acumulada.`
-    case 'roulette_spun': return 'Quem é sorteado sai dos próximos sorteios até a roleta ser redefinida na Administração.'
-    default: return ''
-  }
-}
-
-function activityBadgeLabel(item) {
-  if (item.action === 'prediction_created' || item.action === 'prediction_updated') return 'PALPITE'
-  if (item.action === 'result_updated') return 'RESULTADO'
-  if (item.action === 'leader_changed' || item.action === 'second_changed') return 'CLASSIFICAÇÃO'
-  return 'RODADA'
-}
-
-function summaryIcon(type) {
-  if (type === 'activity') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
-  if (type === 'participants') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM8 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM8 15c-3.314 0-6 2.239-6 5v1h12v-1c0-2.761-2.686-5-6-5Zm8 0c-.71 0-1.391.097-2.03.278A6.78 6.78 0 0 1 18 21v1h4v-1c0-3.314-2.686-6-6-6Z"/></svg>
-  if (type === 'predictions') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m9 12 2 2 4-4"/></svg>
-  if (type === 'results') return <TrophyIcon size={18} />
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 3v5M16 3v5M4 10h16"/></svg>
-}
-
-function activityPrimaryText(item) {
+function eventTitle(item, count = 1) {
   const actor = item.profiles?.display_name || 'Alguém'
+  const round = item.roundName || item.metadata?.round_name || 'Rodada'
   switch (item.action) {
-    case 'prediction_created': return <><strong>{actor}</strong> enviou um palpite.</>
-    case 'prediction_updated': return <><strong>{actor}</strong> atualizou um palpite.</>
-    case 'result_updated': return <>Resultado registrado.</>
-    case 'leader_changed': return <><strong>{actor}</strong> assumiu o 1º lugar.</>
-    case 'second_changed': return <><strong>{actor}</strong> assumiu a 2ª posição.</>
+    case 'prediction_created': return <><strong>{actor}</strong> enviou {count > 1 ? `${count} palpites` : 'um palpite'}</>
+    case 'prediction_updated': return <><strong>{actor}</strong> atualizou {count > 1 ? `${count} palpites` : 'um palpite'}</>
+    case 'result_updated': return <>Resultado registrado</>
+    case 'leader_changed': return <><strong>{actor}</strong> assumiu a liderança</>
+    case 'second_changed': return <><strong>{actor}</strong> chegou ao 2º lugar</>
+    case 'round_created': return <>{round} criada</>
+    case 'round_started': return <>{round} iniciada</>
+    case 'round_finished': return <>{round} concluída</>
+    case 'round_deleted': return <>{round} removida</>
+    case 'season_created': return <>Temporada {item.metadata?.season_name || ''} criada</>
+    case 'season_activated': return <>Temporada {item.metadata?.season_name || ''} ativada</>
+    case 'season_deleted': return <>Temporada {item.metadata?.season_name || ''} removida</>
+    case 'roulette_spun': return <>Sorteio realizado em {round}</>
     default: return <>{activityText(item)}</>
   }
 }
 
+function eventDetail(item) {
+  if (item.action === 'leader_changed' || item.action === 'second_changed') return `${item.metadata?.position || (item.action === 'leader_changed' ? 1 : 2)}º lugar · ${item.metadata?.points ?? 0} pontos`
+  if (item.action === 'round_finished') {
+    const games = item.metadata?.games || 0
+    return `${games} ${games === 1 ? 'jogo concluído' : 'jogos concluídos'}`
+  }
+  if (item.action === 'round_created' || item.action === 'round_started') return item.round?.stage || item.metadata?.stage || ''
+  if (item.action === 'roulette_spun') {
+    const selected = Array.isArray(item.metadata?.selected_names) ? item.metadata.selected_names.filter(Boolean) : []
+    return selected.length ? `Sorteados: ${selected.join(' + ')}` : ''
+  }
+  if (item.action === 'season_created' || item.action === 'season_activated' || item.action === 'season_deleted') return item.metadata?.season_name || ''
+  return ''
+}
+
+function groupPredictionEvents(events) {
+  const groups = []
+  events.forEach((item) => {
+    const lastGroup = groups[groups.length - 1]
+    const lastItem = lastGroup?.items[0]
+    const predictionEvent = item.action === 'prediction_created' || item.action === 'prediction_updated'
+    const canJoin = predictionEvent && lastItem
+      && lastItem.action === item.action
+      && lastItem.profiles?.id === item.profiles?.id
+      && dateKey(lastItem.created_at) === dateKey(item.created_at)
+      && Math.abs(new Date(lastItem.created_at) - new Date(item.created_at)) <= 10 * 60 * 1000
+    if (canJoin) lastGroup.items.push(item)
+    else groups.push({ id: item.id, items: [item] })
+  })
+  return groups
+}
+
+function dayHeading(value) {
+  const key = dateKey(value)
+  const todayKey = dateKey(new Date())
+  const yesterdayKey = dateKey(new Date(Date.now() - 86400000))
+  const date = new Date(value)
+  const day = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', timeZone: 'America/Sao_Paulo' }).format(date)
+  const shortMonth = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'America/Sao_Paulo' }).format(date).replace('.', '').toUpperCase()
+  if (key === todayKey) return `HOJE · ${day} ${shortMonth}`
+  if (key === yesterdayKey) return `ONTEM · ${day} ${shortMonth}`
+  const month = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'America/Sao_Paulo' }).format(date).toUpperCase()
+  return `${day} DE ${month}`
+}
+
 function ActivityFeedSkeleton() {
   return (
-    <div className="page-wrap activity-live-page">
-      <div className="activity-live-skeleton-header activity-live-skeleton-pulse" />
-      <div className="activity-live-skeleton-toolbar activity-live-skeleton-pulse" />
-      <div className="activity-live-skeleton-feed">
-        {[0, 1, 2, 3].map((item) => <div className="activity-live-skeleton-row activity-live-skeleton-pulse" key={item} />)}
-      </div>
+    <div className="page-wrap activity-v2-page" aria-label="Carregando atividades">
+      <div className="activity-v2-skeleton-header" />
+      <div className="activity-v2-skeleton-toolbar" />
+      <div className="activity-v2-feed-skeleton">{[0, 1, 2, 3].map((item) => <div key={item} />)}</div>
     </div>
   )
 }
 
-function ActivityCard({ item }) {
+function ActivityFeedRow({ group, expanded, onToggle }) {
+  const item = group.items[0]
   const tone = activityTone(item.action)
-  const isClassification = item.action === 'leader_changed' || item.action === 'second_changed'
-  const actorRelated = item.action.startsWith('prediction_') || isClassification
+  const predictionOrRanking = item.action.startsWith('prediction_') || item.action === 'leader_changed' || item.action === 'second_changed'
+  const matchName = item.metadata?.match_name || (item.match ? `${item.match.home_team} × ${item.match.away_team}` : '')
+  const detail = eventDetail(item)
 
   return (
-    <article className={`activity-live-card tone-${tone} ${isClassification ? 'is-ranking-event' : ''}`}>
-      <div className="activity-live-card-mobile-meta">
-        <time>{timeLabel(item.created_at)}</time>
-        <span className={`activity-live-type-badge tone-${tone}`}>{activityBadgeLabel(item)}</span>
+    <article className={`activity-v2-row tone-${tone}`}>
+      <div className={`activity-v2-avatar${predictionOrRanking ? '' : ' is-system'}`}>
+        {predictionOrRanking ? (
+          <UserAvatar profile={item.profiles} size="small" />
+        ) : <span><EventGlyph action={item.action} /></span>}
       </div>
-
-      <div className={`activity-live-avatar ${actorRelated ? '' : 'system-event'}`}>
-        {actorRelated ? <UserAvatar profile={item.profiles} size="small" /> : <span className="activity-live-system-icon"><EventGlyph action={item.action} /></span>}
-      </div>
-
-      <div className="activity-live-main">
-        <div className="activity-live-title-row">
-          <h3>{activityPrimaryText(item)}</h3>
-          <time>{relativeTimeLabel(item.created_at)}</time>
+      <div className="activity-v2-copy">
+        <div className="activity-v2-title-line">
+          <h3>{eventTitle(item, group.items.length)}</h3>
+          <time dateTime={item.created_at}>{timeLabel(item.created_at)}</time>
         </div>
-        <p>{eventDescription(item)}</p>
-        <div className="activity-live-mobile-match"><ActivityMatchContext item={item} /></div>
+        {group.items.length > 1 ? (
+          <button type="button" className="activity-v2-group-toggle" aria-expanded={expanded} aria-controls={`activity-group-${group.id}`} onClick={onToggle}>
+            {matchName ? <><span>{matchName}</span><span>e mais {group.items.length - 1} {group.items.length === 2 ? 'jogo' : 'jogos'}</span></> : <span>Ver os {group.items.length} acontecimentos</span>}
+            <span className="activity-v2-group-chevron" aria-hidden="true">⌄</span>
+          </button>
+        ) : (
+          <>
+            {detail && <p>{detail}</p>}
+            <ActivityMatchContext item={item} />
+          </>
+        )}
+        {group.items.length > 1 && expanded && (
+          <div className="activity-v2-group-items" id={`activity-group-${group.id}`}>
+            {group.items.map((entry) => (
+              <div className="activity-v2-group-item" key={entry.id}>
+                <time dateTime={entry.created_at}>{timeLabel(entry.created_at)}</time>
+                <ActivityMatchContext item={entry} compact />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      <div className="activity-live-context">
-        <ActivityMatchContext item={item} />
-        <div className="activity-live-context-meta">
-          {isClassification && (
-            <span className="activity-live-rank-mark">
-              <TrophyIcon size={14} />
-              {item.action === 'leader_changed' ? '1º' : '2º'}
-            </span>
-          )}
-          <span className={`activity-live-type-badge tone-${tone}`}>{activityBadgeLabel(item)}</span>
-        </div>
-      </div>
+      {item.roundId && <Link className="activity-v2-round-link" to={`/rodadas/${item.roundId}`}>Ver rodada <span aria-hidden="true">↗</span></Link>}
     </article>
   )
 }
 
 export default function ActivityPage() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [baseLoading, setBaseLoading] = useState(true)
+  const [baseReady, setBaseReady] = useState(false)
+  const [baseError, setBaseError] = useState('')
+  const [feedLoading, setFeedLoading] = useState(false)
+  const [feedError, setFeedError] = useState('')
   const [logs, setLogs] = useState([])
   const [derived, setDerived] = useState([])
-  const [profiles, setProfiles] = useState([])
   const [rounds, setRounds] = useState([])
-  const [filter, setFilter] = useState('all')
-  const [roundFilter, setRoundFilter] = useState('all')
-  const [roundOptions, setRoundOptions] = useState([])
+  const [roundCatalog, setRoundCatalog] = useState([])
   const [activeSeason, setActiveSeason] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [period, setPeriod] = useState('7d')
+  const [roundFilter, setRoundFilter] = useState('all')
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE)
+  const [hasMoreLogs, setHasMoreLogs] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set())
+  const [baseReload, setBaseReload] = useState(0)
+  const [feedReload, setFeedReload] = useState(0)
+  const offsetRef = useRef(0)
+  const clearedAtRef = useRef(0)
+  const feedRef = useRef(null)
+  const previousFiltersRef = useRef({ filter, period, roundFilter })
 
   useEffect(() => {
     let active = true
-    async function load() {
-      setLoading(true)
-      setError('')
+    async function loadBase() {
+      setBaseLoading(true)
+      setBaseError('')
+      setBaseReady(false)
       try {
-        const [{ data: logData, error: logError }, { data: profileData, error: profileError }, { data: season, error: seasonError }] = await Promise.all([
-          supabase.from('audit_logs').select('*, profiles(id, display_name, avatar_path)').order('created_at', { ascending: false }).limit(500),
+        const [profileResult, seasonResult, clearResult, roundCatalogResult] = await Promise.all([
           supabase.from('profiles').select('*').order('display_name'),
           supabase.from('seasons').select('*').eq('is_active', true).maybeSingle(),
+          supabase.from('audit_logs').select('created_at').eq('action', 'activity_feed_cleared').order('created_at', { ascending: false }).limit(1),
+          supabase.from('rounds').select('id, name, sort_order, season_id').order('sort_order', { ascending: true }),
         ])
-        if (logError) throw logError
-        if (profileError) throw profileError
-        if (seasonError) throw seasonError
+        if (profileResult.error) throw profileResult.error
+        if (seasonResult.error) throw seasonResult.error
+        if (clearResult.error) throw clearResult.error
+        if (roundCatalogResult.error) throw roundCatalogResult.error
 
+        const profileData = profileResult.data || []
+        const season = seasonResult.data || null
+        const clearMarker = clearResult.data?.[0]
+        const clearedAt = clearMarker ? new Date(clearMarker.created_at).getTime() : 0
         let loadedRounds = []
         let predictions = []
+        let resultLogs = []
         if (season) {
           const { data: roundData, error: roundError } = await supabase
             .from('rounds')
@@ -370,175 +407,187 @@ export default function ActivityPage() {
             .order('sort_order', { ascending: true })
           if (roundError) throw roundError
           loadedRounds = roundData || []
-          const finishedIds = loadedRounds.flatMap((round) => round.matches || []).filter(hasResult).map((match) => match.id)
+          const seasonMatches = loadedRounds.flatMap((round) => round.matches || [])
+          const matchIds = seasonMatches.map((match) => match.id)
+          const finishedIds = seasonMatches.filter(hasResult).map((match) => match.id)
+          if (matchIds.length) {
+            const result = await supabase.from('audit_logs').select('action, entity_id, created_at, metadata').eq('action', 'result_updated').in('entity_id', matchIds)
+            if (result.error) throw result.error
+            resultLogs = (result.data || []).filter((log) => new Date(log.created_at).getTime() > clearedAt)
+          }
           if (finishedIds.length) {
-            const { data: predictionData, error: predictionError } = await supabase.from('predictions').select('*').in('match_id', finishedIds)
-            if (predictionError) throw predictionError
-            predictions = predictionData || []
+            const result = await supabase.from('predictions').select('*').in('match_id', finishedIds)
+            if (result.error) throw result.error
+            predictions = result.data || []
           }
         }
-
         if (!active) return
-        setActiveSeason(season || null)
-        const rawLogs = logData || []
-        const clearMarker = rawLogs.find((item) => item.action === 'activity_feed_cleared')
-        const clearedAt = clearMarker ? new Date(clearMarker.created_at).getTime() : 0
-        const visibleRawLogs = rawLogs.filter((item) => item.action !== 'activity_feed_cleared' && new Date(item.created_at).getTime() > clearedAt)
-        const matchMap = new Map(loadedRounds.flatMap((round) => (round.matches || []).map((match) => [match.id, { ...match, round }])))
-        const roundByName = new Map(loadedRounds.map((round) => [round.name, round]))
-
-        const attachRound = (item) => {
-          const match = item.entity_type === 'match' ? matchMap.get(item.entity_id) : null
-          const byName = item.metadata?.round_name ? roundByName.get(item.metadata.round_name) : null
-          const roundId = item.metadata?.round_id || (item.entity_type === 'round' ? item.entity_id : null) || match?.round_id || byName?.id || null
-          const roundName = item.metadata?.round_name || match?.round?.name || byName?.name || null
-          return { ...item, match, roundId, roundName }
-        }
-
-        const derivedEvents = deriveCompetitionEvents({ logs: visibleRawLogs, profiles: profileData || [], rounds: loadedRounds, predictions })
-          .filter((item) => new Date(item.created_at).getTime() > clearedAt)
-          .map(attachRound)
-        const feedLogs = visibleRawLogs.filter(isFeedActivity).map(attachRound)
-
-        const optionMap = new Map(loadedRounds.map((round) => [round.id, { id: round.id, name: round.name, sort_order: round.sort_order }]))
-        ;[...feedLogs, ...derivedEvents].forEach((item) => {
-          if (item.roundId && item.roundName && !optionMap.has(item.roundId)) {
-            optionMap.set(item.roundId, { id: item.roundId, name: item.roundName, sort_order: -1 })
-          }
-        })
-
-        setProfiles(profileData || [])
+        clearedAtRef.current = clearedAt
+        setRoundCatalog(roundCatalogResult.data || [])
         setRounds(loadedRounds)
-        setRoundOptions([...optionMap.values()].sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0) || a.name.localeCompare(b.name)))
-        setLogs(feedLogs)
-        setDerived(derivedEvents)
+        setActiveSeason(season)
+        setDerived(deriveCompetitionEvents({ logs: resultLogs, profiles: profileData, rounds: loadedRounds, predictions }).filter((item) => new Date(item.created_at).getTime() > clearedAt))
+        setBaseReady(true)
       } catch (err) {
-        if (active) setError(err.message || 'Não foi possível carregar as atividades.')
+        if (active) setBaseError(err.message || 'Não foi possível carregar a página de atividades.')
       } finally {
-        if (active) setLoading(false)
+        if (active) setBaseLoading(false)
       }
     }
-    load()
+    loadBase()
     return () => { active = false }
-  }, [])
+  }, [baseReload])
 
-  const mergedEvents = useMemo(() => {
-    return [...logs, ...derived]
-      .filter(isFeedActivity)
-      .map((item) => ({ ...item, category: item.category || activityCategory(item.action) }))
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-  }, [logs, derived])
+  const matchMap = useMemo(() => new Map(rounds.flatMap((round) => (round.matches || []).map((match) => [match.id, { ...match, round }]))), [rounds])
+  const roundByName = useMemo(() => new Map(rounds.map((round) => [round.name, round])), [rounds])
+  const enrichEvent = useCallback((item) => {
+    const match = item.entity_type === 'match' ? matchMap.get(item.entity_id) : null
+    const byName = item.metadata?.round_name ? roundByName.get(item.metadata.round_name) : null
+    const roundId = item.roundId || item.metadata?.round_id || (item.entity_type === 'round' ? item.entity_id : null) || match?.round_id || byName?.id || null
+    const roundName = item.roundName || item.metadata?.round_name || match?.round?.name || byName?.name || null
+    return { ...item, match: item.match || match || null, round: item.round || byName || match?.round || null, roundId, roundName, category: item.category || activityCategory(item.action) }
+  }, [matchMap, roundByName])
 
-  const scopedEvents = useMemo(() => {
-    return roundFilter === 'all'
-      ? mergedEvents
-      : mergedEvents.filter((item) => item.roundId === roundFilter || item.metadata?.round_id === roundFilter)
-  }, [mergedEvents, roundFilter])
-
-  const events = useMemo(() => {
-    return filter === 'all' ? scopedEvents : scopedEvents.filter((item) => item.category === filter)
-  }, [scopedEvents, filter])
-
-  const groups = useMemo(() => {
-    const map = new Map()
-    events.forEach((item) => {
-      const key = dateKey(item.created_at)
-      if (!map.has(key)) map.set(key, { key, value: item.created_at, items: [] })
-      map.get(key).items.push(item)
-    })
-    return [...map.values()]
-  }, [events])
-
-  const stats = useMemo(() => {
-    const today = dateKey(new Date())
-    const activitiesToday = scopedEvents.filter((item) => dateKey(item.created_at) === today).length
-    const activeParticipants = new Set(scopedEvents.map((item) => item.profiles?.id).filter(Boolean)).size
-    const predictionsRegistered = scopedEvents.filter((item) => item.category === 'predictions').length
-    const resultsReleased = scopedEvents.filter((item) => item.category === 'results').length
-    const futureRounds = rounds
-      .map((round) => ({
-        round,
-        firstKickoff: [...(round.matches || [])]
-          .filter((match) => match.kickoff_at)
-          .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))[0]?.kickoff_at || null,
-      }))
-      .filter((entry) => entry.firstKickoff && new Date(entry.firstKickoff) > new Date())
-      .sort((a, b) => new Date(a.firstKickoff) - new Date(b.firstKickoff))
-    return {
-      activitiesToday,
-      activeParticipants: activeParticipants || profiles.length,
-      predictionsRegistered,
-      resultsReleased,
-      nextRound: futureRounds[0]?.round || null,
+  useEffect(() => {
+    if (!baseReady) return undefined
+    let active = true
+    setFeedLoading(true)
+    setFeedError('')
+    setLogs([])
+    setVisibleLimit(PAGE_SIZE)
+    setExpandedGroups(new Set())
+    offsetRef.current = 0
+    async function loadFirstPage() {
+      try {
+        const { data, error } = await fetchActivityBatch({ offset: 0, period, filter, clearedAt: clearedAtRef.current })
+        if (error) throw error
+        if (!active) return
+        setLogs((data || []).filter(isFeedActivity))
+        offsetRef.current = data?.length || 0
+        setHasMoreLogs((data?.length || 0) === PAGE_SIZE)
+      } catch (err) {
+        if (active) setFeedError(err.message || 'Não foi possível carregar as atividades.')
+      } finally {
+        if (active) setFeedLoading(false)
+      }
     }
-  }, [scopedEvents, rounds, profiles])
+    loadFirstPage()
+    return () => { active = false }
+  }, [baseReady, period, filter, feedReload])
 
-  if (loading) return <ActivityFeedSkeleton />
+  const mergedEvents = useMemo(() => [...logs, ...derived]
+    .filter(isFeedActivity)
+    .map(enrichEvent)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at) || String(b.id).localeCompare(String(a.id))), [logs, derived, enrichEvent])
+  const filteredEvents = useMemo(() => {
+    const start = periodStart(period)
+    return mergedEvents.filter((item) => {
+      if (start && new Date(item.created_at).getTime() < new Date(start).getTime()) return false
+      if (filter !== 'all' && item.category !== filter) return false
+      if (roundFilter !== 'all' && item.roundId !== roundFilter && item.metadata?.round_id !== roundFilter) return false
+      return true
+    })
+  }, [mergedEvents, filter, period, roundFilter])
+  const groupedEvents = useMemo(() => groupPredictionEvents(filteredEvents), [filteredEvents])
+  const visibleEvents = groupedEvents.slice(0, visibleLimit)
+  const dayGroups = useMemo(() => {
+    const groups = new Map()
+    visibleEvents.forEach((group) => {
+      const item = group.items[0]
+      const key = dateKey(item.created_at)
+      if (!groups.has(key)) groups.set(key, { key, value: item.created_at, items: [] })
+      groups.get(key).items.push(group)
+    })
+    return [...groups.values()]
+  }, [visibleEvents])
+  const roundOptions = useMemo(() => {
+    const options = new Map(roundCatalog.map((round) => [round.id, { id: round.id, name: round.name, sort_order: round.sort_order }]))
+    ;[...logs, ...derived].map(enrichEvent).forEach((item) => {
+      if (item.roundId && item.roundName && !options.has(item.roundId)) options.set(item.roundId, { id: item.roundId, name: item.roundName, sort_order: -1 })
+    })
+    return [...options.values()].sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0) || a.name.localeCompare(b.name))
+  }, [roundCatalog, logs, derived, enrichEvent])
+
+  useEffect(() => {
+    const previous = previousFiltersRef.current
+    if (previous.filter !== filter || previous.period !== period || previous.roundFilter !== roundFilter) {
+      feedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      previousFiltersRef.current = { filter, period, roundFilter }
+    }
+  }, [filter, period, roundFilter])
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || feedLoading) return
+    const targetLimit = visibleLimit + PAGE_SIZE
+    setVisibleLimit(targetLimit)
+    if (groupedEvents.length >= targetLimit || !hasMoreLogs) return
+    setLoadingMore(true)
+    setFeedError('')
+    try {
+      const { data, error } = await fetchActivityBatch({ offset: offsetRef.current, period, filter, clearedAt: clearedAtRef.current })
+      if (error) throw error
+      const page = (data || []).filter(isFeedActivity)
+      setLogs((current) => {
+        const ids = new Set(current.map((item) => item.id))
+        return [...current, ...page.filter((item) => !ids.has(item.id))]
+      })
+      offsetRef.current += data?.length || 0
+      setHasMoreLogs((data?.length || 0) === PAGE_SIZE)
+    } catch (err) {
+      setFeedError(err.message || 'Não foi possível carregar mais atividades.')
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [loadingMore, feedLoading, visibleLimit, groupedEvents.length, hasMoreLogs, period, filter])
 
   const seasonTitle = activeSeason?.name || 'Champions League'
+  const periodLabel = PERIODS.find((item) => item.value === period)?.label || 'Últimos 7 dias'
+  const hasMoreToShow = groupedEvents.length > visibleLimit || hasMoreLogs
+
+  if (baseLoading) return <ActivityFeedSkeleton />
+  if (baseError) return <div className="page-wrap activity-v2-page"><header className="activity-v2-header"><div className="activity-v2-heading"><span>CHAMPIONS LEAGUE</span><h1>Atividades</h1></div></header><div className="activity-v2-error" role="alert"><p>{baseError}</p><button type="button" onClick={() => setBaseReload((value) => value + 1)}>Tentar novamente</button></div></div>
 
   return (
-    <div className="page-wrap activity-live-page">
-      <header className="activity-live-header">
-        <div className="activity-live-header-copy">
-          <span>{seasonTitle.toUpperCase()}</span>
-          <h1>Atividades</h1>
-          <p>Acompanhe tudo que está acontecendo no bolão.</p>
-        </div>
-        <div className="activity-live-header-today" aria-label={`${stats.activitiesToday} acontecimentos hoje`}>
-          <span>Hoje</span>
-          <strong>{stats.activitiesToday}</strong>
-          <small>{stats.activitiesToday === 1 ? 'acontecimento' : 'acontecimentos'}</small>
-        </div>
-      </header>
+    <div className="page-wrap activity-v2-page">
+      <header className="activity-v2-header"><div className="activity-v2-heading"><span>{seasonTitle.toUpperCase()}</span><h1>Atividades</h1></div></header>
 
-      <section className="activity-live-toolbar" aria-label="Filtros de atividades">
-        <div className="activity-live-filter-row" role="tablist" aria-label="Filtrar atividades">
-          {FILTERS.map(([value, label]) => (
-            <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>
-              <EventGlyph action={value === 'all' ? 'all' : value === 'predictions' ? 'prediction_created' : value === 'results' ? 'result_updated' : value === 'classification' ? 'leader_changed' : 'round_started'} />
-              {label}
-            </button>
-          ))}
+      <section className="activity-v2-toolbar" aria-label="Filtros de atividades">
+        <div className="activity-v2-category-tabs" aria-label="Categoria">
+          {FILTERS.map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{label}</button>)}
         </div>
-        <label className="activity-live-round-filter">
-          <span>Rodada</span>
-          <select value={roundFilter} onChange={(event) => setRoundFilter(event.target.value)}>
-            <option value="all">Todas as rodadas</option>
-            {roundOptions.map((round) => <option key={round.id} value={round.id}>{round.name}</option>)}
-          </select>
-        </label>
+        <div className="activity-v2-filter-selects">
+          <label><span>Período</span><AccessibleSelect value={period} ariaLabel="Filtrar por período" onChange={setPeriod} options={PERIODS} className="activity-v2-select" /></label>
+          <label className="activity-v2-round-select"><span>Rodada</span><AccessibleSelect value={roundFilter} ariaLabel="Filtrar por rodada" onChange={setRoundFilter} options={[{ value: 'all', label: 'Todas as rodadas' }, ...roundOptions.map((round) => ({ value: round.id, label: round.name }))]} className="activity-v2-select" /></label>
+        </div>
+        <div className="activity-v2-mobile-filters">
+          <label><span>Categoria</span><AccessibleSelect value={filter} ariaLabel="Filtrar por categoria" onChange={setFilter} options={FILTERS.map(([value, label]) => ({ value, label }))} className="activity-v2-select" /></label>
+          <label><span>Período</span><AccessibleSelect value={period} ariaLabel="Filtrar por período" onChange={setPeriod} options={PERIODS.map((item) => ({ ...item, label: item.value === '7d' ? '7 dias' : item.value === '30d' ? '30 dias' : item.value === '90d' ? '90 dias' : 'Todo o histórico' }))} className="activity-v2-select" /></label>
+          <label className="activity-v2-round-mobile"><span>Rodada</span><AccessibleSelect value={roundFilter} ariaLabel="Filtrar por rodada" onChange={setRoundFilter} options={[{ value: 'all', label: 'Todas' }, ...roundOptions.map((round) => ({ value: round.id, label: round.name }))]} className="activity-v2-select" /></label>
+        </div>
       </section>
 
-      {error && <div className="form-error">{error}</div>}
-
-      <div className="activity-live-feed" key={`${filter}-${roundFilter}`}>
-        {!groups.length ? (
-          <div className="activity-live-empty">
-            <strong>Nenhuma atividade por aqui.</strong>
-            <span>{filter === 'all' ? 'Os acontecimentos relevantes da competição aparecerão aqui.' : 'Não há eventos deste tipo para o filtro selecionado.'}</span>
-            {(filter !== 'all' || roundFilter !== 'all') && <button type="button" onClick={() => { setFilter('all'); setRoundFilter('all') }}>Limpar filtros</button>}
-          </div>
-        ) : (
-          groups.map((group) => (
-            <section className="activity-live-day" key={group.key}>
-              <header className="activity-live-day-heading">
-                <strong>{dayLabel(group.value)}</strong>
-                <span>{dayCaption(group.value)}</span>
-              </header>
-              <div className="activity-live-day-events">
-                {group.items.map((item) => (
-                  <div className="activity-live-row" key={item.id}>
-                    <time className="activity-live-time">{timeLabel(item.created_at)}</time>
-                    <span className={`activity-live-node tone-${activityTone(item.action)}`}><EventGlyph action={item.action} /></span>
-                    <ActivityCard item={item} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))
-        )}
+      <div className="activity-v2-results-heading" ref={feedRef}>
+        <h2>Feed da competição</h2><span>{periodLabel}{roundFilter !== 'all' ? ` · ${roundOptions.find((round) => round.id === roundFilter)?.name || 'Rodada'}` : ''}</span>
       </div>
+      {feedError && <div className="activity-v2-inline-error" role="alert"><span>{feedError}</span><button type="button" onClick={() => setFeedReload((value) => value + 1)}>Tentar novamente</button></div>}
+
+      {feedLoading ? <div className="activity-v2-feed-skeleton" aria-label="Carregando acontecimentos">{[0, 1, 2].map((item) => <div key={item} />)}</div> : !dayGroups.length ? (
+        <div className="activity-v2-empty">
+          <strong>{hasMoreLogs ? 'Nenhuma atividade neste trecho.' : `Nenhuma atividade ${period === 'all' ? 'no histórico' : period === '7d' ? 'nos últimos 7 dias' : period === '30d' ? 'nos últimos 30 dias' : 'nos últimos 90 dias'}.`}</strong>
+          <span>{hasMoreLogs ? 'Há registros anteriores que ainda podem corresponder aos filtros.' : 'Escolha um período maior para consultar mais acontecimentos.'}</span>
+          {hasMoreLogs ? <button type="button" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Carregando…' : 'Carregar mais'}</button> : period !== 'all' && <button type="button" onClick={() => setPeriod('all')}>Ver todo o histórico</button>}
+        </div>
+      ) : (
+        <div className="activity-v2-feed">
+          {dayGroups.map((group) => <section className="activity-v2-day" key={group.key}>
+            <h3>{dayHeading(group.value)}</h3>
+            <div className="activity-v2-day-rows">
+              {group.items.map((eventGroup) => <ActivityFeedRow key={eventGroup.id} group={eventGroup} expanded={expandedGroups.has(eventGroup.id)} onToggle={() => setExpandedGroups((current) => { const next = new Set(current); if (next.has(eventGroup.id)) next.delete(eventGroup.id); else next.add(eventGroup.id); return next })} />)}
+            </div>
+          </section>)}
+        </div>
+      )}
+      {!feedLoading && dayGroups.length > 0 && hasMoreToShow && <button type="button" className="activity-v2-load-more" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Carregando atividades…' : 'Carregar mais'}</button>}
     </div>
   )
 }
