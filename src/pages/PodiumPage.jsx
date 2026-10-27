@@ -2,15 +2,19 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import TrophyIcon from '../components/TrophyIcon'
 import UserAvatar from '../components/UserAvatar'
+import { useParticipantProfile } from '../context/ParticipantProfileContext'
+import { groupPodiumSeasons } from '../lib/podium'
 import { supabase } from '../lib/supabase'
 import '../styles/podium-gallery.css'
 
-function ChampionPortrait({ winner, size = 'large' }) {
+function ChampionPortrait({ winner, size = 'large', onOpenProfile }) {
   const profile = winner.profile || { display_name: winner.winner_name }
+  const portrait = <UserAvatar profile={profile} size={size === 'large' ? 'xl' : 'large'} />
+  if (winner.profile?.id) {
+    return <button type="button" className={`podium-v2-portrait size-${size} is-clickable`} onClick={() => onOpenProfile?.(winner.profile)} aria-label={`Abrir perfil de ${winner.winner_name}`}>{portrait}</button>
+  }
   return (
-    <div className={`podium-v2-portrait size-${size}`}>
-      <UserAvatar profile={profile} size={size === 'large' ? 'xl' : 'large'} />
-    </div>
+    <div className={`podium-v2-portrait size-${size}`}>{portrait}</div>
   )
 }
 
@@ -36,6 +40,7 @@ function PodiumLoading() {
 }
 
 export default function PodiumPage() {
+  const participantProfile = useParticipantProfile()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [entries, setEntries] = useState([])
@@ -64,19 +69,7 @@ export default function PodiumPage() {
   useEffect(() => { load() }, [load, reloadKey])
 
   const grouped = useMemo(() => {
-    const profileById = new Map(profiles.map((profile) => [profile.id, profile]))
-    const groups = new Map()
-    entries.forEach((entry) => {
-      const key = `${entry.season_sort}:${entry.season_label}`
-      if (!groups.has(key)) groups.set(key, {
-        key,
-        season: entry.season_label,
-        sort: entry.season_sort,
-        winners: [],
-      })
-      groups.get(key).winners.push({ ...entry, profile: entry.user_id ? profileById.get(entry.user_id) || null : null })
-    })
-    return [...groups.values()].sort((a, b) => b.sort - a.sort)
+    return groupPodiumSeasons(entries, profiles)
   }, [entries, profiles])
 
   if (loading) return <PodiumLoading />
@@ -84,6 +77,10 @@ export default function PodiumPage() {
   const featured = grouped[0] || null
   const previousSeasons = grouped.slice(1)
   const shared = (group) => group.winners.length > 1
+  const openChampionProfile = (winner) => participantProfile?.openParticipant?.(winner.profile)
+  const winnerName = (winner, className) => winner.profile?.id
+    ? <button type="button" className={`${className} podium-v2-linked-name`} onClick={() => openChampionProfile(winner)}>{winner.winner_name}</button>
+    : <strong className={className}>{winner.winner_name}</strong>
 
   return (
     <div className="page-wrap podium-v2-page">
@@ -114,9 +111,9 @@ export default function PodiumPage() {
             <div className={`podium-v2-feature-winners${featured.winners.length === 2 ? ' is-double' : ''}`}>
               {featured.winners.map((winner, index) => (
                 <div className="podium-v2-feature-winner" key={winner.id}>
-                  <ChampionPortrait winner={winner} />
+                  <ChampionPortrait winner={winner} onOpenProfile={openChampionProfile} />
                   <div className="podium-v2-feature-name">
-                    <strong>{winner.winner_name}</strong>
+                    {winnerName(winner, '')}
                   </div>
                   {featured.winners.length === 2 && index === 0 && <span className="podium-v2-joint-mark" aria-label="Título compartilhado"><TrophyIcon size={18} /></span>}
                 </div>
@@ -137,8 +134,8 @@ export default function PodiumPage() {
                     <div className="podium-v2-history-winners">
                       {group.winners.map((winner, index) => (
                         <div className="podium-v2-history-winner" key={winner.id}>
-                          <ChampionPortrait winner={winner} size="small" />
-                          <strong>{winner.winner_name}</strong>
+                          <ChampionPortrait winner={winner} size="small" onOpenProfile={openChampionProfile} />
+                          {winnerName(winner, '')}
                           {index < group.winners.length - 1 && <span className="podium-v2-plus" aria-hidden="true">+</span>}
                         </div>
                       ))}

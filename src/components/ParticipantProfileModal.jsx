@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom'
 import TrophyIcon from './TrophyIcon'
 import UserAvatar, { getAvatarUrl } from './UserAvatar'
 import { acquirePageScrollLock } from '../lib/pageScrollLock'
+import { countTitlesForProfile } from '../lib/podium'
 import { supabase } from '../lib/supabase'
 import { calculatePoints, didPickWinner, hasResult, isExactPrediction } from '../lib/utils'
+import '../styles/participant-profile-titles.css'
 
 function sortStats(a, b) {
   return b.points - a.points || b.exact - a.exact || b.winners - a.winners || a.display_name.localeCompare(b.display_name)
@@ -241,15 +243,18 @@ export default function ParticipantProfileModal({ profile, onClose }) {
       setLoading(true)
       setError('')
       try {
-        const [{ data: targetProfile, error: targetError }, { data: profiles, error: profilesError }, { data: season, error: seasonError }] = await Promise.all([
+        const [{ data: targetProfile, error: targetError }, { data: profiles, error: profilesError }, { data: season, error: seasonError }, { data: podiumEntries, error: podiumError }] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', profile.id).maybeSingle(),
           supabase.from('profiles').select('*').order('display_name'),
           supabase.from('seasons').select('*').eq('is_active', true).maybeSingle(),
+          supabase.from('podium_champions').select('season_label, season_sort, winner_name, user_id'),
         ])
         if (targetError) throw targetError
         if (profilesError) throw profilesError
         if (seasonError) throw seasonError
+        if (podiumError) throw podiumError
         const resolvedProfile = targetProfile || profile
+        const titleCount = countTitlesForProfile(resolvedProfile.id, podiumEntries || [])
 
         if (season) {
           const { data: roundData, error: roundError } = await supabase
@@ -280,6 +285,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
           const currentBase = ranked.find((item) => item.id === resolvedProfile.id) || buildStats(resolvedProfile, finishedMatches, predictions)
           const current = finishedMatches.length ? currentBase : { ...currentBase, rank: null }
           current.sentPredictions = submittedPredictions
+          current.titleCount = titleCount
           const predictionMap = new Map(predictions.filter((prediction) => prediction.user_id === resolvedProfile.id).map((prediction) => [prediction.match_id, prediction]))
 
           const roundPerformance = rounds.map((round, index) => {
@@ -326,7 +332,7 @@ export default function ParticipantProfileModal({ profile, onClose }) {
           setDetails({
             profile: resolvedProfile,
             season: null,
-            stats: { ...resolvedProfile, points: 0, exact: 0, winners: 0, rank: null, finishedPredictions: 0, sentPredictions: 0, accuracy: 0 },
+            stats: { ...resolvedProfile, points: 0, exact: 0, winners: 0, rank: null, finishedPredictions: 0, sentPredictions: 0, accuracy: 0, titleCount },
             bestRound: null,
             totalParticipants: (profiles || []).length,
             roundPerformance: [],
@@ -377,6 +383,10 @@ export default function ParticipantProfileModal({ profile, onClose }) {
             <div className="participant-profile-v3-identity">
               <span className="participant-profile-v3-kicker">Perfil do participante</span>
               <h2>{target.display_name || 'Participante'}</h2>
+              {details && <div className={`participant-profile-title-count${details.stats?.titleCount ? ' has-titles' : ''}`} aria-label={details.stats?.titleCount ? `${details.stats.titleCount} ${details.stats.titleCount === 1 ? 'título' : 'títulos'} históricos` : 'Nenhum título histórico'}>
+                {details.stats?.titleCount > 0 && <TrophyIcon size={14} />}
+                <strong>{details.stats?.titleCount ? `${details.stats.titleCount} ${details.stats.titleCount === 1 ? 'título' : 'títulos'}` : 'Nenhum título'}</strong>
+              </div>}
               <p>Jogador{details?.season ? ` · ${details.season.name}` : ''}</p>
             </div>
 

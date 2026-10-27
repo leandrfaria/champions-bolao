@@ -1,0 +1,23 @@
+.participant-profile-v3-identity { position: relative; }
+.participant-profile-title-count {
+  width: fit-content;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 5px;
+  padding: 3px 8px;
+  border: 1px solid rgba(145, 158, 199, .2);
+  border-radius: 999px;
+  color: #b7c0d9;
+  background: rgba(12, 18, 39, .58);
+  font-size: 10px;
+  line-height: 1;
+}
+.participant-profile-title-count strong { font-weight: 750; }
+.participant-profile-title-count.has-titles {
+  border-color: rgba(215, 184, 103, .3);
+  color: #e6cd8b;
+  background: rgba(115, 87, 28, .12);
+}
+.participant-profile-title-count svg { flex: 0 0 auto; color: #d8b95f; }
